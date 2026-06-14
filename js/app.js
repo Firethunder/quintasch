@@ -40,6 +40,16 @@ const playerCustomStakeInput = document.getElementById('player-custom-stake');
 const playerCustomTimerGroup = document.getElementById('player-custom-timer-group');
 const playerCustomTimerInput = document.getElementById('player-custom-timer');
 
+// Landing Page DOM-Elemente
+const landingOverlay = document.getElementById('landing-overlay');
+const hostGameBtn = document.getElementById('host-game-btn');
+const syncGameBtn = document.getElementById('sync-game-btn');
+const syncRoomGroup = document.getElementById('sync-room-group');
+const syncRoomIdInput = document.getElementById('sync-room-id');
+const connectSyncBtn = document.getElementById('connect-sync-btn');
+
+let gameMode = 'host'; // 'host' oder 'sync'
+
 let isRolling = false;
 let timerInterval = null;
 let autoTurnTimeout = null;
@@ -76,7 +86,43 @@ const resetSettingsButton = document.getElementById('reset-settings-button');
 document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
     setupPlayersListDisplay();
-    initHostPeer();
+    // Start-Bildschirm Event Listeners
+    if (hostGameBtn) {
+        hostGameBtn.addEventListener('click', () => {
+            gameMode = 'host';
+            initHostPeer();
+            if (landingOverlay) landingOverlay.style.display = 'none';
+        });
+    }
+
+    if (syncGameBtn) {
+        syncGameBtn.addEventListener('click', () => {
+            if (syncRoomGroup) {
+                if (syncRoomGroup.style.display === 'none' || syncRoomGroup.style.display === '') {
+                    syncRoomGroup.style.display = 'flex';
+                    if (syncRoomIdInput) syncRoomIdInput.focus();
+                } else {
+                    syncRoomGroup.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    if (connectSyncBtn) {
+        connectSyncBtn.addEventListener('click', () => {
+            if (syncRoomIdInput) {
+                const targetRoomId = syncRoomIdInput.value.trim().toUpperCase();
+                if (!targetRoomId) {
+                    alert('Bitte gib eine gültige Raum-ID ein!');
+                    return;
+                }
+                gameMode = 'sync';
+                // Hier wird die Sync-Verbindung initialisiert (Verbindungsaufbau folgt in Phase 2)
+                console.log(`Verbinde zur Synchronisation mit Raum: ${targetRoomId}`);
+                if (landingOverlay) landingOverlay.style.display = 'none';
+            }
+        });
+    }
 
     // Rundensteuerungs-Button-Listeners
     startGameButton.addEventListener('click', startGame);

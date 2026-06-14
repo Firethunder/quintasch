@@ -390,3 +390,32 @@ select.form-control option {
         text-shadow: 0 0 15px var(--neon-cyan), 0 0 30px var(--neon-cyan), 0 0 40px var(--neon-purple);
     }
 }
+
+/* Landing page overlay */
+#landing-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 11, 15, 0.95);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.landing-panel {
+    width: 100%;
+    max-width: 480px;
+    border: 2px solid var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+    padding: 35px 30px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

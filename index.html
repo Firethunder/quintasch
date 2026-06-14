@@ -12,6 +12,34 @@
     <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 </head>
 <body>
+    <!-- Start-Bildschirm Overlay (Landing Page) -->
+    <div id="landing-overlay">
+        <div class="panel landing-panel">
+            <header class="header" style="margin-bottom: 25px;">
+                <h1 style="font-size: 2.6rem; letter-spacing: 2px; text-shadow: var(--glow-cyan); margin: 0;">Quintasch</h1>
+                <p style="font-size: 1rem; color: var(--text-muted); margin-top: 5px;">Würfel-Chaos Multiplayer Dashboard</p>
+            </header>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+                <button class="btn-neon" id="host-game-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: var(--glow-cyan); text-shadow: var(--glow-cyan);">
+                    Neues Spiel hosten (Host)
+                </button>
+                
+                <button class="btn-neon" id="sync-game-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta);">
+                    Mit Raum synchronisieren
+                </button>
+                
+                <div id="sync-room-group" style="display: none; flex-direction: column; gap: 10px; margin-top: 10px; border-top: 1px solid rgba(255, 0, 127, 0.2); padding-top: 15px;">
+                    <label for="sync-room-id" style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; text-align: left; display: block; color: var(--text-main);">Raum-ID des Hosts eingeben</label>
+                    <input type="text" id="sync-room-id" class="form-control" placeholder="z. B. Q-123456" style="text-align: center; font-size: 1.1rem; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; text-transform: uppercase;">
+                    <button class="btn-neon" id="connect-sync-btn" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); min-height: 45px; margin-top: 5px;">
+                        Verbinden
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
         <!-- Dashboard (Zentraler Host-Bildschirm) -->
         <main class="dashboard">
