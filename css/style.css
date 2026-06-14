@@ -47,6 +47,14 @@ body {
     }
 }
 
+.app-container.sidebar-hidden {
+    grid-template-columns: 1fr;
+}
+
+.app-container.sidebar-hidden .sidebar {
+    display: none;
+}
+
 /* Dashboard Panel (Main Screen) */
 .dashboard {
     padding: 40px;
