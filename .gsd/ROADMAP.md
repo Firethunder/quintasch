@@ -1,10 +1,10 @@
 # ROADMAP.md
 
-> **Current Phase**: Phase 2: Network & Lobby
+> **Current Phase**: Phase 3: Gameplay Loop
 > **Milestone**: v1.0 (MVP)
 
 ## Must-Haves (aus SPEC)
-- [ ] Serverless PeerJS (WebRTC) Steuerung zwischen Smartphones und Dashboard
+- [x] Serverless PeerJS (WebRTC) Steuerung zwischen Smartphones und Dashboard
 - [ ] Rundenbasiertes Gameplay mit aktiver Client-Zuweisung
 - [x] 3D-CSS-Würfel-Rendering und automatische Gewinnauswertung auf dem Dashboard
 - [ ] Lokale Historie und PWA Offline-Support
@@ -17,7 +17,7 @@
 **Requirements**: REQ-08, REQ-09, REQ-11
 
 ### Phase 2: Network & Lobby (PeerJS & Verbindungsaufbau)
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Einbindung von PeerJS und qrcode.js. Aufbau der Peer-Verbindung via QR-Code Scan. Synchronisierte Lobby-Spielerliste auf Host und Client.
 **Requirements**: REQ-01, REQ-02, REQ-03, REQ-04
 
