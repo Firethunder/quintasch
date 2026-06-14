@@ -53,10 +53,14 @@ let gameMode = 'host'; // 'host' oder 'sync'
 let isRolling = false;
 let timerInterval = null;
 let autoTurnTimeout = null;
+let timerTimeLeft = 0;
+let timerTotalSeconds = 0;
 
-// PeerJS-Variablen für Host
+// PeerJS-Variablen für Host und Sync
 let peer = null;
 let connections = [];
+let syncConnections = []; // Verbindungen zu sekundären Dashboards (Host-seitig)
+let syncConn = null; // Verbindung zum primären Host (Sync-Dashboard-seitig)
 let players = []; // Array von { peerId, name }
 let hasAutoHiddenSidebar = false;
 
@@ -117,8 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 gameMode = 'sync';
-                // Hier wird die Sync-Verbindung initialisiert (Verbindungsaufbau folgt in Phase 2)
-                console.log(`Verbinde zur Synchronisation mit Raum: ${targetRoomId}`);
+                initSyncPeer(targetRoomId);
                 if (landingOverlay) landingOverlay.style.display = 'none';
             }
         });
@@ -235,13 +238,26 @@ rollButton.addEventListener('click', () => {
         }
     }
 
-    executeRoll(playerName, chosenBet, chosenStake, customTimerVal);
+    if (gameMode === 'sync') {
+        if (syncConn && syncConn.open) {
+            syncConn.send({
+                action: 'syncCommand',
+                type: 'roll',
+                playerName: playerName,
+                bet: chosenBet,
+                stake: chosenStake,
+                timer: customTimerVal
+            });
+        }
+    } else {
+        executeRoll(playerName, chosenBet, chosenStake, customTimerVal);
+    }
 });
 
 /**
  * Führt die Würfel-Animation und Spiel-Auswertung aus.
  */
-function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeParam = 'Standard-Strafe', customTimerParam = null) {
+function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeParam = 'Standard-Strafe', customTimerParam = null, syncDiceParam = null) {
     isRolling = true;
     rollButton.disabled = true;
     rollButton.textContent = 'Würfelt...';
@@ -269,28 +285,48 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
     resultDescription.textContent = 'Die Spannung steigt!';
     resultAction.textContent = '';
 
-    // Werte ermitteln (Zufall oder Custom-Eingabe)
+    // Werte ermitteln (Zufall, Custom-Eingabe oder Sync)
     let diceValues = [];
-    const customInput = customRollInput.value.trim();
-    
-    if (customInput) {
-        // Validiere die Eingabe (z.B. "4,4,4,1,2")
-        const parsed = customInput.split(',').map(n => parseInt(n.trim(), 10));
-        if (parsed.length === 5 && parsed.every(n => n >= 1 && n <= 6)) {
-            diceValues = parsed;
+    if (syncDiceParam && syncDiceParam.length === 5) {
+        diceValues = syncDiceParam;
+    } else {
+        const customInput = customRollInput.value.trim();
+        
+        if (customInput) {
+            // Validiere die Eingabe (z.B. "4,4,4,1,2")
+            const parsed = customInput.split(',').map(n => parseInt(n.trim(), 10));
+            if (parsed.length === 5 && parsed.every(n => n >= 1 && n <= 6)) {
+                diceValues = parsed;
+            }
         }
-    }
-    
-    // Falls keine gültige Custom-Eingabe vorhanden ist, generiere Zufallswerte
-    if (diceValues.length === 0) {
-        for (let i = 0; i < 5; i++) {
-            diceValues.push(Math.floor(Math.random() * 6) + 1);
+        
+        // Falls keine gültige Custom-Eingabe vorhanden ist, generiere Zufallswerte
+        if (diceValues.length === 0) {
+            for (let i = 0; i < 5; i++) {
+                diceValues.push(Math.floor(Math.random() * 6) + 1);
+            }
         }
     }
 
     const playerName = playerNameParam || playerNameInput.value.trim() || 'Unbekannter Spieler';
     const chosenBet = chosenBetParam || playerBetSelect.value;
     const isCustomStake = chosenStakeParam !== 'Standard-Strafe';
+
+    // Falls Host-Modus aktiv ist, sende Würfelwurf an alle Sync-Dashboards
+    if (gameMode === 'host') {
+        syncConnections.forEach(conn => {
+            if (conn.open) {
+                conn.send({
+                    action: 'syncRollStart',
+                    playerName: playerName,
+                    bet: chosenBet,
+                    stake: chosenStakeParam,
+                    timer: customTimerParam,
+                    dice: diceValues
+                });
+            }
+        });
+    }
 
     // Würfel animieren
     for (let i = 0; i < 5; i++) {
@@ -407,28 +443,38 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
  * Startet den 30-Sekunden Penalty-Timer.
  */
 function startTimer(seconds) {
+    if (gameMode === 'host') {
+        syncConnections.forEach(conn => {
+            if (conn.open) {
+                conn.send({ action: 'syncTimerStart', seconds });
+            }
+        });
+    }
+
     timerContainer.style.display = 'flex';
-    let timeLeft = seconds;
-    timerText.textContent = `${timeLeft}s`;
+    timerTotalSeconds = seconds;
+    timerTimeLeft = seconds;
+    timerText.textContent = `${timerTimeLeft}s`;
     timerProgress.style.width = '100%';
     
     // Zwinge das Layout-System zu einem Reflow für die CSS-Animation
     timerProgress.offsetHeight; 
     
     timerInterval = setInterval(() => {
-        timeLeft--;
-        timerText.textContent = `${timeLeft}s`;
+        timerTimeLeft--;
+        timerText.textContent = `${timerTimeLeft}s`;
         
-        const percentage = (timeLeft / seconds) * 100;
+        const percentage = (timerTimeLeft / timerTotalSeconds) * 100;
         timerProgress.style.width = `${percentage}%`;
 
         // Tick-Sound bei jeder verbleibenden Sekunde abspielen
-        if (timeLeft > 0) {
+        if (timerTimeLeft > 0) {
             playTimerTick();
         }
 
-        if (timeLeft <= 0) {
+        if (timerTimeLeft <= 0) {
             clearInterval(timerInterval);
+            timerInterval = null;
             timerText.textContent = 'ZEIT ABGELAUFEN!';
             timerText.style.color = 'var(--neon-magenta)';
             timerText.style.textShadow = 'var(--glow-magenta)';
@@ -438,7 +484,7 @@ function startTimer(seconds) {
             playTimerBuzzer();
             
             // Auto-Fortschritt 3 Sekunden nach Ablauf der Strafe
-            if (gameState === 'playing') {
+            if (gameState === 'playing' && gameMode !== 'sync') {
                 scheduleAutoTurn(3000);
             }
         }
@@ -449,10 +495,20 @@ function startTimer(seconds) {
  * Setzt den Timer zurück.
  */
 function resetTimer() {
+    if (gameMode === 'host') {
+        syncConnections.forEach(conn => {
+            if (conn.open) {
+                conn.send({ action: 'syncTimerReset' });
+            }
+        });
+    }
+
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
     }
+    timerTimeLeft = 0;
+    timerTotalSeconds = 0;
     timerContainer.style.display = 'none';
     timerText.style.color = 'var(--neon-yellow)';
     timerText.style.textShadow = 'var(--glow-yellow)';
@@ -478,7 +534,9 @@ function scheduleAutoTurn(delayMs) {
         } else {
             console.log('[Auto-Turn] Countdown abgelaufen, wechsle Runde.');
             nextTurnButton.textContent = 'Nächster Spieler';
-            nextTurn();
+            if (gameMode !== 'sync') {
+                nextTurn();
+            }
         }
     };
     
@@ -605,6 +663,17 @@ function initHostPeer() {
 
     peer.on('connection', (conn) => {
         conn.on('data', (data) => {
+            if (data && data.action === 'syncDashboardJoin') {
+                syncConnections.push(conn);
+                sendSyncStateTo(conn);
+                return;
+            }
+
+            if (data && data.action === 'syncCommand') {
+                handleSyncCommand(data);
+                return;
+            }
+
             if (data && data.action === 'join') {
                 const nameExists = players.some(p => p.name.toLowerCase() === data.playerName.toLowerCase());
                 if (nameExists) {
@@ -635,8 +704,10 @@ function initHostPeer() {
 
             players = players.filter(p => p.peerId !== conn.peer);
             connections = connections.filter(c => c.peer !== conn.peer);
+            syncConnections = syncConnections.filter(c => c.peer !== conn.peer);
             updateLobbyDisplay();
             broadcastLobby();
+            broadcastSyncState();
 
             // Falls der aktive Spieler das Spiel verlässt
             if (gameState === 'playing' && isActiveDisconnect) {
@@ -708,6 +779,7 @@ function updateLobbyDisplay() {
             }
         }
     }
+    broadcastSyncState();
 }
 
 /**
@@ -727,10 +799,19 @@ function broadcastLobby() {
  */
 function startGame() {
     if (players.length < 1) return;
+    
+    if (gameMode === 'sync') {
+        if (syncConn && syncConn.open) {
+            syncConn.send({ action: 'syncCommand', type: 'startGame' });
+        }
+        return;
+    }
+    
     gameState = 'playing';
     startGameButton.style.display = 'none';
     activePlayerIndex = 0;
     startNextTurn();
+    broadcastSyncState();
 }
 
 /**
@@ -750,6 +831,7 @@ function startNextTurn() {
         resultDescription.textContent = 'Warte auf neue Spieler...';
         resultAction.textContent = '';
         nextTurnButton.style.display = 'none';
+        broadcastSyncState();
         return;
     }
 
@@ -779,6 +861,8 @@ function startNextTurn() {
             }
         }
     });
+
+    broadcastSyncState();
 }
 
 /**
@@ -787,6 +871,14 @@ function startNextTurn() {
 function nextTurn() {
     clearTimeout(autoTurnTimeout);
     autoTurnTimeout = null;
+    
+    if (gameMode === 'sync') {
+        if (syncConn && syncConn.open) {
+            syncConn.send({ action: 'syncCommand', type: 'nextTurn' });
+        }
+        return;
+    }
+    
     console.log('[Auto-Turn] nextTurn() aufgerufen. Nächster Spieler index wird berechnet.');
     if (gameState !== 'playing' || players.length === 0) {
         console.warn(`[Auto-Turn] Abbruch: gameState=${gameState}, Spielerzahl=${players.length}`);
@@ -795,4 +887,226 @@ function nextTurn() {
     activePlayerIndex = (activePlayerIndex + 1) % players.length;
     console.log(`[Auto-Turn] Neuer aktiver Spieler-Index: ${activePlayerIndex} (${players[activePlayerIndex]?.name})`);
     startNextTurn();
+}
+
+/**
+ * Initialisiert den PeerJS Client für das Sync-Dashboard.
+ */
+function initSyncPeer(targetRoomId) {
+    if (typeof Peer === 'undefined') {
+        roomIdDisplay.textContent = 'Fehler: PeerJS nicht geladen';
+        return;
+    }
+
+    // Lese Custom Config
+    let peerConfig = null;
+    try {
+        const stored = localStorage.getItem('quintasch_peer_config');
+        if (stored) {
+            peerConfig = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden der Peer-Server-Einstellungen:', e);
+    }
+
+    // Prefill UI inputs
+    if (peerConfig) {
+        peerHostInput.value = peerConfig.host || '';
+        peerPortInput.value = peerConfig.port || '';
+        peerPathInput.value = peerConfig.path || '';
+        peerSecureInput.checked = peerConfig.secure !== false;
+    }
+
+    // Instanziere Peer mit zufälliger ID (als Client)
+    if (peerConfig && peerConfig.host) {
+        const portVal = peerConfig.port ? parseInt(peerConfig.port) : undefined;
+        peer = new Peer(undefined, {
+            host: peerConfig.host,
+            port: isNaN(portVal) ? undefined : portVal,
+            path: peerConfig.path || '/',
+            secure: peerConfig.secure
+        });
+    } else {
+        peer = new Peer();
+    }
+
+    roomIdDisplay.textContent = 'Verbinde mit Host...';
+
+    peer.on('open', (id) => {
+        console.log('Sync-Peer geöffnet mit ID:', id);
+        
+        syncConn = peer.connect(targetRoomId);
+        
+        syncConn.on('open', () => {
+            console.log('Verbindung zum Host hergestellt:', targetRoomId);
+            roomIdDisplay.textContent = `${targetRoomId} (Sync)`;
+            
+            // Sende Join-Handshake
+            syncConn.send({ action: 'syncDashboardJoin' });
+            
+            // Render den QR-Code des Hosts, damit Spieler beitreten können
+            const joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${targetRoomId}`;
+            qrcodeContainer.innerHTML = '';
+            new QRCode(qrcodeContainer, {
+                text: joinUrl,
+                width: 140,
+                height: 140,
+                colorDark: '#000000',
+                colorLight: '#ffffff'
+            });
+        });
+
+        syncConn.on('data', (data) => {
+            if (!data) return;
+            console.log('Sync-Daten empfangen:', data);
+            
+            if (data.action === 'syncState') {
+                applySyncState(data.state);
+            } else if (data.action === 'syncRollStart') {
+                executeRoll(data.playerName, data.bet, data.stake, data.timer, data.dice);
+            } else if (data.action === 'syncTimerStart') {
+                resetTimer();
+                startTimer(data.seconds);
+            } else if (data.action === 'syncTimerReset') {
+                resetTimer();
+            }
+        });
+
+        const handleSyncDisconnect = () => {
+            console.warn('Verbindung zum Host unterbrochen.');
+            roomIdDisplay.textContent = 'Verbindung unterbrochen';
+            setTimeout(() => {
+                if (gameMode === 'sync') {
+                    console.log('Versuche Reconnect...');
+                    initSyncPeer(targetRoomId);
+                }
+            }, 3000);
+        };
+
+        syncConn.on('close', handleSyncDisconnect);
+        syncConn.on('error', (err) => {
+            console.error('Sync-Verbindung Fehler:', err);
+            handleSyncDisconnect();
+        });
+    });
+
+    peer.on('error', (err) => {
+        console.error('Sync-Peer-Fehler:', err);
+        roomIdDisplay.textContent = 'Verbindung fehlgeschlagen';
+    });
+}
+
+/**
+ * Wendet den empfangenen Spielzustand des Hosts auf das lokale Dashboard an.
+ */
+function applySyncState(state) {
+    if (!state) return;
+
+    players = state.players || [];
+    gameState = state.gameState || 'lobby';
+    activePlayerIndex = state.activePlayerIndex || 0;
+
+    // Aktualisiere Lobby-Anzeige (broadcastSyncState() ist im Sync-Modus ein noop)
+    updateLobbyDisplay();
+
+    // Rundensteuerungs-Buttons synchronisieren
+    if (gameState === 'lobby') {
+        if (players.length >= 1) {
+            startGameButton.style.display = 'block';
+            startGameButton.disabled = false;
+        } else {
+            startGameButton.style.display = 'none';
+            startGameButton.disabled = true;
+        }
+        nextTurnButton.style.display = 'none';
+    } else {
+        startGameButton.style.display = 'none';
+        nextTurnButton.style.display = state.nextTurnButtonVisible ? 'block' : 'none';
+    }
+
+    // Result-Panel synchronisieren
+    if (state.resultPanelClassName) {
+        resultPanel.className = state.resultPanelClassName;
+        resultTitle.textContent = state.resultTitleText || '';
+        resultDescription.textContent = state.resultDescriptionText || '';
+        resultAction.textContent = state.resultActionText || '';
+    }
+
+    // Historie synchronisieren
+    if (state.history) {
+        localStorage.setItem('quintasch_history', JSON.stringify(state.history));
+        renderHistory(state.history);
+    }
+
+    // Timer synchronisieren
+    if (state.timerActive && state.timerTimeLeft > 0) {
+        if (!timerInterval || Math.abs(timerTimeLeft - state.timerTimeLeft) > 1) {
+            resetTimer();
+            startTimer(state.timerTimeLeft);
+            timerTotalSeconds = state.timerTotalSeconds || state.timerTimeLeft;
+        }
+    } else {
+        if (!state.timerActive && timerInterval) {
+            resetTimer();
+        }
+    }
+}
+
+/**
+ * Erstellt das Datenpaket für die Dashboard-Synchronisation.
+ */
+function getSyncStatePayload() {
+    return {
+        players: players,
+        gameState: gameState,
+        activePlayerIndex: activePlayerIndex,
+        nextTurnButtonVisible: nextTurnButton.style.display === 'block',
+        resultPanelClassName: resultPanel.className,
+        resultTitleText: resultTitle.textContent,
+        resultDescriptionText: resultDescription.textContent,
+        resultActionText: resultAction.textContent,
+        history: JSON.parse(localStorage.getItem('quintasch_history') || '[]'),
+        timerActive: !!timerInterval,
+        timerTimeLeft: timerTimeLeft,
+        timerTotalSeconds: timerTotalSeconds
+    };
+}
+
+/**
+ * Sendet den Spielzustand an eine bestimmte Verbindung.
+ */
+function sendSyncStateTo(conn) {
+    if (conn.open) {
+        conn.send({ action: 'syncState', state: getSyncStatePayload() });
+    }
+}
+
+/**
+ * Sendet den Spielzustand an alle registrierten Sync-Dashboards.
+ */
+function broadcastSyncState() {
+    if (gameMode === 'sync') return;
+    
+    const state = getSyncStatePayload();
+    syncConnections.forEach(conn => {
+        if (conn.open) {
+            conn.send({ action: 'syncState', state });
+        }
+    });
+}
+
+/**
+ * Verarbeitet Befehle, die von sekundären Dashboards gesendet wurden (Host-seitig).
+ */
+function handleSyncCommand(data) {
+    if (gameMode === 'sync') return;
+    
+    console.log('Verarbeite Sync-Befehl auf Host:', data);
+    if (data.type === 'startGame') {
+        startGame();
+    } else if (data.type === 'nextTurn') {
+        nextTurn();
+    } else if (data.type === 'roll') {
+        executeRoll(data.playerName, data.bet, data.stake, data.timer);
+    }
 }
