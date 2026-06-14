@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0b0b0f">
+    <title>Quintasch — Würfel-Chaos Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Dashboard (Zentraler Host-Bildschirm) -->
+        <main class="dashboard">
+            <header class="header">
+                <h1>Quintasch</h1>
+                <p>Würfel-Chaos Multiplayer</p>
+            </header>
+
+            <!-- Spielfeld mit 5 3D-CSS-Würfeln -->
+            <section class="dice-table" id="dice-table">
+                <!-- Würfel 1 -->
+                <div class="cube-container">
+                    <div class="cube" id="dice-0">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+                <!-- Würfel 2 -->
+                <div class="cube-container">
+                    <div class="cube" id="dice-1">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+                <!-- Würfel 3 -->
+                <div class="cube-container">
+                    <div class="cube" id="dice-2">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+                <!-- Würfel 4 -->
+                <div class="cube-container">
+                    <div class="cube" id="dice-3">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+                <!-- Würfel 5 -->
+                <div class="cube-container">
+                    <div class="cube" id="dice-4">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Status und Auswertung -->
+            <section class="panel result-panel" id="result-panel">
+                <div class="result-title" id="result-title">Bereit zum Würfeln</div>
+                <div class="result-description" id="result-description">Nutze das Test-Rig an der Seite, um einen Wurf auszuführen.</div>
+                <div class="result-action" id="result-action"></div>
+                
+                <!-- 30-Sekunden-Timer -->
+                <div class="timer-container" id="timer-container">
+                    <div class="timer-text" id="timer-text">30s</div>
+                    <div class="timer-bar">
+                        <div class="timer-progress" id="timer-progress"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Sidebar (Lokal-Testumgebung / Test-Rig) -->
+        <aside class="sidebar">
+            <h2 class="sidebar-title">Lokal Test-Rig</h2>
+            
+            <div class="panel">
+                <div class="form-group">
+                    <label for="player-name">Spielername</label>
+                    <input type="text" id="player-name" class="form-control" value="Test-Spieler">
+                </div>
+
+                <div class="form-group">
+                    <label for="player-bet">Wetteinsatz</label>
+                    <select id="player-bet" class="form-control">
+                        <option value="none">Kein Wetteinsatz (Zuschauen)</option>
+                        <option value="pasch">Pasch (2er-Pasch)</option>
+                        <option value="doppelpasch">Doppelpasch</option>
+                        <option value="trasch">Trasch (3er-Pasch)</option>
+                        <option value="fullhouse">Full House</option>
+                        <option value="strasse">Straße</option>
+                        <option value="quadrasch">Quadrasch (4er-Pasch)</option>
+                        <option value="quintasch">Quintasch (5er-Pasch)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="custom-roll">Simulierter Wurf (Optional)</label>
+                    <input type="text" id="custom-roll" class="form-control" placeholder="z. B. 4,4,4,1,2">
+                </div>
+
+                <button class="btn-neon" id="roll-button">Würfeln (Test)</button>
+            </div>
+
+            <!-- Historie / Spielprotokoll -->
+            <div class="panel">
+                <h3 class="sidebar-title" style="font-size: 1.1rem; border: none; margin-bottom: 15px;">Wurfliste</h3>
+                <ul class="history-list" id="history-list">
+                    <!-- Wird dynamisch befüllt -->
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
