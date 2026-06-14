@@ -16,14 +16,14 @@
 
 ## Current Position
 - **Phase**: Phase 5
-- **Task**: Discussion
-- **Status**: Discussing Phase 5
+- **Task**: Planning complete
+- **Status**: Ready for execution
 
 ## Last Session Summary
 Phase 4 wurde erfolgreich abgeschlossen. Das Test-Rig blendet sich nun standardmäßig aus, sobald der erste Spieler dem Raum beitritt, und wird wieder eingeblendet, wenn alle Spieler das Spiel verlassen. Ein Toggle-Button auf dem Dashboard erlaubt dem Host, das Test-Rig jederzeit manuell ein- oder auszublenden.
 
 ## Next Steps
-1. Discuss Phase 5 and clarify topics
+1. /execute 5
 
 
 
