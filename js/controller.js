@@ -12,6 +12,10 @@ const joinErrorMsg = document.getElementById('join-error-msg');
 const lobbyStatusTitle = document.getElementById('lobby-status-title');
 const lobbySpinner = document.getElementById('lobby-spinner');
 const lobbyPlayersList = document.getElementById('lobby-players-list');
+const gameplayContainer = document.getElementById('gameplay-container');
+const gameplayBetSelect = document.getElementById('gameplay-bet');
+const gameplayRollButton = document.getElementById('gameplay-roll-button');
+const lobbyWaitText = document.getElementById('lobby-wait-text');
 
 // Raum-ID aus der URL auslesen (z.B. controller.html?room=xxxx)
 const roomId = new URLSearchParams(window.location.search).get('room');
@@ -96,6 +100,23 @@ function joinRoom(playerName) {
             if (data.action === 'updateLobby') {
                 renderLobbyPlayers(data.players);
             }
+
+            // Runden-Steuerungsbefehle empfangen
+            if (data.action === 'yourTurn') {
+                // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
+                lobbyContainer.style.display = 'none';
+                gameplayContainer.style.display = 'block';
+                gameplayRollButton.disabled = false;
+                gameplayRollButton.textContent = 'WÜRFELN!';
+            }
+
+            if (data.action === 'waitTurn') {
+                // Inaktiver Spieler: Zeige Warteraum mit Name des aktiven Spielers
+                gameplayContainer.style.display = 'none';
+                lobbyContainer.style.display = 'block';
+                lobbySpinner.style.display = 'none'; // Verberge Ladekreis
+                lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
+            }
         });
 
         // Abfangen von Verbindungsabbrüchen
@@ -132,9 +153,26 @@ function disconnect() {
 
     // UI zurücksetzen
     lobbyContainer.style.display = 'none';
+    gameplayContainer.style.display = 'none';
     joinContainer.style.display = 'block';
     resetJoinButton();
 }
+
+// Event-Listener für den Gameplay-Roll-Button
+gameplayRollButton.addEventListener('click', () => {
+    if (!conn || !conn.open) return;
+    
+    const chosenBet = gameplayBetSelect.value;
+    
+    // Deaktivieren und Text ändern
+    gameplayRollButton.disabled = true;
+    gameplayRollButton.textContent = 'Würfel rollen...';
+    
+    conn.send({
+        action: 'rollDice',
+        bet: chosenBet
+    });
+});
 
 /**
  * Zeigt einen Fehler im Beitritts-Screen an.
