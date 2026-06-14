@@ -150,6 +150,10 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
     // Timer zurücksetzen, falls einer läuft
     resetTimer();
 
+    // Rundenwechsel-Timeout löschen
+    clearTimeout(autoTurnTimeout);
+    autoTurnTimeout = null;
+
     // Wurf-Panel zurücksetzen
     resultPanel.className = 'panel result-panel';
     resultTitle.textContent = 'Würfel rollen...';
@@ -345,6 +349,7 @@ function resetTimer() {
  */
 function scheduleAutoTurn(delayMs) {
     clearTimeout(autoTurnTimeout);
+    console.log(`[Auto-Turn] Rundenwechsel in ${delayMs}ms geplant.`);
     
     let countdownSeconds = Math.ceil(delayMs / 1000);
     const updateButtonText = () => {
@@ -355,6 +360,7 @@ function scheduleAutoTurn(delayMs) {
             countdownSeconds--;
             autoTurnTimeout = setTimeout(updateButtonText, 1000);
         } else {
+            console.log('[Auto-Turn] Countdown abgelaufen, wechsle Runde.');
             nextTurnButton.textContent = 'Nächster Spieler';
             nextTurn();
         }
@@ -597,6 +603,8 @@ function startGame() {
  */
 function startNextTurn() {
     clearTimeout(autoTurnTimeout);
+    autoTurnTimeout = null;
+    console.log('[Auto-Turn] startNextTurn() aufgerufen.');
     
     // Falls keine Spieler mehr im Raum sind, wechsle zurück in die Lobby
     if (players.length === 0) {
@@ -643,7 +651,13 @@ function startNextTurn() {
  */
 function nextTurn() {
     clearTimeout(autoTurnTimeout);
-    if (gameState !== 'playing' || players.length === 0) return;
+    autoTurnTimeout = null;
+    console.log('[Auto-Turn] nextTurn() aufgerufen. Nächster Spieler index wird berechnet.');
+    if (gameState !== 'playing' || players.length === 0) {
+        console.warn(`[Auto-Turn] Abbruch: gameState=${gameState}, Spielerzahl=${players.length}`);
+        return;
+    }
     activePlayerIndex = (activePlayerIndex + 1) % players.length;
+    console.log(`[Auto-Turn] Neuer aktiver Spieler-Index: ${activePlayerIndex} (${players[activePlayerIndex]?.name})`);
     startNextTurn();
 }
