@@ -1,0 +1,22 @@
+# IDE / Editor Settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Agent Metadata & Logs
+.agent/
+.agents/
+.gemini/
+brain/
+scratch/
+*.jsonl
+
+# OS Metadata
+Thumbs.db
+.DS_Store
+ehthumbs.db
+desktop.ini
