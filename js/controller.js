@@ -19,6 +19,16 @@ const gameplayBetSelect = document.getElementById('gameplay-bet');
 const gameplayRollButton = document.getElementById('gameplay-roll-button');
 const lobbyWaitText = document.getElementById('lobby-wait-text');
 
+// Settings DOM-Elemente
+const settingsPanel = document.getElementById('settings-panel');
+const toggleSettingsButton = document.getElementById('toggle-settings-button');
+const peerHostInput = document.getElementById('peer-host');
+const peerPortInput = document.getElementById('peer-port');
+const peerPathInput = document.getElementById('peer-path');
+const peerSecureInput = document.getElementById('peer-secure');
+const saveSettingsButton = document.getElementById('save-settings-button');
+const resetSettingsButton = document.getElementById('reset-settings-button');
+
 // Raum-ID aus der URL auslesen (z.B. controller.html?room=xxxx)
 const roomId = new URLSearchParams(window.location.search).get('room');
 
@@ -30,6 +40,65 @@ document.addEventListener('DOMContentLoaded', () => {
         joinButton.disabled = true;
         clientPlayerNameInput.disabled = true;
     }
+
+    // Lese Custom Config
+    let peerConfig = null;
+    try {
+        const stored = localStorage.getItem('quintasch_peer_config');
+        if (stored) {
+            peerConfig = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden der Peer-Server-Einstellungen:', e);
+    }
+
+    // Prefill UI inputs
+    if (peerConfig) {
+        peerHostInput.value = peerConfig.host || '';
+        peerPortInput.value = peerConfig.port || '';
+        peerPathInput.value = peerConfig.path || '';
+        peerSecureInput.checked = peerConfig.secure !== false;
+    }
+
+    // Settings toggle
+    toggleSettingsButton.addEventListener('click', () => {
+        if (settingsPanel.style.display === 'none') {
+            settingsPanel.style.display = 'block';
+            toggleSettingsButton.textContent = 'Server-Einstellungen ausblenden';
+        } else {
+            settingsPanel.style.display = 'none';
+            toggleSettingsButton.textContent = 'Server-Einstellungen anzeigen';
+        }
+    });
+
+    // Settings save
+    saveSettingsButton.addEventListener('click', () => {
+        const host = peerHostInput.value.trim();
+        const port = peerPortInput.value.trim();
+        const path = peerPathInput.value.trim();
+        const secure = peerSecureInput.checked;
+
+        if (host) {
+            const config = { host, port, path, secure };
+            localStorage.setItem('quintasch_peer_config', JSON.stringify(config));
+        } else {
+            localStorage.removeItem('quintasch_peer_config');
+        }
+        
+        alert('Einstellungen gespeichert!');
+        window.location.reload();
+    });
+
+    // Settings reset
+    resetSettingsButton.addEventListener('click', () => {
+        localStorage.removeItem('quintasch_peer_config');
+        peerHostInput.value = '';
+        peerPortInput.value = '';
+        peerPathInput.value = '';
+        peerSecureInput.checked = true;
+        alert('Einstellungen zurückgesetzt auf Standard!');
+        window.location.reload();
+    });
 });
 
 // Event-Listener für Beitrittsbutton
@@ -64,8 +133,29 @@ function joinRoom(playerName) {
     lobbySpinner.style.display = 'block';
     lobbyStatusTitle.textContent = 'Verbinde zum Signaling-Server...';
 
+    // Lese Custom Config
+    let peerConfig = null;
+    try {
+        const stored = localStorage.getItem('quintasch_peer_config');
+        if (stored) {
+            peerConfig = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden der Peer-Server-Einstellungen:', e);
+    }
+
     // Neuen Peer instanziieren
-    peer = new Peer();
+    if (peerConfig && peerConfig.host) {
+        const portVal = peerConfig.port ? parseInt(peerConfig.port) : undefined;
+        peer = new Peer(undefined, {
+            host: peerConfig.host,
+            port: isNaN(portVal) ? undefined : portVal,
+            path: peerConfig.path || '/',
+            secure: peerConfig.secure
+        });
+    } else {
+        peer = new Peer();
+    }
 
     peer.on('open', (id) => {
         lobbyStatusTitle.textContent = 'Verbinde zum Dashboard...';

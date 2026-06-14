@@ -54,6 +54,16 @@ const startGameButton = document.getElementById('start-game-button');
 const nextTurnButton = document.getElementById('next-turn-button');
 let playersListDisplay = null;
 
+// Settings DOM-Elemente
+const settingsPanel = document.getElementById('settings-panel');
+const toggleSettingsButton = document.getElementById('toggle-settings-button');
+const peerHostInput = document.getElementById('peer-host');
+const peerPortInput = document.getElementById('peer-port');
+const peerPathInput = document.getElementById('peer-path');
+const peerSecureInput = document.getElementById('peer-secure');
+const saveSettingsButton = document.getElementById('save-settings-button');
+const resetSettingsButton = document.getElementById('reset-settings-button');
+
 // Initialisierung bei Seitenaufruf
 document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
@@ -63,6 +73,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rundensteuerungs-Button-Listeners
     startGameButton.addEventListener('click', startGame);
     nextTurnButton.addEventListener('click', nextTurn);
+
+    // Settings toggle
+    toggleSettingsButton.addEventListener('click', () => {
+        if (settingsPanel.style.display === 'none') {
+            settingsPanel.style.display = 'block';
+            toggleSettingsButton.textContent = 'Server-Einstellungen ausblenden';
+        } else {
+            settingsPanel.style.display = 'none';
+            toggleSettingsButton.textContent = 'Server-Einstellungen anzeigen';
+        }
+    });
+
+    // Settings save
+    saveSettingsButton.addEventListener('click', () => {
+        const host = peerHostInput.value.trim();
+        const port = peerPortInput.value.trim();
+        const path = peerPathInput.value.trim();
+        const secure = peerSecureInput.checked;
+
+        if (host) {
+            const config = { host, port, path, secure };
+            localStorage.setItem('quintasch_peer_config', JSON.stringify(config));
+        } else {
+            localStorage.removeItem('quintasch_peer_config');
+        }
+        
+        alert('Einstellungen gespeichert! Der Host wird neu initialisiert.');
+        window.location.reload();
+    });
+
+    // Settings reset
+    resetSettingsButton.addEventListener('click', () => {
+        localStorage.removeItem('quintasch_peer_config');
+        peerHostInput.value = '';
+        peerPortInput.value = '';
+        peerPathInput.value = '';
+        peerSecureInput.checked = true;
+        alert('Einstellungen zurückgesetzt auf Standard! Seite wird neu geladen.');
+        window.location.reload();
+    });
 });
 
 function setupPlayersListDisplay() {
@@ -331,7 +381,37 @@ function initHostPeer() {
         return;
     }
 
-    peer = new Peer();
+    // Lese Custom Config
+    let peerConfig = null;
+    try {
+        const stored = localStorage.getItem('quintasch_peer_config');
+        if (stored) {
+            peerConfig = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error('Fehler beim Laden der Peer-Server-Einstellungen:', e);
+    }
+
+    // Prefill UI inputs
+    if (peerConfig) {
+        peerHostInput.value = peerConfig.host || '';
+        peerPortInput.value = peerConfig.port || '';
+        peerPathInput.value = peerConfig.path || '';
+        peerSecureInput.checked = peerConfig.secure !== false;
+    }
+
+    // Instanziere Peer
+    if (peerConfig && peerConfig.host) {
+        const portVal = peerConfig.port ? parseInt(peerConfig.port) : undefined;
+        peer = new Peer(undefined, {
+            host: peerConfig.host,
+            port: isNaN(portVal) ? undefined : portVal,
+            path: peerConfig.path || '/',
+            secure: peerConfig.secure
+        });
+    } else {
+        peer = new Peer();
+    }
 
     peer.on('open', (id) => {
         roomIdDisplay.textContent = id;
