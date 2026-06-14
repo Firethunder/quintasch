@@ -574,7 +574,7 @@ function updateLobbyDisplay() {
 
     // Start-Game-Button ein- oder ausblenden
     if (gameState === 'lobby') {
-        if (players.length >= 2) {
+        if (players.length >= 1) {
             startGameButton.style.display = 'block';
             startGameButton.disabled = false;
         } else {
@@ -621,7 +621,7 @@ function broadcastLobby() {
  * Startet das aktive Spiel und setzt die Runden auf Anfang.
  */
 function startGame() {
-    if (players.length < 2) return;
+    if (players.length < 1) return;
     gameState = 'playing';
     startGameButton.style.display = 'none';
     activePlayerIndex = 0;
