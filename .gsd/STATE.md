@@ -1,23 +1,23 @@
 # STATE.md — Project Memory
 
-> **Current Status**: In Progress
+> **Current Status**: Milestone Complete / Verified
 > **Active Milestone**: Custom-Bets
-> **Active Phase**: 2
+> **Active Phase**: None (Complete)
 
 ## Phase Progress
 - [x] Phase 1: Custom Stakes & Mobile UI Polish
-- [ ] Phase 2: Client Feedback Loop & Auto-Turns
+- [x] Phase 2: Client Feedback Loop & Auto-Turns
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Phase**: 2
-- **Task**: Planung ausstehend
-- **Status**: Bereit zur Planung
+- **Phase**: None (Milestone Complete)
+- **Task**: Verifizierung abgeschlossen
+- **Status**: Milestone Custom-Bets abgeschlossen
 
 ## Last Session Summary
-Phase 1 wurde erfolgreich abgeschlossen. Eigene Einsätze können am Smartphone ausgewählt und frei eingegeben werden, werden an das Dashboard übertragen und dort angezeigt. Klebrige Button-Highlights auf Mobilgeräten wurden behoben.
+Phase 2 wurde erfolgreich abgeschlossen und verifiziert. Der Mobile Feedback-Loop überträgt und visualisiert stilisierte Würfelaugen auf den Handys. Die automatische Rundensteuerung mit Countdown-Animation schaltet Runden nach regulären Würfen oder Straf-Timer-Ablauf vollautomatisch weiter.
 
 ## Next Steps
-1. Führ den Befehl `/plan 2` aus, um die Umsetzung von Phase 2 zu starten.
+1. Archivierung des Meilensteins (Ausführen des `/complete-milestone` Workflows).
