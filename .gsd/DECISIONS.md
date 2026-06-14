@@ -41,3 +41,16 @@
 
 ### Approach
 - Behebung von Timing-Konflikten im Rundenwechsel durch Bereinigung verbleibender `autoTurnTimeout`-Referenzen bei jedem neuen Wurf.
+
+## Phase 6 Decisions
+
+**Date:** 2026-06-14
+
+### Scope
+- **Eigene Einsätze als Aktion**: Wenn ein eigener (custom) Einsatz gewählt wurde, überschreibt dieser im Gewinnfall den Standard-Aktionstext ("Aktion: [Eigener Einsatz]") auf Dashboard und Smartphone.
+- **Optionaler Custom Timer**: Bei eigenen Einsätzen kann am Smartphone optional ein Timer (in Sekunden) angegeben werden. Wird dieser gesetzt, startet der Host-Timer mit dieser Dauer. Ohne Timer-Angabe wird bei eigenen Einsätzen (auch bei Pasch) standardmäßig kein Timer gestartet. Der standardmäßige 30s-Timer bei Pasch läuft nur noch bei Standard-Einsätzen.
+- **Test-Rig Upgrade**: Das Dashboard-Test-Rig (Sidebar) erhält ebenfalls Auswahllisten für Einsätze, eigene Einsätze und das optionale Timer-Feld, um das Verhalten vollumfänglich lokal simulieren zu können.
+
+### Approach
+- Die Client-Nachricht `rollDice` wird um das optionale Feld `timer` erweitert.
+- Die Host-Methode `executeRoll` und der Broadcast `rollResult` werden angepasst, um den Custom Timer und die Aktionsüberschreibung zu verarbeiten.
