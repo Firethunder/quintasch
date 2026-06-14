@@ -277,11 +277,13 @@ select.form-control option {
     width: 100%;
 }
 
-.btn-neon:hover {
-    background: var(--neon-cyan);
-    color: #000;
-    box-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
-    text-shadow: none;
+@media (hover: hover) {
+    .btn-neon:hover {
+        background: var(--neon-cyan);
+        color: #000;
+        box-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+        text-shadow: none;
+    }
 }
 
 .btn-neon:active {
@@ -295,10 +297,12 @@ select.form-control option {
     box-shadow: var(--glow-magenta);
 }
 
-.btn-magenta:hover {
-    background: var(--neon-magenta);
-    color: #fff;
-    box-shadow: 0 0 20px var(--neon-magenta), 0 0 40px var(--neon-magenta);
+@media (hover: hover) {
+    .btn-magenta:hover {
+        background: var(--neon-magenta);
+        color: #fff;
+        box-shadow: 0 0 20px var(--neon-magenta), 0 0 40px var(--neon-magenta);
+    }
 }
 
 /* History Log list */

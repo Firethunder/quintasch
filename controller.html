@@ -166,6 +166,22 @@
                 </select>
             </div>
 
+            <div class="form-group" style="text-align: left; margin-top: 15px;">
+                <label for="gameplay-stake">Dein Einsatz</label>
+                <select id="gameplay-stake" class="form-control">
+                    <option value="standard">Standard-Strafe</option>
+                    <option value="1 Schluck">1 Schluck</option>
+                    <option value="2 Schlucke">2 Schlucke</option>
+                    <option value="3 Schlucke">3 Schlucke</option>
+                    <option value="4 Schlucke">4 Schlucke</option>
+                    <option value="5 Schlucke">5 Schlucke</option>
+                    <option value="1 Shot">1 Shot</option>
+                    <option value="2 Shots">2 Shots</option>
+                    <option value="custom">Eigener...</option>
+                </select>
+                <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 3 Schlucke auf Ex" style="display: none; margin-top: 10px;" maxlength="30">
+            </div>
+
             <button class="btn-neon" id="gameplay-roll-button" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 15px;">WÜRFELN!</button>
         </main>
     </div>
