@@ -61,6 +61,8 @@ let peer = null;
 let connections = [];
 let syncConnections = []; // Verbindungen zu sekundären Dashboards (Host-seitig)
 let syncConn = null; // Verbindung zum primären Host (Sync-Dashboard-seitig)
+let lastSyncedState = null;
+let hasValidState = false;
 let players = []; // Array von { peerId, name }
 let hasAutoHiddenSidebar = false;
 
@@ -605,7 +607,7 @@ function renderHistory(history) {
 /**
  * Initialisiert den PeerJS Host.
  */
-function initHostPeer() {
+function initHostPeer(forcedId = null) {
     // Falls PeerJS nicht geladen werden konnte (Offline/Blocker)
     if (typeof Peer === 'undefined') {
         roomIdDisplay.textContent = 'Fehler: PeerJS nicht geladen';
@@ -632,7 +634,7 @@ function initHostPeer() {
     }
 
     // Generiere kurze Raum-ID (z. B. Q-123456) zur Vermeidung von Layout-Overflows
-    const customId = 'Q-' + Math.floor(100000 + Math.random() * 900000);
+    const customId = forcedId || ('Q-' + Math.floor(100000 + Math.random() * 900000));
 
     // Instanziere Peer
     if (peerConfig && peerConfig.host) {
@@ -666,6 +668,7 @@ function initHostPeer() {
             if (data && data.action === 'syncDashboardJoin') {
                 syncConnections.push(conn);
                 sendSyncStateTo(conn);
+                broadcastSyncState();
                 return;
             }
 
@@ -975,12 +978,53 @@ function initSyncPeer(targetRoomId) {
         const handleSyncDisconnect = () => {
             console.warn('Verbindung zum Host unterbrochen.');
             roomIdDisplay.textContent = 'Verbindung unterbrochen';
+
+            if (gameMode !== 'sync') return;
+
+            if (hasValidState && lastSyncedState) {
+                // Bestimme Nachfolger
+                const myPeerId = peer ? peer.id : null;
+                const allPeers = lastSyncedState.syncDashboardPeers || [];
+                if (myPeerId && !allPeers.includes(myPeerId)) {
+                    allPeers.push(myPeerId);
+                }
+                allPeers.sort();
+
+                const isSuccessor = myPeerId && allPeers[0] === myPeerId;
+
+                if (isSuccessor) {
+                    console.log('Ich bin der Nachfolger! Bewerbe mich zum Host...');
+                    roomIdDisplay.textContent = 'Host-Promotion...';
+                    
+                    if (peer) {
+                        peer.destroy();
+                        peer = null;
+                    }
+
+                    setTimeout(() => {
+                        gameMode = 'host';
+                        syncConn = null;
+                        syncConnections = [];
+                        connections = [];
+                        hasValidState = false;
+                        lastSyncedState = null;
+                        initHostPeer(targetRoomId);
+                    }, 1500);
+                    return;
+                }
+            }
+
+            // Kein Nachfolger oder keine valide State-Historie vor dem Abbruch: Warte auf Reconnect
+            console.log('Anderes Dashboard ist Nachfolger oder State ungültig. Warte auf Reconnect...');
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
             setTimeout(() => {
                 if (gameMode === 'sync') {
-                    console.log('Versuche Reconnect...');
                     initSyncPeer(targetRoomId);
                 }
-            }, 3000);
+            }, 4000);
         };
 
         syncConn.on('close', handleSyncDisconnect);
@@ -1001,6 +1045,9 @@ function initSyncPeer(targetRoomId) {
  */
 function applySyncState(state) {
     if (!state) return;
+
+    lastSyncedState = state;
+    hasValidState = true;
 
     players = state.players || [];
     gameState = state.gameState || 'lobby';
@@ -1068,7 +1115,8 @@ function getSyncStatePayload() {
         history: JSON.parse(localStorage.getItem('quintasch_history') || '[]'),
         timerActive: !!timerInterval,
         timerTimeLeft: timerTimeLeft,
-        timerTotalSeconds: timerTotalSeconds
+        timerTotalSeconds: timerTotalSeconds,
+        syncDashboardPeers: syncConnections.map(c => c.peer)
     };
 }
 
