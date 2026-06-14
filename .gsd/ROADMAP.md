@@ -28,6 +28,6 @@
 **Objective**: Das Test-Rig auf dem Dashboard standardmäßig ausblenden, sobald sich der erste Spieler angemeldet hat. Es soll jedoch über einen Toggle-Button weiterhin manuell ein- und ausgeblendet werden können.
 
 ### Phase 5: Bugfixing und Polish
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Finales Bugfixing bezüglich des Ausblendens des Test-Rigs, des automatischen Rundenwechsels, der Eingabe eigener Einsätze sowie der Verlustanzeige "Das war nichts" und die vollständige Entfernung der Option "Zuschauen" auf allen Geräten.
 
