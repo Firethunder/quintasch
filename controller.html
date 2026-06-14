@@ -83,6 +83,30 @@
             color: var(--neon-magenta) !important;
             text-shadow: var(--glow-magenta) !important;
         }
+
+        /* Styling für stilisierte Würfelaugen am Handy */
+        .mobile-die {
+            width: 45px;
+            height: 45px;
+            background: rgba(15, 15, 22, 0.9);
+            border: 2px solid var(--neon-cyan);
+            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.2), 0 0 5px rgba(0, 240, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 5px #fff, 0 0 10px var(--neon-cyan);
+        }
+
+        .mobile-die.even {
+            border-color: var(--neon-magenta);
+            box-shadow: inset 0 0 10px rgba(255, 0, 127, 0.2), 0 0 5px rgba(255, 0, 127, 0.2);
+            text-shadow: 0 0 5px #fff, 0 0 10px var(--neon-magenta);
+        }
     </style>
 </head>
 <body>
@@ -184,6 +208,24 @@
 
             <button class="btn-neon" id="gameplay-roll-button" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 15px;">WÜRFELN!</button>
         </main>
+    </div>
+
+    <!-- WÜRFELERGEBNIS-OVERLAY -->
+    <div id="roll-result-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 11, 15, 0.9); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+        <div class="panel" style="width: 100%; max-width: 450px; text-align: center; border: 2px solid var(--neon-cyan); box-shadow: var(--glow-cyan); display: flex; flex-direction: column; gap: 15px; padding: 25px;">
+            <h2 id="result-overlay-title" class="sidebar-title" style="font-size: 1.6rem; border: none; margin-bottom: 0;">Ergebnis</h2>
+            
+            <!-- Stilisierte Würfel-Boxen -->
+            <div id="result-overlay-dice" style="display: flex; justify-content: center; gap: 10px; margin: 10px 0;">
+                <!-- Dynamisch erzeugte Würfel-Kästchen -->
+            </div>
+
+            <div id="result-overlay-text" style="font-size: 1.1rem; color: #fff; line-height: 1.5; margin-bottom: 10px;">
+                <!-- Detaillierter Ergebnistext -->
+            </div>
+
+            <button class="btn-neon" id="result-overlay-close-btn" style="--neon-cyan: var(--neon-magenta); border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); margin-top: 10px; padding: 12px 20px; font-size: 1rem;">Schließen</button>
+        </div>
     </div>
 
     <script type="module" src="js/controller.js"></script>
