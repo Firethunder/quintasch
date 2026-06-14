@@ -248,6 +248,23 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
         // Historie aktualisieren und speichern
         saveRollToHistory(playerName, chosenBet, diceValues, rolledHandName, success);
 
+        // Broadcast roll result to all clients
+        connections.forEach(conn => {
+            if (conn.open) {
+                conn.send({
+                    action: 'rollResult',
+                    playerName: playerName,
+                    bet: chosenBet,
+                    betLabel: BET_LABELS[chosenBet],
+                    stake: chosenStakeParam,
+                    dice: diceValues,
+                    rolledHandName: rolledHandName,
+                    success: success,
+                    rule: BET_RULES[chosenBet]
+                });
+            }
+        });
+
         // Buttons freischalten
         isRolling = false;
         rollButton.disabled = false;

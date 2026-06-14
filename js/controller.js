@@ -21,6 +21,13 @@ const lobbyWaitText = document.getElementById('lobby-wait-text');
 const gameplayStakeSelect = document.getElementById('gameplay-stake');
 const gameplayCustomStakeInput = document.getElementById('gameplay-custom-stake');
 
+// Wurf-Ergebnis Overlay-Elemente
+const rollResultOverlay = document.getElementById('roll-result-overlay');
+const resultOverlayTitle = document.getElementById('result-overlay-title');
+const resultOverlayText = document.getElementById('result-overlay-text');
+const resultOverlayDice = document.getElementById('result-overlay-dice');
+const resultOverlayCloseBtn = document.getElementById('result-overlay-close-btn');
+
 // Settings DOM-Elemente
 const settingsPanel = document.getElementById('settings-panel');
 const toggleSettingsButton = document.getElementById('toggle-settings-button');
@@ -111,6 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 gameplayCustomStakeInput.style.display = 'none';
             }
+        });
+    }
+
+    // Close result overlay
+    if (resultOverlayCloseBtn && rollResultOverlay) {
+        resultOverlayCloseBtn.addEventListener('click', () => {
+            rollResultOverlay.style.display = 'none';
         });
     }
 });
@@ -214,6 +228,9 @@ function joinRoom(playerName) {
                 gameplayContainer.style.display = 'block';
                 gameplayRollButton.disabled = false;
                 gameplayRollButton.textContent = 'WÜRFELN!';
+                
+                // Overlay ausblenden
+                if (rollResultOverlay) rollResultOverlay.style.display = 'none';
             }
 
             if (data.action === 'waitTurn') {
@@ -222,6 +239,56 @@ function joinRoom(playerName) {
                 lobbyContainer.style.display = 'block';
                 lobbySpinner.style.display = 'none'; // Verberge Ladekreis
                 lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
+                
+                // Overlay ausblenden
+                if (rollResultOverlay) rollResultOverlay.style.display = 'none';
+            }
+
+            // Würfelergebnis von Host empfangen
+            if (data.action === 'rollResult') {
+                if (rollResultOverlay) {
+                    // Visualisiere Würfelaugen (Option B - stilisierte Neon-Boxen)
+                    if (resultOverlayDice) {
+                        resultOverlayDice.innerHTML = '';
+                        data.dice.forEach((die, index) => {
+                            const dieEl = document.createElement('div');
+                            // Wechsle Farben ab (ungerade Indizes cyan, gerade magenta)
+                            dieEl.className = `mobile-die ${index % 2 === 1 ? 'even' : ''}`;
+                            dieEl.textContent = die;
+                            resultOverlayDice.appendChild(dieEl);
+                        });
+                    }
+
+                    // Setze Titel & Text
+                    if (resultOverlayTitle) {
+                        resultOverlayTitle.textContent = data.success ? 'Getroffen!' : 'Verfehlt!';
+                        
+                        if (data.success) {
+                            resultOverlayTitle.style.color = 'var(--neon-green)';
+                            resultOverlayTitle.style.textShadow = 'var(--glow-green)';
+                            resultOverlayTitle.style.borderColor = 'var(--neon-green)';
+                        } else {
+                            resultOverlayTitle.style.color = 'var(--neon-magenta)';
+                            resultOverlayTitle.style.textShadow = 'var(--glow-magenta)';
+                            resultOverlayTitle.style.borderColor = 'var(--neon-magenta)';
+                        }
+                    }
+
+                    if (resultOverlayText) {
+                        const outcomeMsg = data.success 
+                            ? `<span style="color: var(--neon-green); font-weight: bold; text-shadow: var(--glow-green);">Erfolg!</span><br>Aktion: ${data.rule}`
+                            : `<span style="color: var(--neon-magenta); font-weight: bold; text-shadow: var(--glow-magenta);">Fehlwurf!</span><br>Keine Auswirkung für ${data.playerName}. Glück gehabt!`;
+                            
+                        resultOverlayText.innerHTML = `
+                            <strong>Spieler:</strong> ${data.playerName}<br>
+                            <strong>Wette:</strong> ${data.betLabel} (Einsatz: ${data.stake})<br>
+                            <strong>Gewürfelt:</strong> ${data.rolledHandName}<br><br>
+                            ${outcomeMsg}
+                        `;
+                    }
+
+                    rollResultOverlay.style.display = 'flex';
+                }
             }
         });
 
