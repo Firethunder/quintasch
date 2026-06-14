@@ -31,3 +31,7 @@
 **Status**: ✅ Complete
 **Objective**: Finales Bugfixing bezüglich des Ausblendens des Test-Rigs, des automatischen Rundenwechsels, der Eingabe eigener Einsätze sowie der Verlustanzeige "Das war nichts" und die vollständige Entfernung der Option "Zuschauen" auf allen Geräten.
 
+### Phase 6: Eigener Einsatz als Aktion anzeigen
+**Status**: ⬜ Not Started
+**Objective**: Wenn ein eigener (custom) Einsatz gewählt wurde, soll dieser im Gewinnfall als Aktion auf dem Dashboard und Smartphone angezeigt werden (anstelle des statischen Bet-Regeltexts).
+
