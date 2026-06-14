@@ -19,4 +19,8 @@
 | REQ-14 | Startbildschirm-Auswahl (Host oder Sync-Modus) | ROADMAP Phase 1 | Complete |
 | REQ-15 | Multi-Dashboard-Echtzeit-Synchronisation | ROADMAP Phase 2 | Complete |
 | REQ-16 | Quintasch Icon PWA Assets (192px/512px) | ROADMAP Phase 1 | Complete |
+| REQ-17 | Automatisches Host-Failover mit Rollen-Promotion | ROADMAP Phase 3 | Complete |
+| REQ-18 | Client-Auto-Reconnect bei Verbindungsverlust | ROADMAP Phase 3 | Complete |
+| REQ-19 | Spieler-Rejoin Erkennung und Session-Restore | ROADMAP Phase 3 | Complete |
+
 
