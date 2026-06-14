@@ -1,5 +1,5 @@
 import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, BET_PROBABILITIES } from './game.js';
-import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer } from './audio.js';
+import { playRollSound, playWinSound, playFailSound, playTimerTick } from './audio.js';
 
 // Rotationswinkel für die verschiedenen Augenzahlen, damit sie nach vorne zeigen.
 const faceAngles = {
@@ -496,8 +496,6 @@ function startTimer(seconds) {
             timerText.style.textShadow = 'var(--glow-magenta)';
             timerProgress.style.background = 'var(--neon-magenta)';
             timerProgress.style.boxShadow = 'var(--glow-magenta)';
-            
-            playTimerBuzzer();
             
             // Auto-Fortschritt 3 Sekunden nach Ablauf der Strafe
             if (gameState === 'playing' && gameMode !== 'sync') {
