@@ -28,3 +28,16 @@
 
 ### Approach
 - **Auto-Advance**: 6-Sekunden-Countdown für automatischen Rundenübergang nach normalen Würfen. Manuelle Klicks brechen diesen Übergang ab und schalten sofort weiter. Bei der Pasch-Strafe wird nach Ablauf des 30s-Timers + 3s Verzögerung weitergeschaltet.
+
+## Phase 5 Decisions
+
+**Date:** 2026-06-14
+
+### Scope
+- **Lobby-Start**: Der Spielstart und das automatische Ausblenden des Test-Rigs werden bereits ab 1 Spieler ermöglicht (zuvor mindestens 2 Spieler). Dies erlaubt einfaches Testen und Solospiel.
+- **Eigene Einsätze (Eingabebox)**: DOM-Selektoren für die Einsatzauswahl werden beim Laden der Seite (`DOMContentLoaded`) dynamisch erfasst, um Null-Referenzen bei Modul-Ladevorgängen auszuschließen.
+- **Verlustanzeige**: Der Verlusttext "Das war nichts!" wird konsistent auch auf dem Client-Overlay (an Stelle von "Fehlwurf!" / "Verfehlt!") verwendet.
+- **Option "Zuschauen" entfernen**: Die Option "Zuschauen" wird vollständig aus den HTML-Auswahllisten entfernt. "Pasch" ist der neue Standardwert.
+
+### Approach
+- Behebung von Timing-Konflikten im Rundenwechsel durch Bereinigung verbleibender `autoTurnTimeout`-Referenzen bei jedem neuen Wurf.
