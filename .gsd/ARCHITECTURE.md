@@ -50,3 +50,11 @@ graph TD
 2. Host registers the connection and responds with the current game state payload (players, history, active turn, active timer).
 3. Any game state changes (turns, timer changes) or dice rolls trigger a broadcast from Host to all connected Sync Dashboards.
 4. UI commands triggered on Sync Dashboards (game start, next turn, roll) are forwarded to Host via `{ action: "syncCommand" }` and processed.
+
+### Host Failover & Client Reconnection Flow
+1. Host dashboard disconnects or closes connection.
+2. Connected Sync Dashboards detect connection loss, sort active spectator peer IDs, and elect the successor (lowest alphabetical peer ID).
+3. The successor dashboard destroys its client peer, waits 1.5 seconds, and promotes itself to Host under the original room ID (keeping existing game state variables).
+4. Other sync dashboards wait 4 seconds and reconnect to the original room ID (now hosted by the successor).
+5. Mobile clients detect connection loss, display a reconnecting overlay, and perform a loop of up to 5 connection retries (every 2 seconds) to the original room ID.
+6. The new Host receives re-joining client requests, updates their connection/peerId, and sends them their current turn state (active or wait) immediately, restoring gameplay.

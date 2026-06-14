@@ -1,22 +1,22 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase 3 Verified
-> **Active Milestone**: Host-Failover-and-Auto-Reconnect
-> **Active Phase**: None (Milestone Complete)
+> **Current Status**: Milestone Complete
+> **Active Milestone**: None
+> **Active Phase**: None
 
 ## Phase Progress
-- [x] Phase 3: Host-Failover & Client-Reconnection
+No active phases.
 
 ## Blockers
 - Keine
 
 ## Current Position
 - **Phase**: None
-- **Task**: All tasks complete
-- **Status**: Verified
+- **Task**: None
+- **Status**: Milestone Complete
 
 ## Last Session Summary
-Phase 3 wurde erfolgreich abgeschlossen und verifiziert. Der dezentrale Host-Failover-Mechanismus (Successor-Promotion) und die automatische Wiederverbindung der mobilen Controller sind voll funktionsfähig und verifiziert.
+Der Meilenstein 'Host-Failover-and-Auto-Reconnect' wurde erfolgreich abgeschlossen. Der dezentrale Host-Failover-Mechanismus, der automatische Client-Wiederverbindungsprozess und die Re-Join-Erkennung auf dem Host wurden vollständig integriert, verifiziert und archiviert.
 
 ## Next Steps
-1. /complete-milestone — Meilenstein archivieren und abschließen.
+1. /new-milestone — Neuen Meilenstein anlegen.
