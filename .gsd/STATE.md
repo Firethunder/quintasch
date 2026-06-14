@@ -1,26 +1,26 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Milestone Complete / Verified
-> **Active Milestone**: v1.0
-> **Active Phase**: None (Complete)
+> **Current Status**: Gap Closure Mode
+> **Active Milestone**: v1.0 (MVP) - Gap Closure
+> **Active Phase**: 5
 
 ## Phase Progress
 - [x] Phase 1: Foundation (Basis-Layout, Styling & Würfel-Logik)
 - [x] Phase 2: Network & Lobby (PeerJS & Verbindungsaufbau)
 - [x] Phase 3: Gameplay Loop (Rundensteuerung & Interaktionen)
 - [x] Phase 4: QoL, History & PWA (Feinschliff & Launch)
+- [ ] Phase 5: Gap Closure (Selbstgehostete Optionen & PeerJS-Optionen)
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Phase**: None (Milestone Complete)
-- **Task**: Verifizierung abgeschlossen
-- **Status**: Milestone v1.0 abgeschlossen
+- **Phase**: 5
+- **Task**: Planung abgeschlossen
+- **Status**: Bereit zur Ausführung
 
 ## Last Session Summary
-Phase 4 wurde erfolgreich abgeschlossen und vom User verifiziert. Alle Kernanforderungen (inkl. PeerJS WebRTC, PWA Offline-Fähigkeit, Web Audio Synthesizer, 3D CSS Würfel) wurden umgesetzt und getestet.
+Der Meilenstein v1.0 wurde abgeschlossen und verifiziert. Im anschließenden Audit wurden zwei technische Schulden/Gaps identifiziert (öffentliche PeerJS-Abhängigkeit und Doku-Lücken). Phase 5 wurde zur Behebung dieser Punkte aufgesetzt.
 
 ## Next Steps
-1. Archivierung des Meilensteins (Ausführen des `/complete-milestone` Workflows).
-2. Start des nächsten Meilensteins (z.B. weitere Features, Verfeinerungen) oder Projekt-Übergabe.
+1. Führ den Befehl `/execute 5` aus, um die Umsetzung von Phase 5 zu starten.
