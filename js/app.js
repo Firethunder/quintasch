@@ -36,10 +36,30 @@ const timerProgress = document.getElementById('timer-progress');
 let isRolling = false;
 let timerInterval = null;
 
+// PeerJS-Variablen für Host
+let peer = null;
+let connections = [];
+let players = []; // Array von { peerId, name }
+
+// DOM-Elemente für PeerJS
+const roomIdDisplay = document.getElementById('room-id-display');
+const qrcodeContainer = document.getElementById('qrcode-container');
+const playersCountDisplay = document.getElementById('players-count-display');
+let playersListDisplay = null;
+
 // Initialisierung bei Seitenaufruf
 document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
+    setupPlayersListDisplay();
+    initHostPeer();
 });
+
+function setupPlayersListDisplay() {
+    playersListDisplay = document.createElement('div');
+    playersListDisplay.id = 'players-list-display';
+    playersListDisplay.style.cssText = 'font-size: 1rem; color: var(--text-main); margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;';
+    playersCountDisplay.after(playersListDisplay);
+}
 
 // Event Listener für den Würfel-Button
 rollButton.addEventListener('click', () => {
@@ -260,5 +280,94 @@ function renderHistory(history) {
             <div class="history-time">${item.time}</div>
         `;
         historyList.appendChild(li);
+    });
+}
+
+/**
+ * Initialisiert den PeerJS Host.
+ */
+function initHostPeer() {
+    // Falls PeerJS nicht geladen werden konnte (Offline/Blocker)
+    if (typeof Peer === 'undefined') {
+        roomIdDisplay.textContent = 'Fehler: PeerJS nicht geladen';
+        return;
+    }
+
+    peer = new Peer();
+
+    peer.on('open', (id) => {
+        roomIdDisplay.textContent = id;
+        const joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${id}`;
+        
+        qrcodeContainer.innerHTML = '';
+        new QRCode(qrcodeContainer, {
+            text: joinUrl,
+            width: 140,
+            height: 140,
+            colorDark: '#000000',
+            colorLight: '#ffffff'
+        });
+    });
+
+    peer.on('connection', (conn) => {
+        conn.on('data', (data) => {
+            if (data && data.action === 'join') {
+                const nameExists = players.some(p => p.name.toLowerCase() === data.playerName.toLowerCase());
+                if (nameExists) {
+                    conn.send({ action: 'joinConfirm', success: false, reason: 'Name bereits vergeben' });
+                    return;
+                }
+
+                // Spieler hinzufügen
+                players.push({ peerId: conn.peer, name: data.playerName });
+                connections.push(conn);
+
+                conn.send({ action: 'joinConfirm', success: true });
+                updateLobbyDisplay();
+                broadcastLobby();
+            }
+        });
+
+        const handleDisconnect = () => {
+            players = players.filter(p => p.peerId !== conn.peer);
+            connections = connections.filter(c => c.peer !== conn.peer);
+            updateLobbyDisplay();
+            broadcastLobby();
+        };
+
+        conn.on('close', handleDisconnect);
+        conn.on('error', handleDisconnect);
+    });
+
+    peer.on('error', (err) => {
+        console.error('PeerJS Host-Fehler:', err);
+        roomIdDisplay.textContent = 'Fehler beim Verbinden';
+    });
+}
+
+/**
+ * Aktualisiert die Lobbyanzeige auf dem Dashboard.
+ */
+function updateLobbyDisplay() {
+    playersCountDisplay.textContent = `Verbundene Spieler: ${players.length}`;
+    playersListDisplay.innerHTML = '';
+    
+    players.forEach(p => {
+        const badge = document.createElement('span');
+        badge.textContent = p.name;
+        badge.style.cssText = 'background: rgba(0, 240, 255, 0.1); border: 1px solid var(--neon-cyan); padding: 4px 10px; border-radius: 4px; font-family: "Orbitron", sans-serif; font-size: 0.9rem; text-shadow: var(--glow-cyan); box-shadow: 0 0 5px rgba(0, 240, 255, 0.2);';
+        playersListDisplay.appendChild(badge);
+    });
+}
+
+/**
+ * Sendet die aktuelle Spielerliste an alle verbundenen Clients.
+ */
+function broadcastLobby() {
+    const playerNames = players.map(p => p.name);
+    connections.forEach(conn => {
+        if (conn.open) {
+            conn.send({ action: 'updateLobby', players: playerNames });
+        }
     });
 }
