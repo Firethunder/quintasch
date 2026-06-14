@@ -451,17 +451,20 @@ function initHostPeer() {
         peerSecureInput.checked = peerConfig.secure !== false;
     }
 
+    // Generiere kurze Raum-ID (z. B. Q-123456) zur Vermeidung von Layout-Overflows
+    const customId = 'Q-' + Math.floor(100000 + Math.random() * 900000);
+
     // Instanziere Peer
     if (peerConfig && peerConfig.host) {
         const portVal = peerConfig.port ? parseInt(peerConfig.port) : undefined;
-        peer = new Peer(undefined, {
+        peer = new Peer(customId, {
             host: peerConfig.host,
             port: isNaN(portVal) ? undefined : portVal,
             path: peerConfig.path || '/',
             secure: peerConfig.secure
         });
     } else {
-        peer = new Peer();
+        peer = new Peer(customId);
     }
 
     peer.on('open', (id) => {
@@ -525,6 +528,15 @@ function initHostPeer() {
 
     peer.on('error', (err) => {
         console.error('PeerJS Host-Fehler:', err);
+        if (err.type === 'unavailable-id') {
+            console.warn('Raum-ID bereits vergeben, generiere neue...');
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
+            initHostPeer();
+            return;
+        }
         roomIdDisplay.textContent = 'Fehler beim Verbinden';
     });
 }
