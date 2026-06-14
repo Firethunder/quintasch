@@ -20,6 +20,6 @@
 **Objective**: Broadcast der Wurfergebnisse an alle Clients zur detaillierten Anzeige des Wurfs (inkl. Würfelaugen) und automatische Weiterschaltung der Spielrunde auf dem Host.
 
 ### Phase 3: Verbesserungen und Fehlverhalten
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Das Ergebnis soll auf allen Endgeräten angezeigt werden. Anstelle von "Hat Verloren" wird "Das war nichts" auf dem Dashboard angezeigt. Der automatische Wechsel wird korrigiert und stabilisiert.
 

@@ -1,26 +1,26 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Planning Phase 3
+> **Current Status**: Phase 3 Complete / Verified
 > **Active Milestone**: Custom-Bets
-> **Active Phase**: Phase 3
+> **Active Phase**: None (Complete)
 
 ## Phase Progress
 - [x] Phase 1: Custom Stakes & Mobile UI Polish
 - [x] Phase 2: Client Feedback Loop & Auto-Turns
-- [ ] Phase 3: Verbesserungen und Fehlverhalten
+- [x] Phase 3: Verbesserungen und Fehlverhalten
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Phase**: Phase 3
-- **Task**: Planning complete
-- **Status**: Ready for execution
+- **Phase**: Phase 3 (completed)
+- **Task**: All tasks complete
+- **Status**: Verified
 
 ## Last Session Summary
-Phase 2 wurde erfolgreich abgeschlossen und verifiziert. Der Mobile Feedback-Loop überträgt und visualisiert stilisierte Würfelaugen auf den Handys. Die automatische Rundensteuerung mit Countdown-Animation schaltet Runden nach regulären Würfen oder Straf-Timer-Ablauf vollautomatisch weiter.
+Phase 3 wurde erfolgreich abgeschlossen. Der Spiel-Loop ist voll funktionsfähig und robust: Wurfergebnisse verbleiben auf den Handys sichtbar bis zum manuellen Klick auf Schließen, das Dashboard meldet "Das war nichts" statt "hat verloren", und der automatische Rundenwechsel arbeitet präzise und fehlerfrei.
 
 ## Next Steps
-1. /execute 3
+1. Archivierung des Meilensteins (Ausführen des `/complete-milestone` Workflows).
 
 
