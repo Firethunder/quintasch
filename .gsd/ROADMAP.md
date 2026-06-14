@@ -11,7 +11,7 @@
 ## Phases
 
 ### Phase 1: Deployment-Vorbereitung
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Vorbereitung der Repository-Struktur, Erstellung der Dokumentation (README.md) und Prüfung aller relativen Pfade im Service Worker und Manifest für die Subpfad-Kompatibilität.
 
 ### Phase 2: GitHub Push & Pages Live-Gang
