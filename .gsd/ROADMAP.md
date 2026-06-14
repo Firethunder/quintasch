@@ -1,20 +1,20 @@
 # ROADMAP.md
 
-> **Current Phase**: None (Milestone Complete)
-> **Milestone**: v1.0 (MVP) - Complete
+> **Current Phase**: Phase 1: Custom Stakes & Mobile UI Polish
+> **Milestone**: Custom-Bets
 
-## Must-Haves (aus SPEC)
-- [x] Serverless PeerJS (WebRTC) Steuerung zwischen Smartphones und Dashboard
-- [x] Rundenbasiertes Gameplay mit aktiver Client-Zuweisung
-- [x] 3D-CSS-Würfel-Rendering und automatische Gewinnauswertung auf dem Dashboard
-- [x] Lokale Historie und PWA Offline-Support
+## Must-Haves
+- [ ] **Eigene Einsatzbestimmung**: Custom-Eingabe für Schlucke/Kurze am Client-Controller, Übertragung zum Host und Anzeige auf dem Dashboard.
+- [ ] **Würfelergebnis auf Mobilgeräten**: Anzeige des Wurf-Ergebnisses (Würfelaugen, z.B. `[4,4,4,1,2]`, und ermittelte Kombination) auf allen Client-Screens.
+- [ ] **Automatische Rundenfortführung**: Host schaltet nach Würfen automatisch zum nächsten Spieler (z. B. nach 6s oder nach Ablauf des 30s-Straf-Timers).
+- [ ] **Mobile Button-Optimierung**: Beseitigung dauerhaft hervorgehobener Würfel-Buttons auf Touch-Geräten.
 
 ## Phases
 
-### Phase 5: Gap Closure
-**Status**: ✅ Complete
-**Objective**: Address gaps and technical debt from milestone audit
+### Phase 1: Custom Stakes & Mobile UI Polish
+**Status**: ⬜ Not Started
+**Objective**: Eigene Wetteinsätze am Smartphone definieren und auf dem Dashboard anzeigen sowie Behebung des klebrigen Hover-Zustands auf Touchscreens.
 
-**Gaps to Close:**
-- [x] Dokumentation für ein alternatives, selbstgehostetes PeerJS-Server-Setup in `docs/runbook.md` hinterlegen.
-- [x] Custom PeerJS Serververbindungs-Einstellungen für Dashboard und Client anbieten.
+### Phase 2: Client Feedback Loop & Auto-Turns
+**Status**: ⬜ Not Started
+**Objective**: Broadcast der Wurfergebnisse an alle Clients zur detaillierten Anzeige des Wurfs (inkl. Würfelaugen) und automatische Weiterschaltung der Spielrunde auf dem Host.

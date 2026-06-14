@@ -1,27 +1,23 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Milestone Complete / Verified
-> **Active Milestone**: v1.0
-> **Active Phase**: None (Complete)
+> **Current Status**: Initialized
+> **Active Milestone**: Custom-Bets
+> **Active Phase**: 1
 
 ## Phase Progress
-- [x] Phase 1: Foundation (Basis-Layout, Styling & Würfel-Logik)
-- [x] Phase 2: Network & Lobby (PeerJS & Verbindungsaufbau)
-- [x] Phase 3: Gameplay Loop (Rundensteuerung & Interaktionen)
-- [x] Phase 4: QoL, History & PWA (Feinschliff & Launch)
-- [x] Phase 5: Gap Closure (Selbstgehostete Optionen & PeerJS-Optionen)
+- [ ] Phase 1: Custom Stakes & Mobile UI Polish
+- [ ] Phase 2: Client Feedback Loop & Auto-Turns
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Phase**: 5 (completed)
-- **Task**: All tasks complete
-- **Status**: Verified
+- **Phase**: 1
+- **Task**: Planung abgeschlossen
+- **Status**: Bereit zur Ausführung
 
 ## Last Session Summary
-Phase 5 (Gap Closure) wurde erfolgreich abgeschlossen und im System verifiziert. Custom PeerJS Serververbindungs-Optionen wurden in Host und Client integriert, die PWA Cache-Version wurde auf v2 angehoben und eine detaillierte Selbsthoster-Doku wurde im GSD-Runbook erfasst.
+Der MVP-Meilenstein v1.0 wurde erfolgreich beendet. Der neue Meilenstein "Custom-Bets" wurde gestartet, um die Benutzerfreundlichkeit, das Feedback-Verhalten auf Smartphones (inkl. Würfel-Ergebnissen auf den Handys) und die Dynamik des Spielablaufs zu verbessern.
 
 ## Next Steps
-1. Archivierung der Gap-Closure-Phase (Verschieben nach `.gsd/milestones/v1.0/` und Ergänzen der Zusammenfassungen).
-2. Projekt-Übergabe oder Planung des nächsten Meilensteins.
+1. Führ den Befehl `/execute 1` aus, um die Umsetzung von Phase 1 zu starten.
