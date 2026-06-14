@@ -32,6 +32,33 @@
                     Verbundene Spieler: 0
                 </div>
                 <button class="btn-neon" id="start-game-button" disabled style="margin-top: 10px; display: none;">Spiel starten</button>
+
+                <div id="settings-panel" style="display: none; width: 100%; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px; margin-top: 10px; text-align: left;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem;">Peer-Server Einstellungen</h4>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label for="peer-host" style="font-size: 0.8rem;">Host</label>
+                        <input type="text" id="peer-host" class="form-control" placeholder="0.peerjs.com" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label for="peer-port" style="font-size: 0.8rem;">Port</label>
+                            <input type="number" id="peer-port" class="form-control" placeholder="443" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label for="peer-path" style="font-size: 0.8rem;">Pfad</label>
+                            <input type="text" id="peer-path" class="form-control" placeholder="/" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <input type="checkbox" id="peer-secure" checked>
+                        <label for="peer-secure" style="margin-bottom: 0; font-size: 0.85rem;">Sicher (SSL/HTTPS)</label>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn-neon" id="save-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto;">Speichern</button>
+                        <button class="btn-neon" id="reset-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto; --neon-cyan: var(--neon-magenta);">Reset</button>
+                    </div>
+                </div>
+                <button id="toggle-settings-button" style="background: none; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline; font-size: 0.85rem; margin-top: 5px;">Server-Einstellungen anzeigen</button>
             </section>
 
             <!-- Spielfeld mit 5 3D-CSS-Würfeln -->
