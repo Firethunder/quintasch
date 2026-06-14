@@ -23,3 +23,7 @@
 **Status**: ✅ Complete
 **Objective**: Das Ergebnis soll auf allen Endgeräten angezeigt werden. Anstelle von "Hat Verloren" wird "Das war nichts" auf dem Dashboard angezeigt. Der automatische Wechsel wird korrigiert und stabilisiert.
 
+### Phase 4: Test-Rig ausblenden
+**Status**: ⬜ Not Started
+**Objective**: Das Test-Rig auf dem Dashboard standardmäßig ausblenden, sobald sich der erste Spieler angemeldet hat. Es soll jedoch über einen Toggle-Button weiterhin manuell ein- und ausgeblendet werden können.
+
