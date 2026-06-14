@@ -228,9 +228,6 @@ function joinRoom(playerName) {
                 gameplayContainer.style.display = 'block';
                 gameplayRollButton.disabled = false;
                 gameplayRollButton.textContent = 'WÜRFELN!';
-                
-                // Overlay ausblenden
-                if (rollResultOverlay) rollResultOverlay.style.display = 'none';
             }
 
             if (data.action === 'waitTurn') {
@@ -239,9 +236,6 @@ function joinRoom(playerName) {
                 lobbyContainer.style.display = 'block';
                 lobbySpinner.style.display = 'none'; // Verberge Ladekreis
                 lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
-                
-                // Overlay ausblenden
-                if (rollResultOverlay) rollResultOverlay.style.display = 'none';
             }
 
             // Würfelergebnis von Host empfangen
