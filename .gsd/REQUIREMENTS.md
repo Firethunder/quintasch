@@ -16,3 +16,7 @@
 | REQ-11 | Responsive Neon/Cyberpunk Dark-Mode UI für Host und Client | SPEC Goal 3 | Complete |
 | REQ-12 | Persistent Spielverlauf-Historie im `localStorage` des Hosts | SPEC Goal 4 | Complete |
 | REQ-13 | PWA-Manifest und Service Worker Caching für Offline-Support | SPEC Goal 4 | Complete |
+| REQ-14 | Startbildschirm-Auswahl (Host oder Sync-Modus) | ROADMAP Phase 1 | Complete |
+| REQ-15 | Multi-Dashboard-Echtzeit-Synchronisation | ROADMAP Phase 2 | Complete |
+| REQ-16 | Quintasch Icon PWA Assets (192px/512px) | ROADMAP Phase 1 | Complete |
+
