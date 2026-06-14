@@ -38,7 +38,7 @@ Load for context:
   <action>
     - Define a global array of active sync peer IDs or map them from `syncConnections` inside `getSyncStatePayload()`.
     - Include `syncDashboardPeers` (an array of strings containing peer IDs of connected sync dashboards) in the state payload returned by `getSyncStatePayload()`.
-    - In the sync dashboard, save the last received state to a new global variable `lastSyncedState` inside `applySyncState()`.
+    - In the sync dashboard, define a global boolean `hasValidState = false`. Set it to `true` and save the last received state to `lastSyncedState` inside `applySyncState()`.
   </action>
   <verify>
     Verify that the broadcast sync state includes the array of connected spectator peer IDs.
@@ -54,6 +54,7 @@ Load for context:
   <action>
     - Refactor `initHostPeer(forcedId = null)` to support reusing an existing room ID if provided.
     - Inside `initSyncPeer()`, update the connection close and error handler `handleSyncDisconnect`:
+      0. Check if `hasValidState` is true. If it is false (state not yet received or invalid), do not participate in failover; instead, destroy client peer, wait 4 seconds, and call `initSyncPeer(targetRoomId)` to reconnect.
       1. Extract all peer IDs from `lastSyncedState.syncDashboardPeers`.
       2. Add the local dashboard's peer ID (`peer.id`) to the list if not present.
       3. Sort the list alphabetically.
