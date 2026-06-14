@@ -1,11 +1,11 @@
 # ROADMAP.md
 
-> **Current Phase**: Phase 3: Gameplay Loop
+> **Current Phase**: Phase 4: QoL, History & PWA
 > **Milestone**: v1.0 (MVP)
 
 ## Must-Haves (aus SPEC)
 - [x] Serverless PeerJS (WebRTC) Steuerung zwischen Smartphones und Dashboard
-- [ ] Rundenbasiertes Gameplay mit aktiver Client-Zuweisung
+- [x] Rundenbasiertes Gameplay mit aktiver Client-Zuweisung
 - [x] 3D-CSS-Würfel-Rendering und automatische Gewinnauswertung auf dem Dashboard
 - [ ] Lokale Historie und PWA Offline-Support
 
@@ -22,7 +22,7 @@
 **Requirements**: REQ-01, REQ-02, REQ-03, REQ-04
 
 ### Phase 3: Gameplay Loop (Rundensteuerung & Interaktionen)
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Rundenverwaltung auf dem Dashboard, Zuweisung des aktiven Spielers, Wetten-Auswahloberfläche auf dem Client, Würfel-Triggern über PeerJS und 30s-Strafe-Timer.
 **Requirements**: REQ-05, REQ-06, REQ-07, REQ-10
 

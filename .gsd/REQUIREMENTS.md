@@ -7,9 +7,9 @@
 | REQ-02 | PeerJS Host-Verbindungsinitialisierung und Signaling | SPEC Goal 1 | Complete |
 | REQ-03 | PeerJS Client-Verbindung per URL-Raum-Parameter | SPEC Goal 1 | Complete |
 | REQ-04 | Spieler-Lobby mit Echtzeit-Synchronisation der Spielerliste auf Host und Client | SPEC Goal 2 | Complete |
-| REQ-05 | Rundenbasierte Steuerung (Host bestimmt, wer dran ist, und aktiviert Client) | SPEC Goal 2 | Pending |
-| REQ-06 | Wetteinsatz-Auswahl auf Client (Pasch, Trasch etc.) oder Überspringen | SPEC Goal 2 | Pending |
-| REQ-07 | Würfel-Trigger (Client sendet Roll-Event via WebRTC an Host) | SPEC Goal 2 | Pending |
+| REQ-05 | Rundenbasierte Steuerung (Host bestimmt, wer dran ist, und aktiviert Client) | SPEC Goal 2 | Complete |
+| REQ-06 | Wetteinsatz-Auswahl auf Client (Pasch, Trasch etc.) oder Überspringen | SPEC Goal 2 | Complete |
+| REQ-07 | Würfel-Trigger (Client sendet Roll-Event via WebRTC an Host) | SPEC Goal 2 | Complete |
 | REQ-08 | 3D CSS Würfel-Rendering und Roll-Animation auf dem Dashboard | SPEC Goal 3 | Complete |
 | REQ-09 | Würfel-Auswertungslogik (Übereinstimmung von Wurf und angesagtem Wetteinsatz) | SPEC Goal 3 | Complete |
 | REQ-10 | Visueller 30-Sekunden-Timer bei getroffenen Strafen | SPEC Goal 3 | Complete |
