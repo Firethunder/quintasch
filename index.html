@@ -7,6 +7,8 @@
     <meta name="theme-color" content="#0b0b0f">
     <title>Quintasch — Würfel-Chaos Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -16,6 +18,19 @@
                 <h1>Quintasch</h1>
                 <p>Würfel-Chaos Multiplayer</p>
             </header>
+
+            <!-- Verbindungs-Panel (Host-Info & QR-Code) -->
+            <section class="panel" style="max-width: 400px; text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <div id="qrcode-container" style="background: white; padding: 10px; border-radius: 8px; width: 160px; height: 160px; display: flex; justify-content: center; align-items: center;">
+                    <span style="color: #0b0b0f; font-size: 0.95rem; font-weight: bold;">Initialisiere Peer...</span>
+                </div>
+                <div style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; color: var(--neon-cyan); margin-top: 5px;">
+                    Raum-ID: <span id="room-id-display">Wird generiert...</span>
+                </div>
+                <div id="players-count-display" style="font-size: 0.95rem; color: var(--text-muted);">
+                    Verbundene Spieler: 0
+                </div>
+            </section>
 
             <!-- Spielfeld mit 5 3D-CSS-Würfeln -->
             <section class="dice-table" id="dice-table">
