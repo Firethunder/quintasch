@@ -1,5 +1,5 @@
 # Journal
 
-> Previous milestone journal archived in `.gsd/milestones/Custom-Bets/JOURNAL.md`
+> Previous milestone journal archived in `.gsd/milestones/GitHub-Pages-Deployment/JOURNAL.md`
 
 ---
