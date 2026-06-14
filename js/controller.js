@@ -4,6 +4,11 @@ import { playRollSound } from './audio.js';
 let peer = null;
 let conn = null;
 let isDisconnecting = false;
+let savedPlayerName = '';
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 5;
+let reconnectTimer = null;
+let isReconnecting = false;
 
 // DOM-Elemente (wiederkehrend deklariert)
 let joinContainer = null;
@@ -241,8 +246,16 @@ document.addEventListener('DOMContentLoaded', () => {
 /**
  * Verbindet den Client mit dem P2P-Raum des Hosts.
  */
+/**
+ * Verbindet den Client mit dem P2P-Raum des Hosts.
+ */
 function joinRoom(playerName) {
     isDisconnecting = false;
+    savedPlayerName = playerName;
+    reconnectAttempts = 0;
+    isReconnecting = false;
+    clearTimeout(reconnectTimer);
+
     if (joinErrorMsg) joinErrorMsg.style.display = 'none';
     if (joinButton) {
         joinButton.disabled = true;
@@ -290,115 +303,8 @@ function joinRoom(playerName) {
         if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Verbinde zum Dashboard...';
         
         // Verbindung zum Host-Peer aufbauen
-        conn = peer.connect(roomId);
-
-        conn.on('open', () => {
-            if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Warte auf Bestätigung...';
-            // Handshake senden
-            conn.send({
-                action: 'join',
-                playerName: playerName
-            });
-        });
-
-        conn.on('data', (data) => {
-            if (!data) return;
-
-            // Handshake Bestätigung
-            if (data.action === 'joinConfirm') {
-                if (data.success) {
-                    if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'In der Lobby';
-                    if (lobbySpinner) lobbySpinner.style.display = 'none';
-                } else {
-                    // Beitritt fehlgeschlagen (z.B. Name bereits vergeben)
-                    isDisconnecting = true;
-                    showError(data.reason || 'Beitritt abgelehnt.');
-                    disconnect();
-                }
-            }
-
-            // Lobby-Update vom Host empfangen
-            if (data.action === 'updateLobby') {
-                renderLobbyPlayers(data.players);
-            }
-
-            // Runden-Steuerungsbefehle empfangen
-            if (data.action === 'yourTurn') {
-                // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
-                if (lobbyContainer) lobbyContainer.style.display = 'none';
-                if (gameplayContainer) gameplayContainer.style.display = 'block';
-                if (gameplayRollButton) {
-                    gameplayRollButton.disabled = false;
-                    gameplayRollButton.textContent = 'WÜRFELN!';
-                }
-            }
-
-            if (data.action === 'waitTurn') {
-                // Inaktiver Spieler: Zeige Warteraum mit Name des aktiven Spielers
-                if (gameplayContainer) gameplayContainer.style.display = 'none';
-                if (lobbyContainer) lobbyContainer.style.display = 'block';
-                if (lobbySpinner) lobbySpinner.style.display = 'none'; // Verberge Ladekreis
-                if (lobbyWaitText) lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
-            }
-
-            // Würfelergebnis von Host empfangen
-            if (data.action === 'rollResult') {
-                if (rollResultOverlay) {
-                    // Visualisiere Würfelaugen (Option B - stilisierte Neon-Boxen)
-                    if (resultOverlayDice) {
-                        resultOverlayDice.innerHTML = '';
-                        data.dice.forEach((die, index) => {
-                            const dieEl = document.createElement('div');
-                            // Wechsle Farben ab (ungerade Indizes cyan, gerade magenta)
-                            dieEl.className = `mobile-die ${index % 2 === 1 ? 'even' : ''}`;
-                            dieEl.textContent = die;
-                            resultOverlayDice.appendChild(dieEl);
-                        });
-                    }
-
-                    // Setze Titel & Text
-                    if (resultOverlayTitle) {
-                        resultOverlayTitle.textContent = data.success ? 'Getroffen!' : 'Das war nichts!';
-                        
-                        if (data.success) {
-                            resultOverlayTitle.style.color = 'var(--neon-green)';
-                            resultOverlayTitle.style.textShadow = 'var(--glow-green)';
-                            resultOverlayTitle.style.borderColor = 'var(--neon-green)';
-                        } else {
-                            resultOverlayTitle.style.color = 'var(--neon-magenta)';
-                            resultOverlayTitle.style.textShadow = 'var(--glow-magenta)';
-                            resultOverlayTitle.style.borderColor = 'var(--neon-magenta)';
-                        }
-                    }
-
-                    if (resultOverlayText) {
-                        const outcomeMsg = data.success 
-                            ? `<span style="color: var(--neon-green); font-weight: bold; text-shadow: var(--glow-green);">Erfolg!</span><br>Aktion: ${data.rule}`
-                            : `<span style="color: var(--neon-magenta); font-weight: bold; text-shadow: var(--glow-magenta);">Das war nichts!</span><br>Keine Auswirkung für ${data.playerName}. Glück gehabt!`;
-                            
-                        resultOverlayText.innerHTML = `
-                            <strong>Spieler:</strong> ${data.playerName}<br>
-                            <strong>Wette:</strong> ${data.betLabel} (Einsatz: ${data.stake})<br>
-                            <strong>Gewürfelt:</strong> ${data.rolledHandName}<br><br>
-                            ${outcomeMsg}
-                        `;
-                    }
-
-                    rollResultOverlay.style.display = 'flex';
-                }
-            }
-        });
-
-        // Abfangen von Verbindungsabbrüchen
-        const handleConnectionClose = () => {
-            if (!isDisconnecting) {
-                showError('Verbindung zum Dashboard verloren.');
-            }
-            disconnect();
-        };
-
-        conn.on('close', handleConnectionClose);
-        conn.on('error', handleConnectionClose);
+        const newConn = peer.connect(roomId);
+        handleNewConnection(newConn);
     });
 
     peer.on('error', (err) => {
@@ -409,9 +315,213 @@ function joinRoom(playerName) {
 }
 
 /**
+ * Behandelt eine neue Verbindung und registriert alle Event-Listener.
+ */
+function handleNewConnection(newConn) {
+    conn = newConn;
+
+    conn.on('open', () => {
+        if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Warte auf Bestätigung...';
+        // Handshake senden
+        conn.send({
+            action: 'join',
+            playerName: savedPlayerName
+        });
+    });
+
+    conn.on('data', (data) => {
+        if (!data) return;
+
+        // Handshake Bestätigung
+        if (data.action === 'joinConfirm') {
+            if (data.success) {
+                if (isReconnecting) {
+                    isReconnecting = false;
+                    reconnectAttempts = 0;
+                    clearTimeout(reconnectTimer);
+                }
+                if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'In der Lobby';
+                if (lobbySpinner) lobbySpinner.style.display = 'none';
+            } else {
+                // Beitritt fehlgeschlagen (z.B. Name bereits vergeben)
+                isDisconnecting = true;
+                showError(data.reason || 'Beitritt abgelehnt.');
+                disconnect();
+            }
+        }
+
+        // Lobby-Update vom Host empfangen
+        if (data.action === 'updateLobby') {
+            renderLobbyPlayers(data.players);
+        }
+
+        // Runden-Steuerungsbefehle empfangen
+        if (data.action === 'yourTurn') {
+            // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
+            if (lobbyContainer) lobbyContainer.style.display = 'none';
+            if (gameplayContainer) gameplayContainer.style.display = 'block';
+            if (gameplayRollButton) {
+                gameplayRollButton.disabled = false;
+                gameplayRollButton.textContent = 'WÜRFELN!';
+            }
+        }
+
+        if (data.action === 'waitTurn') {
+            // Inaktiver Spieler: Zeige Warteraum mit Name des aktiven Spielers
+            if (gameplayContainer) gameplayContainer.style.display = 'none';
+            if (lobbyContainer) lobbyContainer.style.display = 'block';
+            if (lobbySpinner) lobbySpinner.style.display = 'none'; // Verberge Ladekreis
+            if (lobbyWaitText) lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
+        }
+
+        // Würfelergebnis von Host empfangen
+        if (data.action === 'rollResult') {
+            if (rollResultOverlay) {
+                // Visualisiere Würfelaugen (Option B - stilisierte Neon-Boxen)
+                if (resultOverlayDice) {
+                    resultOverlayDice.innerHTML = '';
+                    data.dice.forEach((die, index) => {
+                        const dieEl = document.createElement('div');
+                        // Wechsle Farben ab (ungerade Indizes cyan, gerade magenta)
+                        dieEl.className = `mobile-die ${index % 2 === 1 ? 'even' : ''}`;
+                        dieEl.textContent = die;
+                        resultOverlayDice.appendChild(dieEl);
+                    });
+                }
+
+                // Setze Titel & Text
+                if (resultOverlayTitle) {
+                    resultOverlayTitle.textContent = data.success ? 'Getroffen!' : 'Das war nichts!';
+                    
+                    if (data.success) {
+                        resultOverlayTitle.style.color = 'var(--neon-green)';
+                        resultOverlayTitle.style.textShadow = 'var(--glow-green)';
+                        resultOverlayTitle.style.borderColor = 'var(--neon-green)';
+                    } else {
+                        resultOverlayTitle.style.color = 'var(--neon-magenta)';
+                        resultOverlayTitle.style.textShadow = 'var(--glow-magenta)';
+                        resultOverlayTitle.style.borderColor = 'var(--neon-magenta)';
+                    }
+                }
+
+                if (resultOverlayText) {
+                    const outcomeMsg = data.success 
+                        ? `<span style="color: var(--neon-green); font-weight: bold; text-shadow: var(--glow-green);">Erfolg!</span><br>Aktion: ${data.rule}`
+                        : `<span style="color: var(--neon-magenta); font-weight: bold; text-shadow: var(--glow-magenta);">Das war nichts!</span><br>Keine Auswirkung für ${data.playerName}. Glück gehabt!`;
+                        
+                    resultOverlayText.innerHTML = `
+                        <strong>Spieler:</strong> ${data.playerName}<br>
+                        <strong>Wette:</strong> ${data.betLabel} (Einsatz: ${data.stake})<br>
+                        <strong>Gewürfelt:</strong> ${data.rolledHandName}<br><br>
+                        ${outcomeMsg}
+                    `;
+                }
+
+                rollResultOverlay.style.display = 'flex';
+            }
+        }
+    });
+
+    // Abfangen von Verbindungsabbrüchen
+    const handleConnectionClose = () => {
+        if (!isDisconnecting) {
+            if (reconnectAttempts < maxReconnectAttempts) {
+                startReconnection();
+            } else {
+                showError('Verbindung zum Dashboard verloren.');
+                disconnect();
+            }
+        } else {
+            disconnect();
+        }
+    };
+
+    conn.on('close', handleConnectionClose);
+    conn.on('error', handleConnectionClose);
+}
+
+/**
+ * Startet den automatischen Reconnection-Loop.
+ */
+function startReconnection() {
+    if (isDisconnecting) return;
+
+    isReconnecting = true;
+    reconnectAttempts++;
+    console.log(`Versuche Wiederverbindung (${reconnectAttempts}/${maxReconnectAttempts})...`);
+
+    if (lobbyStatusTitle) lobbyStatusTitle.textContent = `Verbindung verloren. Reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`;
+    if (lobbySpinner) lobbySpinner.style.display = 'block';
+
+    // UI auf Warteraum/Lobby umschalten, damit der Benutzer den Reconnecting-Status sieht
+    if (joinContainer) joinContainer.style.display = 'none';
+    if (gameplayContainer) gameplayContainer.style.display = 'none';
+    if (lobbyContainer) lobbyContainer.style.display = 'block';
+
+    // Trenne bestehende Verbindungen leise
+    if (conn) {
+        conn.off('close');
+        conn.off('error');
+        conn.close();
+        conn = null;
+    }
+    if (peer) {
+        peer.destroy();
+        peer = null;
+    }
+
+    reconnectTimer = setTimeout(() => {
+        if (isDisconnecting) return;
+
+        // Lese Custom Config
+        let peerConfig = null;
+        try {
+            const stored = localStorage.getItem('quintasch_peer_config');
+            if (stored) {
+                peerConfig = JSON.parse(stored);
+            }
+        } catch (e) {
+            console.error('Fehler beim Laden der Peer-Server-Einstellungen:', e);
+        }
+
+        // Neuen Peer instanziieren
+        if (peerConfig && peerConfig.host) {
+            const portVal = peerConfig.port ? parseInt(peerConfig.port) : undefined;
+            peer = new Peer(undefined, {
+                host: peerConfig.host,
+                port: isNaN(portVal) ? undefined : portVal,
+                path: peerConfig.path || '/',
+                secure: peerConfig.secure
+            });
+        } else {
+            peer = new Peer();
+        }
+
+        peer.on('open', () => {
+            const newConn = peer.connect(roomId);
+            handleNewConnection(newConn);
+        });
+
+        peer.on('error', (err) => {
+            console.error('Reconnect peer error:', err);
+            if (reconnectAttempts < maxReconnectAttempts) {
+                startReconnection();
+            } else {
+                showError('Fehler beim Wiederverbindungsaufbau zum Signaling-Server.');
+                disconnect();
+            }
+        });
+    }, 2000);
+}
+
+/**
  * Trennt alle Peer-Verbindungen und setzt das UI zurück.
  */
 function disconnect() {
+    isReconnecting = false;
+    reconnectAttempts = 0;
+    clearTimeout(reconnectTimer);
+
     if (conn) {
         conn.close();
         conn = null;

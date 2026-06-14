@@ -678,12 +678,34 @@ function initHostPeer(forcedId = null) {
             }
 
             if (data && data.action === 'join') {
-                const nameExists = players.some(p => p.name.toLowerCase() === data.playerName.toLowerCase());
-                if (nameExists) {
-                    conn.send({ action: 'joinConfirm', success: false, reason: 'Name bereits vergeben' });
+                const existingPlayerIndex = players.findIndex(p => p.name.toLowerCase() === data.playerName.toLowerCase());
+                
+                if (existingPlayerIndex !== -1) {
+                    console.log(`Re-join erkannt für Spieler: ${data.playerName}`);
+                    
+                    // Update peerId und Connection
+                    players[existingPlayerIndex].peerId = conn.peer;
+                    connections = connections.filter(c => c.peer !== conn.peer);
+                    connections.push(conn);
+
+                    conn.send({ action: 'joinConfirm', success: true });
+                    
+                    // Sende Rundenstatus falls bereits im Spiel
+                    if (gameState === 'playing') {
+                        const activePlayer = players[activePlayerIndex];
+                        if (activePlayer && activePlayer.name.toLowerCase() === data.playerName.toLowerCase()) {
+                            conn.send({ action: 'yourTurn' });
+                        } else {
+                            conn.send({ action: 'waitTurn', activePlayerName: activePlayer ? activePlayer.name : '' });
+                        }
+                    } else {
+                        updateLobbyDisplay();
+                        broadcastLobby();
+                    }
                     return;
                 }
 
+                // Normaler Beitritt
                 // Spieler hinzufügen
                 players.push({ peerId: conn.peer, name: data.playerName });
                 connections.push(conn);
