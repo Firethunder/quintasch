@@ -9,6 +9,8 @@ let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
 let reconnectTimer = null;
 let isReconnecting = false;
+let isAnimating = false;
+let rattleInterval = null;
 
 // Audio-Checkbox DOM-Element & mobile-specials
 let clientSoundToggle = null;
@@ -399,6 +401,11 @@ function handleNewConnection(newConn) {
             // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
             if (lobbyContainer) lobbyContainer.style.display = 'none';
             if (gameplayContainer) gameplayContainer.style.display = 'block';
+            // Reset Würfel/Form-State (z.B. nach Reconnect während Animation)
+            if (mobileDiceTable) mobileDiceTable.style.display = 'none';
+            if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
+            isAnimating = false;
+            if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
             if (gameplayRollButton) {
                 gameplayRollButton.disabled = false;
                 gameplayRollButton.textContent = 'WÜRFELN!';
@@ -415,18 +422,30 @@ function handleNewConnection(newConn) {
 
         // Host signalisiert Start des Würfelns mit den Werten (nur für aktives Gerät)
         if (data.action === 'rollStart') {
+            // Defensive Prüfung: Sind gültige Würfeldaten vorhanden?
+            if (!data.dice || data.dice.length < 5) return;
+
+            // Guard gegen doppeltes rollStart (verhindert Sound-Stacking)
+            if (isAnimating) return;
+            isAnimating = true;
+
             // Blende Form aus, zeige 3D-Würfeltisch
             if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'none';
             if (mobileDiceTable) mobileDiceTable.style.display = 'flex';
+            if (gameplayRollButton) gameplayRollButton.disabled = true;
+
+            // Bestehenden Rassel-Interval bereinigen (Defense-in-depth)
+            if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
 
             // Spiele lokalen Rassel-Sound ab, falls aktiviert
             if (clientSoundToggle && clientSoundToggle.checked) {
                 let shakeCount = 0;
-                const shakeInterval = setInterval(() => {
+                rattleInterval = setInterval(() => {
                     playRollSound();
                     shakeCount++;
                     if (shakeCount >= 8) {
-                        clearInterval(shakeInterval);
+                        clearInterval(rattleInterval);
+                        rattleInterval = null;
                     }
                 }, 150);
             }
@@ -458,6 +477,10 @@ function handleNewConnection(newConn) {
 
         // Würfelergebnis von Host empfangen
         if (data.action === 'rollResult') {
+            // Animations-Flag und Rassel-Interval zurücksetzen
+            isAnimating = false;
+            if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
+
             // Verberge Würfeltisch auf dem rollenden Gerät (falls aktiv gewesen) und zeige Form wieder an
             if (mobileDiceTable) mobileDiceTable.style.display = 'none';
             if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
