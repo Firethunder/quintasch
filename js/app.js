@@ -42,6 +42,7 @@ let autoTurnTimeout = null;
 let peer = null;
 let connections = [];
 let players = []; // Array von { peerId, name }
+let hasAutoHiddenSidebar = false;
 
 // Rundenbasierter Spielzustand
 let gameState = 'lobby'; // 'lobby' oder 'playing'
@@ -74,6 +75,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rundensteuerungs-Button-Listeners
     startGameButton.addEventListener('click', startGame);
     nextTurnButton.addEventListener('click', nextTurn);
+
+    // Sidebar (Test-Rig) toggle
+    const toggleSidebarButton = document.getElementById('toggle-sidebar-button');
+    const appContainer = document.querySelector('.app-container');
+    if (toggleSidebarButton && appContainer) {
+        toggleSidebarButton.addEventListener('click', () => {
+            const isHidden = appContainer.classList.toggle('sidebar-hidden');
+            toggleSidebarButton.textContent = isHidden ? 'Lokal Test-Rig anzeigen' : 'Lokal Test-Rig ausblenden';
+        });
+    }
 
     // Settings toggle
     toggleSettingsButton.addEventListener('click', () => {
@@ -572,6 +583,25 @@ function updateLobbyDisplay() {
         }
     } else {
         startGameButton.style.display = 'none';
+    }
+
+    // Auto-Hide des Test-Rigs, sobald Spieler beitreten
+    const appContainer = document.querySelector('.app-container');
+    const toggleSidebarButton = document.getElementById('toggle-sidebar-button');
+    if (appContainer) {
+        if (players.length > 0 && !hasAutoHiddenSidebar) {
+            appContainer.classList.add('sidebar-hidden');
+            hasAutoHiddenSidebar = true;
+            if (toggleSidebarButton) {
+                toggleSidebarButton.textContent = 'Lokal Test-Rig anzeigen';
+            }
+        } else if (players.length === 0 && hasAutoHiddenSidebar) {
+            appContainer.classList.remove('sidebar-hidden');
+            hasAutoHiddenSidebar = false;
+            if (toggleSidebarButton) {
+                toggleSidebarButton.textContent = 'Lokal Test-Rig ausblenden';
+            }
+        }
     }
 }
 
