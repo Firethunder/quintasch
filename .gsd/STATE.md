@@ -1,23 +1,23 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Initialized
+> **Current Status**: In Progress
 > **Active Milestone**: Custom-Bets
-> **Active Phase**: 1
+> **Active Phase**: 2
 
 ## Phase Progress
-- [ ] Phase 1: Custom Stakes & Mobile UI Polish
+- [x] Phase 1: Custom Stakes & Mobile UI Polish
 - [ ] Phase 2: Client Feedback Loop & Auto-Turns
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Phase**: 1
-- **Task**: Planung abgeschlossen
-- **Status**: Bereit zur Ausführung
+- **Phase**: 2
+- **Task**: Planung ausstehend
+- **Status**: Bereit zur Planung
 
 ## Last Session Summary
-Der MVP-Meilenstein v1.0 wurde erfolgreich beendet. Der neue Meilenstein "Custom-Bets" wurde gestartet, um die Benutzerfreundlichkeit, das Feedback-Verhalten auf Smartphones (inkl. Würfel-Ergebnissen auf den Handys) und die Dynamik des Spielablaufs zu verbessern.
+Phase 1 wurde erfolgreich abgeschlossen. Eigene Einsätze können am Smartphone ausgewählt und frei eingegeben werden, werden an das Dashboard übertragen und dort angezeigt. Klebrige Button-Highlights auf Mobilgeräten wurden behoben.
 
 ## Next Steps
-1. Führ den Befehl `/execute 1` aus, um die Umsetzung von Phase 1 zu starten.
+1. Führ den Befehl `/plan 2` aus, um die Umsetzung von Phase 2 zu starten.
