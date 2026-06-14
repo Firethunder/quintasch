@@ -15,5 +15,5 @@
 **Objective**: Vorbereitung der Repository-Struktur, Erstellung der Dokumentation (README.md) und Prüfung aller relativen Pfade im Service Worker und Manifest für die Subpfad-Kompatibilität.
 
 ### Phase 2: GitHub Push & Pages Live-Gang
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: GitHub-Remote verbinden, Code pushen, GitHub Pages aktivieren und Live-Test der PWA und WebRTC/PeerJS Verbindung über HTTPS.
