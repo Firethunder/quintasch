@@ -17,14 +17,14 @@
 
 ## Current Position
 - **Phase**: Phase 6
-- **Task**: Discussion
-- **Status**: Discussing Phase 6
+- **Task**: Planning complete
+- **Status**: Ready for execution
 
 ## Last Session Summary
 Phase 5 wurde erfolgreich abgeschlossen. Der Spielstart und das automatische Ausblenden des Test-Rigs funktionieren nun bereits ab einem Spieler. Die Eingabebox für eigene Einsätze auf Smartphones lädt fehlerfrei, die Verlustanzeige meldet konsistent "Das war nichts!" und die Option "Zuschauen" wurde überall entfernt.
 
 ## Next Steps
-1. Discuss Phase 6 and clarify topics
+1. /execute 6
 
 
 
