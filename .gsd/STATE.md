@@ -15,13 +15,14 @@
 
 ## Current Position
 - **Phase**: Phase 4
-- **Task**: Planning
-- **Status**: Planning Phase 4
+- **Task**: Planning complete
+- **Status**: Ready for execution
 
 ## Last Session Summary
 Phase 3 wurde erfolgreich abgeschlossen. Der Spiel-Loop ist voll funktionsfähig und robust: Wurfergebnisse verbleiben auf den Handys sichtbar bis zum manuellen Klick auf Schließen, das Dashboard meldet "Das war nichts" statt "hat verloren", und der automatische Rundenwechsel arbeitet präzise und fehlerfrei.
 
 ## Next Steps
-1. Plan Phase 4
+1. /execute 4
+
 
 
