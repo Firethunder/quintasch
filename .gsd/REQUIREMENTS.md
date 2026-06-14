@@ -22,5 +22,8 @@
 | REQ-17 | Automatisches Host-Failover mit Rollen-Promotion | ROADMAP Phase 3 | Complete |
 | REQ-18 | Client-Auto-Reconnect bei Verbindungsverlust | ROADMAP Phase 3 | Complete |
 | REQ-19 | Spieler-Rejoin Erkennung und Session-Restore | ROADMAP Phase 3 | Complete |
+| REQ-20 | 3D-CSS-Würfel-Markup und skalierte Styles auf dem mobilen Controller | ROADMAP Phase 4 | Complete |
+| REQ-21 | Synchronisierte Wurf-Start-Signalisierung vom Host an den aktiven Client | ROADMAP Phase 4 | Complete |
+| REQ-22 | Client-seitige 3D-Roll-Animation mit optionalem Rassel-Sound und Ergebnis-Overlay | ROADMAP Phase 4 | Complete |
 
 
