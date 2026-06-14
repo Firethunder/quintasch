@@ -144,7 +144,7 @@ body {
 .face {
     border-color: var(--neon-cyan);
 }
-.cube:nth-child(even) .face {
+.cube-container:nth-child(even) .cube .face {
     border-color: var(--neon-magenta);
     text-shadow: 0 0 8px #fff, 0 0 15px var(--neon-magenta);
     box-shadow: inset 0 0 15px rgba(255, 0, 127, 0.2), 0 0 10px rgba(255, 0, 127, 0.2);
@@ -418,4 +418,16 @@ select.form-control option {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+/* Mobile Dice Scale Layout */
+.mobile-dice-table {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    perspective: 1000px;
+    transform: scale(0.6);
+    transform-origin: center;
 }

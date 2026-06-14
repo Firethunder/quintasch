@@ -10,6 +10,30 @@ const maxReconnectAttempts = 5;
 let reconnectTimer = null;
 let isReconnecting = false;
 
+// Audio-Checkbox DOM-Element & mobile-specials
+let clientSoundToggle = null;
+let mobileDiceTable = null;
+let gameplayFormWrapper = null;
+
+// Rotationswinkel für die verschiedenen Augenzahlen, damit sie nach vorne zeigen.
+const faceAngles = {
+    1: { x: 0, y: 0 },
+    6: { x: 0, y: -180 },
+    3: { x: 0, y: -90 },
+    4: { x: 0, y: 90 },
+    2: { x: -90, y: 0 },
+    5: { x: 90, y: 0 }
+};
+
+// Akkumulierte Rotationen für jeden der 5 Würfel, um kontinuierlich vorwärts zu drehen.
+const currentRotations = [
+    { x: 0, y: 0, z: 0 },
+    { x: 0, y: 0, z: 0 },
+    { x: 0, y: 0, z: 0 },
+    { x: 0, y: 0, z: 0 },
+    { x: 0, y: 0, z: 0 }
+];
+
 // DOM-Elemente (wiederkehrend deklariert)
 let joinContainer = null;
 let lobbyContainer = null;
@@ -58,6 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
     joinErrorMsg = document.getElementById('join-error-msg');
     lobbyStatusTitle = document.getElementById('lobby-status-title');
     lobbySpinner = document.getElementById('lobby-spinner');
+    clientSoundToggle = document.getElementById('client-sound-toggle');
+    mobileDiceTable = document.getElementById('mobile-dice-table');
+    gameplayFormWrapper = document.getElementById('gameplay-form-wrapper');
     lobbyPlayersList = document.getElementById('lobby-players-list');
     gameplayContainer = document.getElementById('gameplay-container');
     gameplayBetSelect = document.getElementById('gameplay-bet');
@@ -111,6 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (peerSecureInput) peerSecureInput.checked = peerConfig.secure !== false;
     }
 
+    // Lese Sound-Einstellung
+    const savedSoundPref = localStorage.getItem('quintasch_client_sound');
+    if (clientSoundToggle) {
+        clientSoundToggle.checked = savedSoundPref !== 'false';
+    }
+
     // Settings toggle
     if (toggleSettingsButton && settingsPanel) {
         toggleSettingsButton.addEventListener('click', () => {
@@ -138,6 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 localStorage.removeItem('quintasch_peer_config');
             }
+
+            if (clientSoundToggle) {
+                localStorage.setItem('quintasch_client_sound', clientSoundToggle.checked ? 'true' : 'false');
+            }
             
             alert('Einstellungen gespeichert!');
             window.location.reload();
@@ -148,10 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resetSettingsButton) {
         resetSettingsButton.addEventListener('click', () => {
             localStorage.removeItem('quintasch_peer_config');
+            localStorage.removeItem('quintasch_client_sound');
             if (peerHostInput) peerHostInput.value = '';
             if (peerPortInput) peerPortInput.value = '';
             if (peerPathInput) peerPathInput.value = '';
             if (peerSecureInput) peerSecureInput.checked = true;
+            if (clientSoundToggle) clientSoundToggle.checked = true;
             alert('Einstellungen zurückgesetzt auf Standard!');
             window.location.reload();
         });
@@ -374,8 +413,59 @@ function handleNewConnection(newConn) {
             if (lobbyWaitText) lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
         }
 
+        // Host signalisiert Start des Würfelns mit den Werten (nur für aktives Gerät)
+        if (data.action === 'rollStart') {
+            // Blende Form aus, zeige 3D-Würfeltisch
+            if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'none';
+            if (mobileDiceTable) mobileDiceTable.style.display = 'flex';
+
+            // Spiele lokalen Rassel-Sound ab, falls aktiviert
+            if (clientSoundToggle && clientSoundToggle.checked) {
+                let shakeCount = 0;
+                const shakeInterval = setInterval(() => {
+                    playRollSound();
+                    shakeCount++;
+                    if (shakeCount >= 8) {
+                        clearInterval(shakeInterval);
+                    }
+                }, 150);
+            }
+
+            // Würfel animieren
+            for (let i = 0; i < 5; i++) {
+                const diceElement = document.getElementById(`mobile-dice-${i}`);
+                if (!diceElement) continue;
+
+                const val = data.dice[i];
+                const target = faceAngles[val];
+
+                // Drehungen plus Versatz
+                const extraXSpins = 3 + Math.floor(Math.random() * 2);
+                const extraYSpins = 3 + Math.floor(Math.random() * 2);
+                const extraZSpins = 2 + Math.floor(Math.random() * 2);
+
+                const newX = currentRotations[i].x + (extraXSpins * 360) + (target.x - (currentRotations[i].x % 360));
+                const newY = currentRotations[i].y + (extraYSpins * 360) + (target.y - (currentRotations[i].y % 360));
+                const newZ = currentRotations[i].z + (extraZSpins * 360);
+
+                currentRotations[i].x = newX;
+                currentRotations[i].y = newY;
+                currentRotations[i].z = newZ;
+
+                diceElement.style.transform = `rotateX(${newX}deg) rotateY(${newY}deg) rotateZ(${newZ}deg)`;
+            }
+        }
+
         // Würfelergebnis von Host empfangen
         if (data.action === 'rollResult') {
+            // Verberge Würfeltisch auf dem rollenden Gerät (falls aktiv gewesen) und zeige Form wieder an
+            if (mobileDiceTable) mobileDiceTable.style.display = 'none';
+            if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
+            if (gameplayRollButton) {
+                gameplayRollButton.disabled = false;
+                gameplayRollButton.textContent = 'WÜRFELN!';
+            }
+
             if (rollResultOverlay) {
                 // Visualisiere Würfelaugen (Option B - stilisierte Neon-Boxen)
                 if (resultOverlayDice) {

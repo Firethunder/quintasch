@@ -314,6 +314,20 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
     const chosenBet = chosenBetParam || playerBetSelect.value;
     const isCustomStake = chosenStakeParam !== 'Standard-Strafe';
 
+    // Falls Host-Modus aktiv ist, sende rollStart an den gerade aktiven Spieler, damit dieser die Animation ausführen kann
+    if (gameMode === 'host') {
+        const activePlayer = players[activePlayerIndex];
+        if (activePlayer) {
+            const activeConn = connections.find(c => c.peer === activePlayer.peerId);
+            if (activeConn && activeConn.open) {
+                activeConn.send({
+                    action: 'rollStart',
+                    dice: diceValues
+                });
+            }
+        }
+    }
+
     // Falls Host-Modus aktiv ist, sende Würfelwurf an alle Sync-Dashboards
     if (gameMode === 'host') {
         syncConnections.forEach(conn => {

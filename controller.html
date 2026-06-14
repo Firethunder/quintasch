@@ -149,6 +149,11 @@
                     <input type="checkbox" id="peer-secure" checked>
                     <label for="peer-secure" style="margin-bottom: 0; font-size: 0.85rem;">Sicher (SSL/HTTPS)</label>
                 </div>
+                <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">Audio Einstellungen</h4>
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                    <input type="checkbox" id="client-sound-toggle" checked>
+                    <label for="client-sound-toggle" style="margin-bottom: 0; font-size: 0.85rem;">Rassel-Sound abspielen</label>
+                </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button class="btn-neon" id="save-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto;">Speichern</button>
                     <button class="btn-neon" id="reset-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto; --neon-cyan: var(--neon-magenta);">Reset</button>
@@ -176,38 +181,99 @@
         <main class="panel" id="gameplay-container" style="display: none; text-align: center;">
             <h2 class="sidebar-title" style="font-size: 1.5rem; margin-bottom: 20px; border: none; color: var(--neon-green); text-shadow: var(--glow-green);">Du bist dran!</h2>
             
-            <div class="form-group" style="text-align: left;">
-                <label for="gameplay-bet">Dein Wetteinsatz</label>
-                <select id="gameplay-bet" class="form-control">
-                    <option value="pasch">Pasch (2er-Pasch)</option>
-                    <option value="doppelpasch">Doppelpasch</option>
-                    <option value="trasch">Trasch (3er-Pasch)</option>
-                    <option value="fullhouse">Full House</option>
-                    <option value="strasse">Straße</option>
-                    <option value="quadrasch">Quadrasch (4er-Pasch)</option>
-                    <option value="quintasch">Quintasch (5er-Pasch)</option>
-                </select>
-            </div>
+            <div id="gameplay-form-wrapper">
+                <div class="form-group" style="text-align: left;">
+                    <label for="gameplay-bet">Dein Wetteinsatz</label>
+                    <select id="gameplay-bet" class="form-control">
+                        <option value="pasch">Pasch (2er-Pasch)</option>
+                        <option value="doppelpasch">Doppelpasch</option>
+                        <option value="trasch">Trasch (3er-Pasch)</option>
+                        <option value="fullhouse">Full House</option>
+                        <option value="strasse">Straße</option>
+                        <option value="quadrasch">Quadrasch (4er-Pasch)</option>
+                        <option value="quintasch">Quintasch (5er-Pasch)</option>
+                    </select>
+                </div>
 
-            <div class="form-group" style="text-align: left; margin-top: 15px;">
-                <label for="gameplay-stake">Dein Einsatz</label>
-                <select id="gameplay-stake" class="form-control">
-                    <option value="standard">Standard-Strafe</option>
-                    <option value="1 Schluck">1 Schluck</option>
-                    <option value="2 Schlucke">2 Schlucke</option>
-                    <option value="3 Schlucke">3 Schlucke</option>
-                    <option value="4 Schlucke">4 Schlucke</option>
-                    <option value="5 Schlucke">5 Schlucke</option>
-                    <option value="1 Shot">1 Shot</option>
-                    <option value="2 Shots">2 Shots</option>
-                    <option value="custom">Eigener...</option>
-                </select>
-                <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 3 Schlucke auf Ex" style="display: none; margin-top: 10px;" maxlength="30">
-                <div id="gameplay-custom-timer-group" style="display: none; margin-top: 10px;">
-                    <label for="gameplay-custom-timer" style="font-size: 0.8rem;">Timer (optional in Sekunden)</label>
-                    <input type="number" id="gameplay-custom-timer" class="form-control" placeholder="z. B. 30" min="1" max="300" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                <div class="form-group" style="text-align: left; margin-top: 15px;">
+                    <label for="gameplay-stake">Dein Einsatz</label>
+                    <select id="gameplay-stake" class="form-control">
+                        <option value="standard">Standard-Strafe</option>
+                        <option value="1 Schluck">1 Schluck</option>
+                        <option value="2 Schlucke">2 Schlucke</option>
+                        <option value="3 Schlucke">3 Schlucke</option>
+                        <option value="4 Schlucke">4 Schlucke</option>
+                        <option value="5 Schlucke">5 Schlucke</option>
+                        <option value="1 Shot">1 Shot</option>
+                        <option value="2 Shots">2 Shots</option>
+                        <option value="custom">Eigener...</option>
+                    </select>
+                    <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 3 Schlucke auf Ex" style="display: none; margin-top: 10px;" maxlength="30">
+                    <div id="gameplay-custom-timer-group" style="display: none; margin-top: 10px;">
+                        <label for="gameplay-custom-timer" style="font-size: 0.8rem;">Timer (optional in Sekunden)</label>
+                        <input type="number" id="gameplay-custom-timer" class="form-control" placeholder="z. B. 30" min="1" max="300" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                    </div>
                 </div>
             </div>
+
+            <!-- Spielfeld mit 5 3D-CSS-Würfeln auf dem Handy -->
+            <section class="mobile-dice-table" id="mobile-dice-table" style="display: none;">
+                <!-- Würfel 1 -->
+                <div class="cube-container">
+                    <div class="cube" id="mobile-dice-0">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+                <!-- Würfel 2 -->
+                <div class="cube-container">
+                    <div class="cube" id="mobile-dice-1">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+                <!-- Würfel 3 -->
+                <div class="cube-container">
+                    <div class="cube" id="mobile-dice-2">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+                <!-- Würfel 4 -->
+                <div class="cube-container">
+                    <div class="cube" id="mobile-dice-3">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+                <!-- Würfel 5 -->
+                <div class="cube-container">
+                    <div class="cube" id="mobile-dice-4">
+                        <div class="face front">1</div>
+                        <div class="face back">6</div>
+                        <div class="face right">3</div>
+                        <div class="face left">4</div>
+                        <div class="face top">2</div>
+                        <div class="face bottom">5</div>
+                    </div>
+                </div>
+            </section>
 
             <button class="btn-neon" id="gameplay-roll-button" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 15px;">WÜRFELN!</button>
         </main>
