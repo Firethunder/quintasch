@@ -34,6 +34,12 @@ const timerContainer = document.getElementById('timer-container');
 const timerText = document.getElementById('timer-text');
 const timerProgress = document.getElementById('timer-progress');
 
+// Test-Rig Custom Stake und Timer DOM-Elemente
+const playerStakeSelect = document.getElementById('player-stake');
+const playerCustomStakeInput = document.getElementById('player-custom-stake');
+const playerCustomTimerGroup = document.getElementById('player-custom-timer-group');
+const playerCustomTimerInput = document.getElementById('player-custom-timer');
+
 let isRolling = false;
 let timerInterval = null;
 let autoTurnTimeout = null;
@@ -83,6 +89,25 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleSidebarButton.addEventListener('click', () => {
             const isHidden = appContainer.classList.toggle('sidebar-hidden');
             toggleSidebarButton.textContent = isHidden ? 'Lokal Test-Rig anzeigen' : 'Lokal Test-Rig ausblenden';
+        });
+    }
+
+    // Stake selection toggle for custom input in local Test-Rig
+    if (playerStakeSelect && playerCustomStakeInput) {
+        playerStakeSelect.addEventListener('change', () => {
+            if (playerStakeSelect.value === 'custom') {
+                playerCustomStakeInput.style.display = 'block';
+                playerCustomStakeInput.focus();
+                if (playerCustomTimerGroup) {
+                    playerCustomTimerGroup.style.display = 'block';
+                }
+            } else {
+                playerCustomStakeInput.style.display = 'none';
+                if (playerCustomTimerGroup) {
+                    playerCustomTimerGroup.style.display = 'none';
+                    if (playerCustomTimerInput) playerCustomTimerInput.value = '';
+                }
+            }
         });
     }
 
@@ -137,13 +162,40 @@ function setupPlayersListDisplay() {
 // Event Listener für den Würfel-Button
 rollButton.addEventListener('click', () => {
     if (isRolling) return;
-    executeRoll();
+    
+    const playerName = playerNameInput.value.trim() || 'Test-Spieler';
+    const chosenBet = playerBetSelect.value;
+    
+    // Lies den gewählten Einsatz aus
+    let chosenStake = 'Standard-Strafe';
+    if (playerStakeSelect) {
+        const stakeType = playerStakeSelect.value;
+        if (stakeType === 'custom' && playerCustomStakeInput) {
+            const customVal = playerCustomStakeInput.value.trim();
+            chosenStake = customVal || 'Standard-Strafe';
+        } else if (stakeType === 'standard') {
+            chosenStake = 'Standard-Strafe';
+        } else {
+            chosenStake = stakeType;
+        }
+    }
+
+    // Lies den optionalen Custom Timer aus
+    let customTimerVal = null;
+    if (playerCustomTimerInput && playerStakeSelect && playerStakeSelect.value === 'custom') {
+        const timerVal = parseInt(playerCustomTimerInput.value.trim(), 10);
+        if (!isNaN(timerVal) && timerVal > 0) {
+            customTimerVal = timerVal;
+        }
+    }
+
+    executeRoll(playerName, chosenBet, chosenStake, customTimerVal);
 });
 
 /**
  * Führt die Würfel-Animation und Spiel-Auswertung aus.
  */
-function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeParam = 'Standard-Strafe') {
+function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeParam = 'Standard-Strafe', customTimerParam = null) {
     isRolling = true;
     rollButton.disabled = true;
     rollButton.textContent = 'Würfelt...';
@@ -192,6 +244,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
 
     const playerName = playerNameParam || playerNameInput.value.trim() || 'Unbekannter Spieler';
     const chosenBet = chosenBetParam || playerBetSelect.value;
+    const isCustomStake = chosenStakeParam !== 'Standard-Strafe';
 
     // Würfel animieren
     for (let i = 0; i < 5; i++) {
@@ -233,6 +286,8 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
             }
         }
 
+        const actionText = isCustomStake ? chosenStakeParam : BET_RULES[chosenBet];
+
         // UI-Klassen anwenden
         if (chosenBet === 'none') {
             resultPanel.classList.add('win');
@@ -244,12 +299,15 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
             resultPanel.classList.add('win');
             resultTitle.textContent = `${playerName} hat gewonnen!`;
             resultDescription.textContent = `Ziel: ${BET_LABELS[chosenBet]} (Einsatz: ${chosenStakeParam}) | Gewürfelt: ${rolledHandName} (${diceValues.join(', ')})`;
-            resultAction.textContent = `Aktion: ${BET_RULES[chosenBet]}`;
+            resultAction.textContent = `Aktion: ${actionText}`;
             
             playWinSound();
             
-            // Wenn Wette getroffen wurde und es eine Strafe erfordert (z.B. Pasch 30s-Timer)
-            if (chosenBet === 'pasch') {
+            // Wenn ein custom timer angegeben wurde (und > 0), starte diesen.
+            // Andernfalls, falls KEIN custom stake vorliegt und die Wette Pasch ist, starte den standardmäßigen 30s-Timer.
+            if (customTimerParam && customTimerParam > 0) {
+                startTimer(customTimerParam);
+            } else if (!isCustomStake && chosenBet === 'pasch') {
                 startTimer(30);
             }
         } else {
@@ -276,7 +334,8 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
                     dice: diceValues,
                     rolledHandName: rolledHandName,
                     success: success,
-                    rule: BET_RULES[chosenBet]
+                    rule: actionText,
+                    timer: customTimerParam
                 });
             }
         });
@@ -291,7 +350,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
             nextTurnButton.style.display = 'block';
             
             // Falls kein Timer läuft, automatisch nach 6 Sekunden weiterschalten
-            if (chosenBet !== 'pasch' || !success) {
+            if (!timerInterval) {
                 scheduleAutoTurn(6000);
             }
         }
@@ -520,7 +579,7 @@ function initHostPeer() {
             if (data && data.action === 'rollDice') {
                 const activePlayer = players[activePlayerIndex];
                 if (gameState === 'playing' && activePlayer && conn.peer === activePlayer.peerId && !isRolling) {
-                    executeRoll(activePlayer.name, data.bet, data.stake);
+                    executeRoll(activePlayer.name, data.bet, data.stake, data.timer);
                 }
             }
         });

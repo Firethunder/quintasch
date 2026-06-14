@@ -163,6 +163,26 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="player-stake">Wetteinsatz-Strafe</label>
+                    <select id="player-stake" class="form-control">
+                        <option value="standard">Standard-Strafe</option>
+                        <option value="1 Schluck">1 Schluck</option>
+                        <option value="2 Schlucke">2 Schlucke</option>
+                        <option value="3 Schlucke">3 Schlucke</option>
+                        <option value="4 Schlucke">4 Schlucke</option>
+                        <option value="5 Schlucke">5 Schlucke</option>
+                        <option value="1 Shot">1 Shot</option>
+                        <option value="2 Shots">2 Shots</option>
+                        <option value="custom">Eigener...</option>
+                    </select>
+                    <input type="text" id="player-custom-stake" class="form-control" placeholder="z. B. 3 Schlucke auf Ex" style="display: none; margin-top: 10px;" maxlength="30">
+                    <div id="player-custom-timer-group" style="display: none; margin-top: 10px;">
+                        <label for="player-custom-timer" style="font-size: 0.8rem;">Timer (optional in Sekunden)</label>
+                        <input type="number" id="player-custom-timer" class="form-control" placeholder="z. B. 30" min="1" max="300" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label for="custom-roll">Simulierter Wurf (Optional)</label>
                     <input type="text" id="custom-roll" class="form-control" placeholder="z. B. 4,4,4,1,2">
                 </div>
