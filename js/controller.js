@@ -1,6 +1,7 @@
 // Client PeerJS-Variablen
 let peer = null;
 let conn = null;
+let isDisconnecting = false;
 
 // DOM-Elemente
 const joinContainer = document.getElementById('join-container');
@@ -39,6 +40,7 @@ joinButton.addEventListener('click', () => {
  * Verbindet den Client mit dem P2P-Raum des Hosts.
  */
 function joinRoom(playerName) {
+    isDisconnecting = false;
     joinErrorMsg.style.display = 'none';
     joinButton.disabled = true;
     joinButton.textContent = 'Verbinde...';
@@ -84,6 +86,7 @@ function joinRoom(playerName) {
                     lobbySpinner.style.display = 'none';
                 } else {
                     // Beitritt fehlgeschlagen (z.B. Name bereits vergeben)
+                    isDisconnecting = true;
                     showError(data.reason || 'Beitritt abgelehnt.');
                     disconnect();
                 }
@@ -97,7 +100,9 @@ function joinRoom(playerName) {
 
         // Abfangen von Verbindungsabbrüchen
         const handleConnectionClose = () => {
-            showError('Verbindung zum Dashboard verloren.');
+            if (!isDisconnecting) {
+                showError('Verbindung zum Dashboard verloren.');
+            }
             disconnect();
         };
 
