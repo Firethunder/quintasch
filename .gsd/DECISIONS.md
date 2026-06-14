@@ -15,4 +15,16 @@
 
 ### Approach
 - **P2P-Übertragung**: Das rollDice-Event wird um das Feld `stake` ergänzt.
-- **CSS Mobile Touch Hover-Fix**: Klebrige Button-Highlights auf Handys werden behoben, indem `:hover` Stile für `.btn-neon` in eine `@media (hover: hover)` Media Query gekapselt werden.
+- **CSS Mobile Touch Hover-Fix**: Klebrige Button-Highlights auf Handys werden behoben, indem `:hover` Stile für `.btn-neon` und `.btn-magenta` in eine `@media (hover: hover)` Media Query gekapselt werden.
+
+## Phase 2 Decisions
+
+**Date:** 2026-06-14
+
+### Scope
+- **Würfeldarstellung auf Smartphones**: Option B - 5 kleine quadratische Neon-Boxen nebeneinander zur Visualisierung der Würfelaugen.
+- **Overlay-Verhalten**: Bleibt offen, bis es manuell per Schließen-Button geschlossen wird oder bis die nächste Spielrunde startet (Triggern von `yourTurn` / `waitTurn` schließt das Overlay automatisch).
+- **Audio**: Soundeffekte für Rundenende (Win/Fail Fanfaren) werden nur auf dem Host-Dashboard abgespielt, nicht auf Client-Geräten, um Lärm am Tisch zu vermeiden.
+
+### Approach
+- **Auto-Advance**: 6-Sekunden-Countdown für automatischen Rundenübergang nach normalen Würfen. Manuelle Klicks brechen diesen Übergang ab und schalten sofort weiter. Bei der Pasch-Strafe wird nach Ablauf des 30s-Timers + 3s Verzögerung weitergeschaltet.
