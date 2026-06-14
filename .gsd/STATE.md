@@ -2,7 +2,7 @@
 
 > **Current Status**: Initialized
 > **Active Milestone**: v1.0
-> **Active Phase**: None
+> **Active Phase**: 1
 
 ## Phase Progress
 - [ ] Phase 1: Foundation (Basis-Layout, Styling & Würfel-Logik)
@@ -13,5 +13,10 @@
 ## Blockers
 - Keine
 
+## Current Position
+- **Phase**: 1
+- **Task**: Planung abgeschlossen
+- **Status**: Bereit zur Ausführung
+
 ## Next Steps
-1. Starte Phase 1 (Foundation) zur Entwicklung des Basis-Layouts, Designs und der 3D-Würfel-Logik.
+1. Führ den Befehl `/execute 1` aus, um die Umsetzung von Phase 1 zu starten.
