@@ -1,4 +1,6 @@
 // Client PeerJS-Variablen
+import { playRollSound } from './audio.js';
+
 let peer = null;
 let conn = null;
 let isDisconnecting = false;
@@ -163,6 +165,9 @@ gameplayRollButton.addEventListener('click', () => {
     if (!conn || !conn.open) return;
     
     const chosenBet = gameplayBetSelect.value;
+    
+    // Lokalen Rassel-Sound auf dem Handy abspielen
+    playRollSound();
     
     // Deaktivieren und Text ändern
     gameplayRollButton.disabled = true;

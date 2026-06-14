@@ -1,4 +1,5 @@
 import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, BET_PROBABILITIES } from './game.js';
+import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer } from './audio.js';
 
 // Rotationswinkel für die verschiedenen Augenzahlen, damit sie nach vorne zeigen.
 const faceAngles = {
@@ -84,6 +85,16 @@ function executeRoll(playerNameParam = null, chosenBetParam = null) {
     isRolling = true;
     rollButton.disabled = true;
     rollButton.textContent = 'Würfelt...';
+
+    // Rasselnden Würfel-Sound in Abständen abspielen
+    let shakeCount = 0;
+    const shakeInterval = setInterval(() => {
+        playRollSound();
+        shakeCount++;
+        if (shakeCount >= 8) {
+            clearInterval(shakeInterval);
+        }
+    }, 150);
     
     // Timer zurücksetzen, falls einer läuft
     resetTimer();
@@ -162,11 +173,14 @@ function executeRoll(playerNameParam = null, chosenBetParam = null) {
             resultTitle.textContent = `${playerName} schaut zu`;
             resultDescription.textContent = `Gewürfelt wurde: ${rolledHandName} (${diceValues.join(', ')})`;
             resultAction.textContent = 'Keine Wette platziert.';
+            playWinSound();
         } else if (success) {
             resultPanel.classList.add('win');
             resultTitle.textContent = `${playerName} hat gewonnen!`;
             resultDescription.textContent = `Ziel: ${BET_LABELS[chosenBet]} | Gewürfelt: ${rolledHandName} (${diceValues.join(', ')})`;
             resultAction.textContent = `Aktion: ${BET_RULES[chosenBet]}`;
+            
+            playWinSound();
             
             // Wenn Wette getroffen wurde und es eine Strafe erfordert (z.B. Pasch 30s-Timer)
             if (chosenBet === 'pasch') {
@@ -177,6 +191,8 @@ function executeRoll(playerNameParam = null, chosenBetParam = null) {
             resultTitle.textContent = `${playerName} hat verloren!`;
             resultDescription.textContent = `Ziel: ${BET_LABELS[chosenBet]} | Gewürfelt: ${rolledHandName} (${diceValues.join(', ')})`;
             resultAction.textContent = 'Keine Konsequenz. Glück gehabt!';
+            
+            playFailSound();
         }
 
         // Historie aktualisieren und speichern
@@ -213,6 +229,11 @@ function startTimer(seconds) {
         const percentage = (timeLeft / seconds) * 100;
         timerProgress.style.width = `${percentage}%`;
 
+        // Tick-Sound bei jeder verbleibenden Sekunde abspielen
+        if (timeLeft > 0) {
+            playTimerTick();
+        }
+
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             timerText.textContent = 'ZEIT ABGELAUFEN!';
@@ -220,6 +241,8 @@ function startTimer(seconds) {
             timerText.style.textShadow = 'var(--glow-magenta)';
             timerProgress.style.background = 'var(--neon-magenta)';
             timerProgress.style.boxShadow = 'var(--glow-magenta)';
+            
+            playTimerBuzzer();
         }
     }, 1000);
 }
