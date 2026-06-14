@@ -5,49 +5,82 @@ let peer = null;
 let conn = null;
 let isDisconnecting = false;
 
-// DOM-Elemente
-const joinContainer = document.getElementById('join-container');
-const lobbyContainer = document.getElementById('lobby-container');
-const joinButton = document.getElementById('join-button');
-const clientPlayerNameInput = document.getElementById('client-player-name');
-const joinErrorMsg = document.getElementById('join-error-msg');
-const lobbyStatusTitle = document.getElementById('lobby-status-title');
-const lobbySpinner = document.getElementById('lobby-spinner');
-const lobbyPlayersList = document.getElementById('lobby-players-list');
-const gameplayContainer = document.getElementById('gameplay-container');
-const gameplayBetSelect = document.getElementById('gameplay-bet');
-const gameplayRollButton = document.getElementById('gameplay-roll-button');
-const lobbyWaitText = document.getElementById('lobby-wait-text');
-const gameplayStakeSelect = document.getElementById('gameplay-stake');
-const gameplayCustomStakeInput = document.getElementById('gameplay-custom-stake');
+// DOM-Elemente (wiederkehrend deklariert)
+let joinContainer = null;
+let lobbyContainer = null;
+let joinButton = null;
+let clientPlayerNameInput = null;
+let joinErrorMsg = null;
+let lobbyStatusTitle = null;
+let lobbySpinner = null;
+let lobbyPlayersList = null;
+let gameplayContainer = null;
+let gameplayBetSelect = null;
+let gameplayRollButton = null;
+let lobbyWaitText = null;
+let gameplayStakeSelect = null;
+let gameplayCustomStakeInput = null;
 
 // Wurf-Ergebnis Overlay-Elemente
-const rollResultOverlay = document.getElementById('roll-result-overlay');
-const resultOverlayTitle = document.getElementById('result-overlay-title');
-const resultOverlayText = document.getElementById('result-overlay-text');
-const resultOverlayDice = document.getElementById('result-overlay-dice');
-const resultOverlayCloseBtn = document.getElementById('result-overlay-close-btn');
+let rollResultOverlay = null;
+let resultOverlayTitle = null;
+let resultOverlayText = null;
+let resultOverlayDice = null;
+let resultOverlayCloseBtn = null;
 
 // Settings DOM-Elemente
-const settingsPanel = document.getElementById('settings-panel');
-const toggleSettingsButton = document.getElementById('toggle-settings-button');
-const peerHostInput = document.getElementById('peer-host');
-const peerPortInput = document.getElementById('peer-port');
-const peerPathInput = document.getElementById('peer-path');
-const peerSecureInput = document.getElementById('peer-secure');
-const saveSettingsButton = document.getElementById('save-settings-button');
-const resetSettingsButton = document.getElementById('reset-settings-button');
+let settingsPanel = null;
+let toggleSettingsButton = null;
+let peerHostInput = null;
+let peerPortInput = null;
+let peerPathInput = null;
+let peerSecureInput = null;
+let saveSettingsButton = null;
+let resetSettingsButton = null;
 
 // Raum-ID aus der URL auslesen (z.B. controller.html?room=xxxx)
 const roomId = new URLSearchParams(window.location.search).get('room');
 
 // Initialisierung bei Seitenaufruf
 document.addEventListener('DOMContentLoaded', () => {
+    // DOM-Elemente abrufen
+    joinContainer = document.getElementById('join-container');
+    lobbyContainer = document.getElementById('lobby-container');
+    joinButton = document.getElementById('join-button');
+    clientPlayerNameInput = document.getElementById('client-player-name');
+    joinErrorMsg = document.getElementById('join-error-msg');
+    lobbyStatusTitle = document.getElementById('lobby-status-title');
+    lobbySpinner = document.getElementById('lobby-spinner');
+    lobbyPlayersList = document.getElementById('lobby-players-list');
+    gameplayContainer = document.getElementById('gameplay-container');
+    gameplayBetSelect = document.getElementById('gameplay-bet');
+    gameplayRollButton = document.getElementById('gameplay-roll-button');
+    lobbyWaitText = document.getElementById('lobby-wait-text');
+    gameplayStakeSelect = document.getElementById('gameplay-stake');
+    gameplayCustomStakeInput = document.getElementById('gameplay-custom-stake');
+
+    // Wurf-Ergebnis Overlay-Elemente abrufen
+    rollResultOverlay = document.getElementById('roll-result-overlay');
+    resultOverlayTitle = document.getElementById('result-overlay-title');
+    resultOverlayText = document.getElementById('result-overlay-text');
+    resultOverlayDice = document.getElementById('result-overlay-dice');
+    resultOverlayCloseBtn = document.getElementById('result-overlay-close-btn');
+
+    // Settings DOM-Elemente abrufen
+    settingsPanel = document.getElementById('settings-panel');
+    toggleSettingsButton = document.getElementById('toggle-settings-button');
+    peerHostInput = document.getElementById('peer-host');
+    peerPortInput = document.getElementById('peer-port');
+    peerPathInput = document.getElementById('peer-path');
+    peerSecureInput = document.getElementById('peer-secure');
+    saveSettingsButton = document.getElementById('save-settings-button');
+    resetSettingsButton = document.getElementById('reset-settings-button');
+
     // Falls keine Raum-ID vorhanden ist, breche ab
     if (!roomId) {
         showError('Ungültige oder fehlende Raum-ID! Bitte scanne den QR-Code auf dem Dashboard erneut.');
-        joinButton.disabled = true;
-        clientPlayerNameInput.disabled = true;
+        if (joinButton) joinButton.disabled = true;
+        if (clientPlayerNameInput) clientPlayerNameInput.disabled = true;
     }
 
     // Lese Custom Config
@@ -63,51 +96,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Prefill UI inputs
     if (peerConfig) {
-        peerHostInput.value = peerConfig.host || '';
-        peerPortInput.value = peerConfig.port || '';
-        peerPathInput.value = peerConfig.path || '';
-        peerSecureInput.checked = peerConfig.secure !== false;
+        if (peerHostInput) peerHostInput.value = peerConfig.host || '';
+        if (peerPortInput) peerPortInput.value = peerConfig.port || '';
+        if (peerPathInput) peerPathInput.value = peerConfig.path || '';
+        if (peerSecureInput) peerSecureInput.checked = peerConfig.secure !== false;
     }
 
     // Settings toggle
-    toggleSettingsButton.addEventListener('click', () => {
-        if (settingsPanel.style.display === 'none') {
-            settingsPanel.style.display = 'block';
-            toggleSettingsButton.textContent = 'Server-Einstellungen ausblenden';
-        } else {
-            settingsPanel.style.display = 'none';
-            toggleSettingsButton.textContent = 'Server-Einstellungen anzeigen';
-        }
-    });
+    if (toggleSettingsButton && settingsPanel) {
+        toggleSettingsButton.addEventListener('click', () => {
+            if (settingsPanel.style.display === 'none') {
+                settingsPanel.style.display = 'block';
+                toggleSettingsButton.textContent = 'Server-Einstellungen ausblenden';
+            } else {
+                settingsPanel.style.display = 'none';
+                toggleSettingsButton.textContent = 'Server-Einstellungen anzeigen';
+            }
+        });
+    }
 
     // Settings save
-    saveSettingsButton.addEventListener('click', () => {
-        const host = peerHostInput.value.trim();
-        const port = peerPortInput.value.trim();
-        const path = peerPathInput.value.trim();
-        const secure = peerSecureInput.checked;
+    if (saveSettingsButton) {
+        saveSettingsButton.addEventListener('click', () => {
+            const host = peerHostInput.value.trim();
+            const port = peerPortInput.value.trim();
+            const path = peerPathInput.value.trim();
+            const secure = peerSecureInput.checked;
 
-        if (host) {
-            const config = { host, port, path, secure };
-            localStorage.setItem('quintasch_peer_config', JSON.stringify(config));
-        } else {
-            localStorage.removeItem('quintasch_peer_config');
-        }
-        
-        alert('Einstellungen gespeichert!');
-        window.location.reload();
-    });
+            if (host) {
+                const config = { host, port, path, secure };
+                localStorage.setItem('quintasch_peer_config', JSON.stringify(config));
+            } else {
+                localStorage.removeItem('quintasch_peer_config');
+            }
+            
+            alert('Einstellungen gespeichert!');
+            window.location.reload();
+        });
+    }
 
     // Settings reset
-    resetSettingsButton.addEventListener('click', () => {
-        localStorage.removeItem('quintasch_peer_config');
-        peerHostInput.value = '';
-        peerPortInput.value = '';
-        peerPathInput.value = '';
-        peerSecureInput.checked = true;
-        alert('Einstellungen zurückgesetzt auf Standard!');
-        window.location.reload();
-    });
+    if (resetSettingsButton) {
+        resetSettingsButton.addEventListener('click', () => {
+            localStorage.removeItem('quintasch_peer_config');
+            if (peerHostInput) peerHostInput.value = '';
+            if (peerPortInput) peerPortInput.value = '';
+            if (peerPathInput) peerPathInput.value = '';
+            if (peerSecureInput) peerSecureInput.checked = true;
+            alert('Einstellungen zurückgesetzt auf Standard!');
+            window.location.reload();
+        });
+    }
 
     // Stake selection toggle for custom input
     if (gameplayStakeSelect && gameplayCustomStakeInput) {
@@ -127,16 +166,55 @@ document.addEventListener('DOMContentLoaded', () => {
             rollResultOverlay.style.display = 'none';
         });
     }
-});
 
-// Event-Listener für Beitrittsbutton
-joinButton.addEventListener('click', () => {
-    const playerName = clientPlayerNameInput.value.trim();
-    if (!playerName) {
-        showError('Bitte gib einen Spielernamen ein!');
-        return;
+    // Event-Listener für Beitrittsbutton
+    if (joinButton) {
+        joinButton.addEventListener('click', () => {
+            const playerName = clientPlayerNameInput.value.trim();
+            if (!playerName) {
+                showError('Bitte gib einen Spielernamen ein!');
+                return;
+            }
+            joinRoom(playerName);
+        });
     }
-    joinRoom(playerName);
+
+    // Event-Listener für den Gameplay-Roll-Button
+    if (gameplayRollButton) {
+        gameplayRollButton.addEventListener('click', () => {
+            if (!conn || !conn.open) return;
+            
+            const chosenBet = gameplayBetSelect.value;
+            
+            // Lies den gewählten Einsatz aus
+            let chosenStake = 'Standard-Strafe';
+            if (gameplayStakeSelect) {
+                const stakeType = gameplayStakeSelect.value;
+                if (stakeType === 'custom' && gameplayCustomStakeInput) {
+                    const customVal = gameplayCustomStakeInput.value.trim();
+                    chosenStake = customVal || 'Standard-Strafe';
+                } else if (stakeType === 'standard') {
+                    chosenStake = 'Standard-Strafe';
+                } else {
+                    chosenStake = stakeType;
+                }
+            }
+            
+            // Lokalen Rassel-Sound auf dem Handy abspielen
+            playRollSound();
+            
+            // Deaktivieren und Text ändern
+            gameplayRollButton.disabled = true;
+            gameplayRollButton.textContent = 'Würfel rollen...';
+            gameplayRollButton.blur(); // Focus aufheben, um klebriges Design zu verhindern
+            
+            conn.send({
+                action: 'rollDice',
+                bet: chosenBet,
+                stake: chosenStake
+            });
+        });
+    }
 });
 
 /**
@@ -144,9 +222,11 @@ joinButton.addEventListener('click', () => {
  */
 function joinRoom(playerName) {
     isDisconnecting = false;
-    joinErrorMsg.style.display = 'none';
-    joinButton.disabled = true;
-    joinButton.textContent = 'Verbinde...';
+    if (joinErrorMsg) joinErrorMsg.style.display = 'none';
+    if (joinButton) {
+        joinButton.disabled = true;
+        joinButton.textContent = 'Verbinde...';
+    }
 
     // Falls PeerJS nicht geladen werden konnte
     if (typeof Peer === 'undefined') {
@@ -156,10 +236,10 @@ function joinRoom(playerName) {
     }
 
     // Warteraum anzeigen
-    joinContainer.style.display = 'none';
-    lobbyContainer.style.display = 'block';
-    lobbySpinner.style.display = 'block';
-    lobbyStatusTitle.textContent = 'Verbinde zum Signaling-Server...';
+    if (joinContainer) joinContainer.style.display = 'none';
+    if (lobbyContainer) lobbyContainer.style.display = 'block';
+    if (lobbySpinner) lobbySpinner.style.display = 'block';
+    if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Verbinde zum Signaling-Server...';
 
     // Lese Custom Config
     let peerConfig = null;
@@ -186,13 +266,13 @@ function joinRoom(playerName) {
     }
 
     peer.on('open', (id) => {
-        lobbyStatusTitle.textContent = 'Verbinde zum Dashboard...';
+        if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Verbinde zum Dashboard...';
         
         // Verbindung zum Host-Peer aufbauen
         conn = peer.connect(roomId);
 
         conn.on('open', () => {
-            lobbyStatusTitle.textContent = 'Warte auf Bestätigung...';
+            if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Warte auf Bestätigung...';
             // Handshake senden
             conn.send({
                 action: 'join',
@@ -206,8 +286,8 @@ function joinRoom(playerName) {
             // Handshake Bestätigung
             if (data.action === 'joinConfirm') {
                 if (data.success) {
-                    lobbyStatusTitle.textContent = 'In der Lobby';
-                    lobbySpinner.style.display = 'none';
+                    if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'In der Lobby';
+                    if (lobbySpinner) lobbySpinner.style.display = 'none';
                 } else {
                     // Beitritt fehlgeschlagen (z.B. Name bereits vergeben)
                     isDisconnecting = true;
@@ -224,18 +304,20 @@ function joinRoom(playerName) {
             // Runden-Steuerungsbefehle empfangen
             if (data.action === 'yourTurn') {
                 // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
-                lobbyContainer.style.display = 'none';
-                gameplayContainer.style.display = 'block';
-                gameplayRollButton.disabled = false;
-                gameplayRollButton.textContent = 'WÜRFELN!';
+                if (lobbyContainer) lobbyContainer.style.display = 'none';
+                if (gameplayContainer) gameplayContainer.style.display = 'block';
+                if (gameplayRollButton) {
+                    gameplayRollButton.disabled = false;
+                    gameplayRollButton.textContent = 'WÜRFELN!';
+                }
             }
 
             if (data.action === 'waitTurn') {
                 // Inaktiver Spieler: Zeige Warteraum mit Name des aktiven Spielers
-                gameplayContainer.style.display = 'none';
-                lobbyContainer.style.display = 'block';
-                lobbySpinner.style.display = 'none'; // Verberge Ladekreis
-                lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
+                if (gameplayContainer) gameplayContainer.style.display = 'none';
+                if (lobbyContainer) lobbyContainer.style.display = 'block';
+                if (lobbySpinner) lobbySpinner.style.display = 'none'; // Verberge Ladekreis
+                if (lobbyWaitText) lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
             }
 
             // Würfelergebnis von Host empfangen
@@ -255,7 +337,7 @@ function joinRoom(playerName) {
 
                     // Setze Titel & Text
                     if (resultOverlayTitle) {
-                        resultOverlayTitle.textContent = data.success ? 'Getroffen!' : 'Verfehlt!';
+                        resultOverlayTitle.textContent = data.success ? 'Getroffen!' : 'Das war nichts!';
                         
                         if (data.success) {
                             resultOverlayTitle.style.color = 'var(--neon-green)';
@@ -271,7 +353,7 @@ function joinRoom(playerName) {
                     if (resultOverlayText) {
                         const outcomeMsg = data.success 
                             ? `<span style="color: var(--neon-green); font-weight: bold; text-shadow: var(--glow-green);">Erfolg!</span><br>Aktion: ${data.rule}`
-                            : `<span style="color: var(--neon-magenta); font-weight: bold; text-shadow: var(--glow-magenta);">Fehlwurf!</span><br>Keine Auswirkung für ${data.playerName}. Glück gehabt!`;
+                            : `<span style="color: var(--neon-magenta); font-weight: bold; text-shadow: var(--glow-magenta);">Das war nichts!</span><br>Keine Auswirkung für ${data.playerName}. Glück gehabt!`;
                             
                         resultOverlayText.innerHTML = `
                             <strong>Spieler:</strong> ${data.playerName}<br>
@@ -319,67 +401,37 @@ function disconnect() {
     }
 
     // UI zurücksetzen
-    lobbyContainer.style.display = 'none';
-    gameplayContainer.style.display = 'none';
-    joinContainer.style.display = 'block';
+    if (lobbyContainer) lobbyContainer.style.display = 'none';
+    if (gameplayContainer) gameplayContainer.style.display = 'none';
+    if (joinContainer) joinContainer.style.display = 'block';
     resetJoinButton();
 }
-
-// Event-Listener für den Gameplay-Roll-Button
-gameplayRollButton.addEventListener('click', () => {
-    if (!conn || !conn.open) return;
-    
-    const chosenBet = gameplayBetSelect.value;
-    
-    // Lies den gewählten Einsatz aus
-    let chosenStake = 'Standard-Strafe';
-    if (gameplayStakeSelect) {
-        const stakeType = gameplayStakeSelect.value;
-        if (stakeType === 'custom' && gameplayCustomStakeInput) {
-            const customVal = gameplayCustomStakeInput.value.trim();
-            chosenStake = customVal || 'Standard-Strafe';
-        } else if (stakeType === 'standard') {
-            chosenStake = 'Standard-Strafe';
-        } else {
-            chosenStake = stakeType;
-        }
-    }
-    
-    // Lokalen Rassel-Sound auf dem Handy abspielen
-    playRollSound();
-    
-    // Deaktivieren und Text ändern
-    gameplayRollButton.disabled = true;
-    gameplayRollButton.textContent = 'Würfel rollen...';
-    gameplayRollButton.blur(); // Focus aufheben, um klebriges Design zu verhindern
-    
-    conn.send({
-        action: 'rollDice',
-        bet: chosenBet,
-        stake: chosenStake
-    });
-});
 
 /**
  * Zeigt einen Fehler im Beitritts-Screen an.
  */
 function showError(message) {
-    joinErrorMsg.textContent = message;
-    joinErrorMsg.style.display = 'block';
+    if (joinErrorMsg) {
+        joinErrorMsg.textContent = message;
+        joinErrorMsg.style.display = 'block';
+    }
 }
 
 /**
  * Setzt den Beitritts-Button zurück.
  */
 function resetJoinButton() {
-    joinButton.disabled = false;
-    joinButton.textContent = 'Beitreten';
+    if (joinButton) {
+        joinButton.disabled = false;
+        joinButton.textContent = 'Beitreten';
+    }
 }
 
 /**
  * Rendert die Spielerliste in der mobilen Ansicht.
  */
 function renderLobbyPlayers(players) {
+    if (!lobbyPlayersList) return;
     lobbyPlayersList.innerHTML = '';
     
     if (players.length === 0) {
