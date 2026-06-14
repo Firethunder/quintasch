@@ -239,7 +239,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
             }
         } else {
             resultPanel.classList.add('fail');
-            resultTitle.textContent = `${playerName} hat verloren!`;
+            resultTitle.textContent = `${playerName} — Das war nichts!`;
             resultDescription.textContent = `Ziel: ${BET_LABELS[chosenBet]} (Einsatz: ${chosenStakeParam}) | Gewürfelt: ${rolledHandName} (${diceValues.join(', ')})`;
             resultAction.textContent = 'Keine Konsequenz. Glück gehabt!';
             
