@@ -18,6 +18,8 @@ const gameplayContainer = document.getElementById('gameplay-container');
 const gameplayBetSelect = document.getElementById('gameplay-bet');
 const gameplayRollButton = document.getElementById('gameplay-roll-button');
 const lobbyWaitText = document.getElementById('lobby-wait-text');
+const gameplayStakeSelect = document.getElementById('gameplay-stake');
+const gameplayCustomStakeInput = document.getElementById('gameplay-custom-stake');
 
 // Settings DOM-Elemente
 const settingsPanel = document.getElementById('settings-panel');
@@ -99,6 +101,18 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Einstellungen zurückgesetzt auf Standard!');
         window.location.reload();
     });
+
+    // Stake selection toggle for custom input
+    if (gameplayStakeSelect && gameplayCustomStakeInput) {
+        gameplayStakeSelect.addEventListener('change', () => {
+            if (gameplayStakeSelect.value === 'custom') {
+                gameplayCustomStakeInput.style.display = 'block';
+                gameplayCustomStakeInput.focus();
+            } else {
+                gameplayCustomStakeInput.style.display = 'none';
+            }
+        });
+    }
 });
 
 // Event-Listener für Beitrittsbutton
@@ -256,16 +270,32 @@ gameplayRollButton.addEventListener('click', () => {
     
     const chosenBet = gameplayBetSelect.value;
     
+    // Lies den gewählten Einsatz aus
+    let chosenStake = 'Standard-Strafe';
+    if (gameplayStakeSelect) {
+        const stakeType = gameplayStakeSelect.value;
+        if (stakeType === 'custom' && gameplayCustomStakeInput) {
+            const customVal = gameplayCustomStakeInput.value.trim();
+            chosenStake = customVal || 'Standard-Strafe';
+        } else if (stakeType === 'standard') {
+            chosenStake = 'Standard-Strafe';
+        } else {
+            chosenStake = stakeType;
+        }
+    }
+    
     // Lokalen Rassel-Sound auf dem Handy abspielen
     playRollSound();
     
     // Deaktivieren und Text ändern
     gameplayRollButton.disabled = true;
     gameplayRollButton.textContent = 'Würfel rollen...';
+    gameplayRollButton.blur(); // Focus aufheben, um klebriges Design zu verhindern
     
     conn.send({
         action: 'rollDice',
-        bet: chosenBet
+        bet: chosenBet,
+        stake: chosenStake
     });
 });
 
