@@ -432,7 +432,10 @@ function handleNewConnection(newConn) {
             // Blende Form aus, zeige 3D-Würfeltisch
             if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'none';
             if (mobileDiceTable) mobileDiceTable.style.display = 'flex';
-            if (gameplayRollButton) gameplayRollButton.disabled = true;
+            if (gameplayRollButton) {
+                gameplayRollButton.disabled = true;
+                gameplayRollButton.textContent = 'Würfel rollen...';
+            }
 
             // Bestehenden Rassel-Interval bereinigen (Defense-in-depth)
             if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
@@ -450,29 +453,34 @@ function handleNewConnection(newConn) {
                 }, 150);
             }
 
-            // Würfel animieren
-            for (let i = 0; i < 5; i++) {
-                const diceElement = document.getElementById(`mobile-dice-${i}`);
-                if (!diceElement) continue;
+            // Warte einen Frame, damit der Browser die Würfel erst sichtbar rendert (display:none → flex),
+            // bevor die CSS Transition gestartet wird — sonst wird die Transition übersprungen.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    for (let i = 0; i < 5; i++) {
+                        const diceElement = document.getElementById(`mobile-dice-${i}`);
+                        if (!diceElement) continue;
 
-                const val = data.dice[i];
-                const target = faceAngles[val];
+                        const val = data.dice[i];
+                        const target = faceAngles[val];
 
-                // Drehungen plus Versatz
-                const extraXSpins = 3 + Math.floor(Math.random() * 2);
-                const extraYSpins = 3 + Math.floor(Math.random() * 2);
-                const extraZSpins = 2 + Math.floor(Math.random() * 2);
+                        // 3-4 volle Drehungen plus Winkelversatz zur letzten Position
+                        const extraXSpins = 3 + Math.floor(Math.random() * 2);
+                        const extraYSpins = 3 + Math.floor(Math.random() * 2);
+                        const extraZSpins = 2 + Math.floor(Math.random() * 2);
 
-                const newX = currentRotations[i].x + (extraXSpins * 360) + (target.x - (currentRotations[i].x % 360));
-                const newY = currentRotations[i].y + (extraYSpins * 360) + (target.y - (currentRotations[i].y % 360));
-                const newZ = currentRotations[i].z + (extraZSpins * 360);
+                        const newX = currentRotations[i].x + (extraXSpins * 360) + (target.x - (currentRotations[i].x % 360));
+                        const newY = currentRotations[i].y + (extraYSpins * 360) + (target.y - (currentRotations[i].y % 360));
+                        const newZ = currentRotations[i].z + (extraZSpins * 360);
 
-                currentRotations[i].x = newX;
-                currentRotations[i].y = newY;
-                currentRotations[i].z = newZ;
+                        currentRotations[i].x = newX;
+                        currentRotations[i].y = newY;
+                        currentRotations[i].z = newZ;
 
-                diceElement.style.transform = `rotateX(${newX}deg) rotateY(${newY}deg) rotateZ(${newZ}deg)`;
-            }
+                        diceElement.style.transform = `rotateX(${newX}deg) rotateY(${newY}deg) rotateZ(${newZ}deg)`;
+                    }
+                });
+            });
         }
 
         // Würfelergebnis von Host empfangen
