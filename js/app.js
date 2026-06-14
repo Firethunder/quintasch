@@ -41,10 +41,16 @@ let peer = null;
 let connections = [];
 let players = []; // Array von { peerId, name }
 
+// Rundenbasierter Spielzustand
+let gameState = 'lobby'; // 'lobby' oder 'playing'
+let activePlayerIndex = 0;
+
 // DOM-Elemente für PeerJS
 const roomIdDisplay = document.getElementById('room-id-display');
 const qrcodeContainer = document.getElementById('qrcode-container');
 const playersCountDisplay = document.getElementById('players-count-display');
+const startGameButton = document.getElementById('start-game-button');
+const nextTurnButton = document.getElementById('next-turn-button');
 let playersListDisplay = null;
 
 // Initialisierung bei Seitenaufruf
@@ -52,6 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
     setupPlayersListDisplay();
     initHostPeer();
+
+    // Rundensteuerungs-Button-Listeners
+    startGameButton.addEventListener('click', startGame);
+    nextTurnButton.addEventListener('click', nextTurn);
 });
 
 function setupPlayersListDisplay() {
@@ -70,7 +80,7 @@ rollButton.addEventListener('click', () => {
 /**
  * Führt die Würfel-Animation und Spiel-Auswertung aus.
  */
-function executeRoll() {
+function executeRoll(playerNameParam = null, chosenBetParam = null) {
     isRolling = true;
     rollButton.disabled = true;
     rollButton.textContent = 'Würfelt...';
@@ -103,8 +113,8 @@ function executeRoll() {
         }
     }
 
-    const playerName = playerNameInput.value.trim() || 'Unbekannter Spieler';
-    const chosenBet = playerBetSelect.value;
+    const playerName = playerNameParam || playerNameInput.value.trim() || 'Unbekannter Spieler';
+    const chosenBet = chosenBetParam || playerBetSelect.value;
 
     // Würfel animieren
     for (let i = 0; i < 5; i++) {
@@ -176,6 +186,11 @@ function executeRoll() {
         isRolling = false;
         rollButton.disabled = false;
         rollButton.textContent = 'Würfeln (Test)';
+
+        // Wenn wir aktiv im Spiel sind, zeige den "Nächste Runde" Button an
+        if (gameState === 'playing') {
+            nextTurnButton.style.display = 'block';
+        }
     }, 2000);
 }
 
@@ -326,13 +341,28 @@ function initHostPeer() {
                 updateLobbyDisplay();
                 broadcastLobby();
             }
+
+            // Client sendet Würfelwurf-Trigger
+            if (data && data.action === 'rollDice') {
+                const activePlayer = players[activePlayerIndex];
+                if (gameState === 'playing' && activePlayer && conn.peer === activePlayer.peerId && !isRolling) {
+                    executeRoll(activePlayer.name, data.bet);
+                }
+            }
         });
 
         const handleDisconnect = () => {
+            const isActiveDisconnect = players[activePlayerIndex] && players[activePlayerIndex].peerId === conn.peer;
+
             players = players.filter(p => p.peerId !== conn.peer);
             connections = connections.filter(c => c.peer !== conn.peer);
             updateLobbyDisplay();
             broadcastLobby();
+
+            // Falls der aktive Spieler das Spiel verlässt
+            if (gameState === 'playing' && isActiveDisconnect) {
+                startNextTurn();
+            }
         };
 
         conn.on('close', handleDisconnect);
@@ -358,6 +388,19 @@ function updateLobbyDisplay() {
         badge.style.cssText = 'background: rgba(0, 240, 255, 0.1); border: 1px solid var(--neon-cyan); padding: 4px 10px; border-radius: 4px; font-family: "Orbitron", sans-serif; font-size: 0.9rem; text-shadow: var(--glow-cyan); box-shadow: 0 0 5px rgba(0, 240, 255, 0.2);';
         playersListDisplay.appendChild(badge);
     });
+
+    // Start-Game-Button ein- oder ausblenden
+    if (gameState === 'lobby') {
+        if (players.length >= 2) {
+            startGameButton.style.display = 'block';
+            startGameButton.disabled = false;
+        } else {
+            startGameButton.style.display = 'none';
+            startGameButton.disabled = true;
+        }
+    } else {
+        startGameButton.style.display = 'none';
+    }
 }
 
 /**
@@ -370,4 +413,67 @@ function broadcastLobby() {
             conn.send({ action: 'updateLobby', players: playerNames });
         }
     });
+}
+
+/**
+ * Startet das aktive Spiel und setzt die Runden auf Anfang.
+ */
+function startGame() {
+    if (players.length < 2) return;
+    gameState = 'playing';
+    startGameButton.style.display = 'none';
+    activePlayerIndex = 0;
+    startNextTurn();
+}
+
+/**
+ * Initialisiert die Runde für den nächsten Spieler.
+ */
+function startNextTurn() {
+    // Falls keine Spieler mehr im Raum sind, wechsle zurück in die Lobby
+    if (players.length === 0) {
+        gameState = 'lobby';
+        updateLobbyDisplay();
+        resultPanel.className = 'panel result-panel';
+        resultTitle.textContent = 'Bereit zum Würfeln';
+        resultDescription.textContent = 'Warte auf neue Spieler...';
+        resultAction.textContent = '';
+        nextTurnButton.style.display = 'none';
+        return;
+    }
+
+    // Index-Korrektur falls Spieler gegangen sind
+    if (activePlayerIndex >= players.length) {
+        activePlayerIndex = 0;
+    }
+
+    const activePlayer = players[activePlayerIndex];
+
+    // Dashboard-UI anpassen
+    resultPanel.className = 'panel result-panel';
+    resultTitle.textContent = `${activePlayer.name} ist an der Reihe`;
+    resultDescription.textContent = 'Wähle deinen Einsatz am Handy und würfle!';
+    resultAction.textContent = '';
+    nextTurnButton.style.display = 'none';
+    resetTimer();
+
+    // Broadcast Rundenstatus
+    connections.forEach(conn => {
+        if (conn.open) {
+            if (conn.peer === activePlayer.peerId) {
+                conn.send({ action: 'yourTurn' });
+            } else {
+                conn.send({ action: 'waitTurn', activePlayerName: activePlayer.name });
+            }
+        }
+    });
+}
+
+/**
+ * Wechselt rundenbasiert zum nächsten Spieler.
+ */
+function nextTurn() {
+    if (gameState !== 'playing' || players.length === 0) return;
+    activePlayerIndex = (activePlayerIndex + 1) % players.length;
+    startNextTurn();
 }
