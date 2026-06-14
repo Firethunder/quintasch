@@ -46,16 +46,18 @@ Load for context:
   <name>Controller UI & Scale Styles Integration</name>
   <files>controller.html, css/style.css, js/controller.js</files>
   <action>
-    - In `controller.html`, add a container `<section class="mobile-dice-table" id="mobile-dice-table" style="display: none;"></section>` inside `gameplay-container` right before the roll button.
-    - Inside `#mobile-dice-table`, add 5 cube structures (each with class `cube-container`, nested `cube` id `mobile-dice-{index}`, and 6 `face` children for numbers 1 to 6), identical to the host's dice table structure.
-    - In `css/style.css`, define `.mobile-dice-table` to style the section using flexbox (centered, gap 10px, perspective 1000px), with a scale transform (`transform: scale(0.6); margin: 15px 0; transform-origin: center;`) to fit on standard portrait viewports.
+    - In `controller.html`, add a wrapper `<div id="gameplay-form-wrapper"></div>` enclosing all betting/stake form groups inside `gameplay-container`.
+    - In `controller.html`, add `<section class="mobile-dice-table" id="mobile-dice-table" style="display: none;"></section>` inside `gameplay-container` right before the roll button.
+    - Inside `#mobile-dice-table`, add 5 cube structures identical to the host's dice table.
+    - In the settings panel of `controller.html`, append an "Audio-Einstellungen" section containing a checkbox `<input type="checkbox" id="client-sound-toggle" checked>` and label.
+    - In `css/style.css`, define `.mobile-dice-table` using flexbox (centered, gap 10px, perspective 1000px, `transform: scale(0.6); margin: 15px 0; transform-origin: center;`) to fit on standard portrait viewports.
     - In `js/controller.js`, declare the global `faceAngles` mapping and `currentRotations` array (size 5, initialized to `{ x: 0, y: 0, z: 0 }`).
   </action>
   <verify>
-    Verify that the mobile dice table is correctly parsed and rendered under scaled styling.
+    Verify that the mobile dice table and sound toggle checkbox are correctly parsed and styled.
   </verify>
   <done>
-    Scaled 3D dice container markup and styles are present on the mobile controller.
+    Scaled 3D dice container markup, audio toggle checkbox, and styles are present on the mobile controller.
   </done>
 </task>
 
@@ -80,10 +82,11 @@ Load for context:
   <name>Client Roll Animation Driver</name>
   <files>js/controller.js</files>
   <action>
-    - In `js/controller.js`, handle the `rollStart` action inside `handleNewConnection`'s data listener:
-      1. Hide the betting form elements (wrap the form-groups inside a wrapper `id="gameplay-form-wrapper"` in `controller.html` to toggle easily).
-      2. Show the `#mobile-dice-table`.
-      3. Play a repeating rattle sound interval (e.g. 6 rattle sounds spaced 150ms apart) to match the physical dice roll.
+    - In `js/controller.js`, get a reference to the `#client-sound-toggle` DOM element and read its value before playing sounds.
+    - Handle the `rollStart` action inside `handleNewConnection`'s data listener:
+      1. Hide `#gameplay-form-wrapper`.
+      2. Show `#mobile-dice-table`.
+      3. If `#client-sound-toggle` is checked, play a repeating rattle sound interval (e.g. 6 rattle sounds spaced 150ms apart).
       4. Animate the 3D-CSS dice by updating their CSS transforms in `currentRotations` using `faceAngles` and the received `data.dice` array, identical to the host's animation rotation logic.
     - In the `rollResult` action handler:
       1. Hide the `#mobile-dice-table`.
