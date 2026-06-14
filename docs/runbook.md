@@ -292,5 +292,34 @@ git diff --staged
 
 ---
 
+## Self-Hosted PeerJS Server Setup
+
+If the public PeerJS signaling cloud (`0.peerjs.com`) is slow or offline, you can run a local or self-hosted PeerJS server.
+
+### Option A: Installation via Node.js/NPM
+
+1. Install the PeerJS server globally:
+   ```bash
+   npm install -g peer
+   ```
+2. Start the server on a port of your choice (e.g., `9000`) and define a path suffix (e.g., `/myapp`):
+   ```bash
+   peerjs --port 9000 --path /myapp
+   ```
+
+### Option B: Running with Docker
+
+Use the official Docker image to run the server in the background:
+```bash
+docker run -p 9000:9000 -d peerjs/peerjs-server
+```
+
+### Config Suffix & Security (HTTPS)
+
+- **Local/Development**: In a local network, you can run the server on HTTP (unsecure). 
+- **Production/PWA**: Note that PWAs require **HTTPS/SSL**. In production, you must run the PeerJS server behind a reverse proxy (e.g. Nginx with Let's Encrypt certificates) to provide HTTPS.
+
+---
+
 *See PROJECT_RULES.md for canonical rules.*
 *See docs/model-selection-playbook.md for model guidance.*
