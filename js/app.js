@@ -36,6 +36,7 @@ const timerProgress = document.getElementById('timer-progress');
 
 let isRolling = false;
 let timerInterval = null;
+let autoTurnTimeout = null;
 
 // PeerJS-Variablen für Host
 let peer = null;
@@ -273,6 +274,11 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
         // Wenn wir aktiv im Spiel sind, zeige den "Nächste Runde" Button an
         if (gameState === 'playing') {
             nextTurnButton.style.display = 'block';
+            
+            // Falls kein Timer läuft, automatisch nach 6 Sekunden weiterschalten
+            if (chosenBet !== 'pasch' || !success) {
+                scheduleAutoTurn(6000);
+            }
         }
     }, 2000);
 }
@@ -310,6 +316,11 @@ function startTimer(seconds) {
             timerProgress.style.boxShadow = 'var(--glow-magenta)';
             
             playTimerBuzzer();
+            
+            // Auto-Fortschritt 3 Sekunden nach Ablauf der Strafe
+            if (gameState === 'playing') {
+                scheduleAutoTurn(3000);
+            }
         }
     }, 1000);
 }
@@ -327,6 +338,29 @@ function resetTimer() {
     timerText.style.textShadow = 'var(--glow-yellow)';
     timerProgress.style.background = 'var(--neon-yellow)';
     timerProgress.style.boxShadow = 'var(--glow-yellow)';
+}
+
+/**
+ * Plant einen automatischen Rundenübergang nach Ablauf der Zeit.
+ */
+function scheduleAutoTurn(delayMs) {
+    clearTimeout(autoTurnTimeout);
+    
+    let countdownSeconds = Math.ceil(delayMs / 1000);
+    const updateButtonText = () => {
+        if (countdownSeconds > 0) {
+            if (gameState === 'playing') {
+                nextTurnButton.textContent = `Nächster Spieler (in ${countdownSeconds}s...)`;
+            }
+            countdownSeconds--;
+            autoTurnTimeout = setTimeout(updateButtonText, 1000);
+        } else {
+            nextTurnButton.textContent = 'Nächster Spieler';
+            nextTurn();
+        }
+    };
+    
+    updateButtonText();
 }
 
 /**
@@ -550,6 +584,8 @@ function startGame() {
  * Initialisiert die Runde für den nächsten Spieler.
  */
 function startNextTurn() {
+    clearTimeout(autoTurnTimeout);
+    
     // Falls keine Spieler mehr im Raum sind, wechsle zurück in die Lobby
     if (players.length === 0) {
         gameState = 'lobby';
@@ -574,6 +610,7 @@ function startNextTurn() {
     resultTitle.textContent = `${activePlayer.name} ist an der Reihe`;
     resultDescription.textContent = 'Wähle deinen Einsatz am Handy und würfle!';
     resultAction.textContent = '';
+    nextTurnButton.textContent = 'Nächster Spieler';
     nextTurnButton.style.display = 'none';
     resetTimer();
 
@@ -593,6 +630,7 @@ function startNextTurn() {
  * Wechselt rundenbasiert zum nächsten Spieler.
  */
 function nextTurn() {
+    clearTimeout(autoTurnTimeout);
     if (gameState !== 'playing' || players.length === 0) return;
     activePlayerIndex = (activePlayerIndex + 1) % players.length;
     startNextTurn();
