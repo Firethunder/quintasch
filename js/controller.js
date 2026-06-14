@@ -20,6 +20,8 @@ let gameplayRollButton = null;
 let lobbyWaitText = null;
 let gameplayStakeSelect = null;
 let gameplayCustomStakeInput = null;
+let gameplayCustomTimerGroup = null;
+let gameplayCustomTimerInput = null;
 
 // Wurf-Ergebnis Overlay-Elemente
 let rollResultOverlay = null;
@@ -58,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
     lobbyWaitText = document.getElementById('lobby-wait-text');
     gameplayStakeSelect = document.getElementById('gameplay-stake');
     gameplayCustomStakeInput = document.getElementById('gameplay-custom-stake');
+    gameplayCustomTimerGroup = document.getElementById('gameplay-custom-timer-group');
+    gameplayCustomTimerInput = document.getElementById('gameplay-custom-timer');
 
     // Wurf-Ergebnis Overlay-Elemente abrufen
     rollResultOverlay = document.getElementById('roll-result-overlay');
@@ -154,8 +158,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (gameplayStakeSelect.value === 'custom') {
                 gameplayCustomStakeInput.style.display = 'block';
                 gameplayCustomStakeInput.focus();
+                if (gameplayCustomTimerGroup) {
+                    gameplayCustomTimerGroup.style.display = 'block';
+                }
             } else {
                 gameplayCustomStakeInput.style.display = 'none';
+                if (gameplayCustomTimerGroup) {
+                    gameplayCustomTimerGroup.style.display = 'none';
+                    if (gameplayCustomTimerInput) gameplayCustomTimerInput.value = '';
+                }
             }
         });
     }
@@ -199,6 +210,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     chosenStake = stakeType;
                 }
             }
+
+            // Lies den optionalen Custom Timer aus
+            let customTimerVal = null;
+            if (gameplayCustomTimerInput && gameplayStakeSelect.value === 'custom') {
+                const timerVal = parseInt(gameplayCustomTimerInput.value.trim(), 10);
+                if (!isNaN(timerVal) && timerVal > 0) {
+                    customTimerVal = timerVal;
+                }
+            }
             
             // Lokalen Rassel-Sound auf dem Handy abspielen
             playRollSound();
@@ -211,7 +231,8 @@ document.addEventListener('DOMContentLoaded', () => {
             conn.send({
                 action: 'rollDice',
                 bet: chosenBet,
-                stake: chosenStake
+                stake: chosenStake,
+                timer: customTimerVal
             });
         });
     }

@@ -203,6 +203,10 @@
                     <option value="custom">Eigener...</option>
                 </select>
                 <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 3 Schlucke auf Ex" style="display: none; margin-top: 10px;" maxlength="30">
+                <div id="gameplay-custom-timer-group" style="display: none; margin-top: 10px;">
+                    <label for="gameplay-custom-timer" style="font-size: 0.8rem;">Timer (optional in Sekunden)</label>
+                    <input type="number" id="gameplay-custom-timer" class="form-control" placeholder="z. B. 30" min="1" max="300" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                </div>
             </div>
 
             <button class="btn-neon" id="gameplay-roll-button" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 15px;">WÜRFELN!</button>
