@@ -131,7 +131,7 @@ rollButton.addEventListener('click', () => {
 /**
  * Führt die Würfel-Animation und Spiel-Auswertung aus.
  */
-function executeRoll(playerNameParam = null, chosenBetParam = null) {
+function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeParam = 'Standard-Strafe') {
     isRolling = true;
     rollButton.disabled = true;
     rollButton.textContent = 'Würfelt...';
@@ -227,7 +227,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null) {
         } else if (success) {
             resultPanel.classList.add('win');
             resultTitle.textContent = `${playerName} hat gewonnen!`;
-            resultDescription.textContent = `Ziel: ${BET_LABELS[chosenBet]} | Gewürfelt: ${rolledHandName} (${diceValues.join(', ')})`;
+            resultDescription.textContent = `Ziel: ${BET_LABELS[chosenBet]} (Einsatz: ${chosenStakeParam}) | Gewürfelt: ${rolledHandName} (${diceValues.join(', ')})`;
             resultAction.textContent = `Aktion: ${BET_RULES[chosenBet]}`;
             
             playWinSound();
@@ -239,7 +239,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null) {
         } else {
             resultPanel.classList.add('fail');
             resultTitle.textContent = `${playerName} hat verloren!`;
-            resultDescription.textContent = `Ziel: ${BET_LABELS[chosenBet]} | Gewürfelt: ${rolledHandName} (${diceValues.join(', ')})`;
+            resultDescription.textContent = `Ziel: ${BET_LABELS[chosenBet]} (Einsatz: ${chosenStakeParam}) | Gewürfelt: ${rolledHandName} (${diceValues.join(', ')})`;
             resultAction.textContent = 'Keine Konsequenz. Glück gehabt!';
             
             playFailSound();
@@ -449,7 +449,7 @@ function initHostPeer() {
             if (data && data.action === 'rollDice') {
                 const activePlayer = players[activePlayerIndex];
                 if (gameState === 'playing' && activePlayer && conn.peer === activePlayer.peerId && !isRolling) {
-                    executeRoll(activePlayer.name, data.bet);
+                    executeRoll(activePlayer.name, data.bet, data.stake);
                 }
             }
         });
