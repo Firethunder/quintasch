@@ -1,23 +1,22 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase 2 Verified
-> **Active Milestone**: Dashboard-Landing-and-Sync
-> **Active Phase**: None (Milestone Complete)
+> **Current Status**: Milestone Complete
+> **Active Milestone**: None
+> **Active Phase**: None
 
 ## Phase Progress
-- [x] Phase 1: Start-Bildschirm & PWA-Icon
-- [x] Phase 2: Multi-Dashboard Sync & Steuerung
+No active phases.
 
 ## Blockers
 - Keine
 
 ## Current Position
 - **Phase**: None
-- **Task**: All tasks complete
-- **Status**: Verified
+- **Task**: None
+- **Status**: Milestone Complete
 
 ## Last Session Summary
-Phase 2 wurde erfolgreich abgeschlossen und verifiziert. Die Multi-Dashboard-Synchronisation via PeerJS (P2P) ist voll funktionsfähig, einschließlich bidirektionaler Steuerung, Würfel- und Timer-Synchronisation.
+Der Meilenstein 'Dashboard-Landing-and-Sync' wurde erfolgreich abgeschlossen. Der Dashboard-Startbildschirm, das neue Quintasch PWA-Icon und die Multi-Dashboard-Synchronisation wurden vollständig integriert, verifiziert und archiviert.
 
 ## Next Steps
-1. /complete-milestone — Meilenstein archivieren und abschließen.
+1. /new-milestone — Neuen Meilenstein anlegen.
