@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0b0b0f">
+    <title>Quintasch — Controller</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+    <style>
+        /* Spezifische Controller-Anpassungen für Mobile-First */
+        .controller-wrapper {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+            gap: 20px;
+        }
+        
+        .loading-pulse {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: transparent;
+            border: 3px solid var(--neon-cyan);
+            box-shadow: var(--glow-cyan);
+            margin: 20px auto;
+            animation: pulse-ring 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+                box-shadow: 0 0 20px var(--neon-cyan);
+            }
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+        }
+
+        .lobby-players {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .lobby-player-badge {
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            text-shadow: var(--glow-cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lobby-player-badge::after {
+            content: "BEREIT";
+            font-size: 0.8rem;
+            color: var(--neon-green);
+            text-shadow: var(--glow-green);
+        }
+
+        .status-error {
+            color: var(--neon-magenta) !important;
+            text-shadow: var(--glow-magenta) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="controller-wrapper">
+        <header class="header">
+            <h1 style="font-size: 2.2rem; letter-spacing: 2px;">Quintasch</h1>
+            <p style="font-size: 0.95rem;">Smartphone Controller</p>
+        </header>
+
+        <!-- BEITRITTS-BEREICH -->
+        <main class="panel" id="join-container">
+            <h2 class="sidebar-title" style="font-size: 1.2rem; margin-bottom: 20px; border: none;">Spiel beitreten</h2>
+            
+            <div id="join-error-msg" class="status-error" style="font-size: 0.95rem; margin-bottom: 15px; display: none;"></div>
+
+            <div class="form-group">
+                <label for="client-player-name">Dein Name</label>
+                <input type="text" id="client-player-name" class="form-control" placeholder="z. B. Max" maxlength="12">
+            </div>
+
+            <button class="btn-neon" id="join-button">Beitreten</button>
+        </main>
+
+        <!-- LOBBY-WARTERAUM -->
+        <main class="panel" id="lobby-container" style="display: none; text-align: center;">
+            <h2 class="sidebar-title" id="lobby-status-title" style="font-size: 1.2rem; margin-bottom: 15px; border: none;">Verbinde zum Raum...</h2>
+            
+            <div class="loading-pulse" id="lobby-spinner"></div>
+            
+            <div style="margin-top: 25px; text-align: left;">
+                <h3 class="sidebar-title" style="font-size: 1rem; border: none; margin-bottom: 10px; color: var(--text-muted);">Spieler im Raum:</h3>
+                <ul class="lobby-players" id="lobby-players-list">
+                    <!-- Dynamische Spielerliste -->
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="js/controller.js"></script>
+</body>
+</html>
