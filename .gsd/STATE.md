@@ -1,22 +1,22 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase Complete
-> **Active Milestone**: Mobile-3D-Dice-Animation
-> **Active Phase**: Phase 4 (completed)
+> **Current Status**: Milestone Complete
+> **Active Milestone**: —
+> **Active Phase**: —
 
 ## Phase Progress
-- [x] Phase 4: Mobile Dice Animation
+_No active phases._
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Phase**: Phase 4
-- **Task**: All tasks complete
-- **Status**: Verified
+- **Phase**: —
+- **Task**: —
+- **Status**: Idle
 
 ## Last Session Summary
-Phase 4 executed successfully. 1 plan, 3 tasks completed. Mobile 3D dice animation implemented on the active player's controller device with synchronized roll-start signaling, scaled CSS cube layout, rattle sound with toggle, and result overlay integration.
+Meilenstein 'Mobile-3D-Dice-Animation' erfolgreich abgeschlossen, archiviert und getaggt. 9 Commits, 11 Dateien geändert. Audit-Findings behoben (3D-Flattening, CSS-Transition-Timing, Sound-Stacking, Reconnect-Resilienz). Timer-Buzzer-Sound entfernt.
 
 ## Next Steps
-1. /complete-milestone — Meilenstein 'Mobile-3D-Dice-Animation' abschließen und archivieren.
+1. /new-milestone — Neuen Meilenstein starten.

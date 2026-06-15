@@ -26,8 +26,8 @@ graph TD
   - `index.html`: Layout of the game screen, landing/start overlay, room code, QR code container, 3D dice stage, scoreboard, and logs.
   - `js/app.js`: Orchestrates the PeerJS host peer or sync peer, parses client and sync messages (joining, rolling, command forwarding), updates game turns, manages localStorage history, and triggers 3D rolls and sound effects.
 - **Client (Controller)**:
-  - `controller.html`: Interface for inputting room code/name, selecting bets (Pasch, Trasch, Quintasch, etc.), and triggering rolls.
-  - `js/controller.js`: Connects to host via PeerJS, handles UI state changes (`yourTurn`, `waitTurn`), validates input, and sends action payloads to the host.
+  - `controller.html`: Interface for inputting room code/name, selecting bets (Pasch, Trasch, Quintasch, etc.), triggering rolls, and displaying a scaled 3D dice animation during active rolls.
+  - `js/controller.js`: Connects to host via PeerJS, handles UI state changes (`yourTurn`, `waitTurn`, `rollStart`, `rollResult`), validates input, sends action payloads to the host, drives the mobile 3D dice animation, and manages local sound preferences via localStorage.
 - **Game Engine & Rules**:
   - `js/game.js`: Contains dice combinations, evaluation rules (`evaluateDiceRoll`), and rotation mathematics for the 3D CSS dice.
 - **Audio Synthesizer**:
@@ -41,9 +41,12 @@ graph TD
 ### Game Roll Flow
 1. Active Client selects a bet (e.g. "Pasch") and clicks "WÜRFELN!".
 2. Client sends a JSON payload `{ type: "rollDice", bet: "pasch" }` to Host.
-3. Host receives payload, locks gameplay inputs, plays white noise rattle sound, and performs 3D CSS dice animation.
-4. Host calculates results, evaluates outcome via `evaluateDiceRoll(diceValues, bet)`.
-5. Host updates score, displays outcome modal, saves to `localStorage`, plays success or failure synth sound, and handles turn transition.
+3. Host receives payload, generates dice values, and immediately sends `{ action: "rollStart", dice: [...] }` to the active client's WebRTC connection.
+4. Host locks gameplay inputs, plays white noise rattle sound, and performs 3D CSS dice animation (2s cubic-bezier transition).
+5. Active Client receives `rollStart`, hides betting form, shows scaled 50px 3D dice, plays optional rattle sound, and animates dice in sync with dashboard using double `requestAnimationFrame`.
+6. Host calculates results, evaluates outcome via `evaluateDiceRoll(diceValues, bet)`.
+7. Host broadcasts `rollResult` to all clients — active client hides dice table, restores betting form, and displays result overlay.
+8. Host updates score, displays outcome modal, saves to `localStorage`, plays success or failure synth sound, and handles turn transition.
 
 ### Multi-Dashboard Sync Flow
 1. Sync Dashboard connects to Host via PeerJS and sends `{ action: "syncDashboardJoin" }`.
