@@ -20,7 +20,7 @@
 **Objective**: Implement selectable stake presets on the host dashboard (Classic, Non-alcoholic, Family/Points) and sync them to mobile clients via WebRTC during the connection handshake and whenever configuration changes.
 
 ### Phase 2: Historie-Integration
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Update the host dashboard and mobile client history views to display the selected stakes alongside dice roll outcome records.
 
 ### Phase 3: Controller-Window Link & Desktop Support
