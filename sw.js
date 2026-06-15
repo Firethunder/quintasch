@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quintasch-v2';
+const CACHE_NAME = 'quintasch-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -46,7 +46,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch-Event - Cache-First Strategie mit Netzwerk-Fallback
+// Fetch-Event - Network-First Strategie mit Cache-Fallback
 self.addEventListener('fetch', (event) => {
   // Ignoriere PeerJS WebSocket-Signaling, CDN-Skripte oder externe API Aufrufe
   const url = event.request.url;
@@ -60,12 +60,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      
-      return fetch(event.request).then((networkResponse) => {
+    fetch(event.request)
+      .then((networkResponse) => {
         // Cache nur erfolgreiche GET-Anfragen der eigenen App
         if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
           return caches.open(CACHE_NAME).then((cache) => {
@@ -74,9 +70,10 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(err => {
-        console.error('[Service Worker] Fetch failed', err);
-      });
-    })
+      })
+      .catch((err) => {
+        console.log('[Service Worker] Network request failed, serving from cache:', event.request.url, err);
+        return caches.match(event.request);
+      })
   );
 });
