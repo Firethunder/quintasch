@@ -58,6 +58,7 @@ let timerTotalSeconds = 0;
 
 // PeerJS-Variablen für Host und Sync
 let peer = null;
+let activeRoomId = null;
 let connections = [];
 let syncConnections = []; // Verbindungen zu sekundären Dashboards (Host-seitig)
 let syncConn = null; // Verbindung zum primären Host (Sync-Dashboard-seitig)
@@ -210,6 +211,29 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Einstellungen zurückgesetzt auf Standard! Seite wird neu geladen.');
         window.location.reload();
     });
+
+    // Sync-Link Kopieren
+    const copySyncLinkBtn = document.getElementById('copy-sync-link-btn');
+    if (copySyncLinkBtn) {
+        copySyncLinkBtn.addEventListener('click', () => {
+            if (!activeRoomId) return;
+            const syncUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}index.html?sync=${activeRoomId}`;
+            navigator.clipboard.writeText(syncUrl).then(() => {
+                const oldText = copySyncLinkBtn.textContent;
+                copySyncLinkBtn.textContent = 'Kopiert!';
+                copySyncLinkBtn.style.borderColor = 'var(--neon-green)';
+                copySyncLinkBtn.style.color = 'var(--neon-green)';
+                setTimeout(() => {
+                    copySyncLinkBtn.textContent = oldText;
+                    copySyncLinkBtn.style.borderColor = 'var(--neon-magenta)';
+                    copySyncLinkBtn.style.color = 'var(--neon-magenta)';
+                }, 2000);
+            }).catch(err => {
+                console.error('Kopieren fehlgeschlagen:', err);
+                alert('Kopieren fehlgeschlagen. Bitte kopiere die URL manuell.');
+            });
+        });
+    }
 });
 
 function setupPlayersListDisplay() {
@@ -671,7 +695,10 @@ function initHostPeer(forcedId = null) {
     }
 
     peer.on('open', (id) => {
+        activeRoomId = id;
         roomIdDisplay.textContent = id;
+        const copySyncLinkBtn = document.getElementById('copy-sync-link-btn');
+        if (copySyncLinkBtn) copySyncLinkBtn.style.display = 'inline-block';
         const joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${id}`;
         
         qrcodeContainer.innerHTML = '';
@@ -985,7 +1012,10 @@ function initSyncPeer(targetRoomId) {
         
         syncConn.on('open', () => {
             console.log('Verbindung zum Host hergestellt:', targetRoomId);
+            activeRoomId = targetRoomId;
             roomIdDisplay.textContent = `${targetRoomId} (Sync)`;
+            const copySyncLinkBtn = document.getElementById('copy-sync-link-btn');
+            if (copySyncLinkBtn) copySyncLinkBtn.style.display = 'inline-block';
             
             // Sende Join-Handshake
             syncConn.send({ action: 'syncDashboardJoin' });
