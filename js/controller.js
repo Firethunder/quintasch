@@ -857,13 +857,14 @@ function renderClientHistory(history) {
         const escapedPlayer = escapeHtml(item.player);
         const escapedHand = escapeHtml(item.hand);
         const escapedBet = escapeHtml(item.bet);
+        const escapedStake = escapeHtml(item.stake || 'Standard-Einsatz');
         const escapedDice = escapeHtml(item.dice);
         const escapedTime = escapeHtml(item.time);
         
         li.innerHTML = `
             <div>
                 <strong>${escapedPlayer}</strong>: ${escapedHand} <br>
-                <span style="font-size: 0.8rem; color: var(--text-muted)">Ziel: ${escapedBet} | Wurf: [${escapedDice}]</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted)">Ziel: ${escapedBet} | Einsatz: ${escapedStake} | Wurf: [${escapedDice}]</span>
             </div>
             <div class="history-time">${escapedTime}</div>
         `;
