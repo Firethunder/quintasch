@@ -198,9 +198,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Lese Wetteinsatz- und Einsatz-Vorauswahl
+    const savedBet = localStorage.getItem('quintasch_default_bet');
+    const savedStake = localStorage.getItem('quintasch_default_stake');
+    const savedCustomStake = localStorage.getItem('quintasch_default_custom_stake');
+    const savedCustomTimer = localStorage.getItem('quintasch_default_custom_timer');
+
+    if (savedBet && gameplayBetSelect) {
+        gameplayBetSelect.value = savedBet;
+    }
+    if (savedStake && gameplayStakeSelect) {
+        gameplayStakeSelect.value = savedStake;
+        if (savedStake === 'custom') {
+            if (gameplayCustomStakeInput) {
+                gameplayCustomStakeInput.style.display = 'block';
+                if (savedCustomStake) gameplayCustomStakeInput.value = savedCustomStake;
+            }
+            if (gameplayCustomTimerGroup) {
+                gameplayCustomTimerGroup.style.display = 'block';
+                if (gameplayCustomTimerInput && savedCustomTimer) {
+                    gameplayCustomTimerInput.value = savedCustomTimer;
+                }
+            }
+        }
+    }
+
+    if (gameplayBetSelect) {
+        gameplayBetSelect.addEventListener('change', () => {
+            localStorage.setItem('quintasch_default_bet', gameplayBetSelect.value);
+        });
+    }
+    if (gameplayCustomStakeInput) {
+        gameplayCustomStakeInput.addEventListener('input', () => {
+            localStorage.setItem('quintasch_default_custom_stake', gameplayCustomStakeInput.value);
+        });
+    }
+    if (gameplayCustomTimerInput) {
+        gameplayCustomTimerInput.addEventListener('input', () => {
+            localStorage.setItem('quintasch_default_custom_timer', gameplayCustomTimerInput.value);
+        });
+    }
+
     // Stake selection toggle for custom input
     if (gameplayStakeSelect && gameplayCustomStakeInput) {
         gameplayStakeSelect.addEventListener('change', () => {
+            localStorage.setItem('quintasch_default_stake', gameplayStakeSelect.value);
             if (gameplayStakeSelect.value === 'custom') {
                 gameplayCustomStakeInput.style.display = 'block';
                 gameplayCustomStakeInput.focus();
@@ -211,8 +253,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameplayCustomStakeInput.style.display = 'none';
                 if (gameplayCustomTimerGroup) {
                     gameplayCustomTimerGroup.style.display = 'none';
-                    if (gameplayCustomTimerInput) gameplayCustomTimerInput.value = '';
+                    if (gameplayCustomTimerInput) {
+                        gameplayCustomTimerInput.value = '';
+                        localStorage.removeItem('quintasch_default_custom_timer');
+                    }
                 }
+                localStorage.removeItem('quintasch_default_custom_stake');
             }
         });
     }
