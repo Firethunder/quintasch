@@ -4,11 +4,11 @@
 > **Goal**: Einführung flexibler Einsatz-Sets für unterschiedliche Spielanlässe (inkl. alkoholfreie/familienfreundliche Alternativen), Visualisierung von Einsätzen in der Historie sowie zusätzliche UI-Komfortfunktionen.
 
 ## Must-Haves
-- [ ] Auswahl von verschiedenen Einsatz-Sets (Alkoholfrei, Klassisch, Familie) auf dem Host
-- [ ] Client-Synchronisation der geladenen Einsatz-Sets via WebRTC
-- [ ] Anzeige der gewählten Einsätze in der Host- und Controller-Historie
-- [ ] Dashboard-Link zum schnellen Öffnen eines Controllers in einem neuen Fenster
-- [ ] Optimierung und Verifikation der Controller-Bedienung im Desktop-PC-Webbrowser
+- [x] Auswahl von verschiedenen Einsatz-Sets (Alkoholfrei, Klassisch, Familie) auf dem Host
+- [x] Client-Synchronisation der geladenen Einsatz-Sets via WebRTC
+- [x] Anzeige der gewählten Einsätze in der Host- und Controller-Historie
+- [x] Dashboard-Link zum schnellen Öffnen eines Controllers in einem neuen Fenster
+- [x] Optimierung und Verifikation der Controller-Bedienung im Desktop-PC-Webbrowser
 
 ## Nice-to-Haves
 - [ ] Erweiterte Anpassungsmöglichkeit der Einsatz-Sets direkt im Lobby-Bildschirm
@@ -28,5 +28,5 @@
 **Objective**: Provide a quick link on the host dashboard to launch a local controller window, and optimize the controller layout and WebRTC handling for desktop PC web browsers.
 
 ### Phase 4: Milestone Verification & Final Polish
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Perform full multi-device and multi-browser verification of the new features, fix remaining edge cases, and complete the milestone.
