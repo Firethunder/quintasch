@@ -1,11 +1,11 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Milestone Planned
+> **Current Status**: Phase Completed
 > **Active Milestone**: Custom-Stakes-and-Extras
-> **Active Phase**: —
+> **Active Phase**: 1
 
 ## Phase Progress
-- **Phase 1: Einsatz-Sets & Custom Stakes Definition**: ⬜ Not Started
+- **Phase 1: Einsatz-Sets & Custom Stakes Definition**: ✅ Complete
 - **Phase 2: Historie-Integration**: ⬜ Not Started
 - **Phase 3: Controller-Window Link & Desktop Support**: ⬜ Not Started
 - **Phase 4: Milestone Verification & Final Polish**: ⬜ Not Started
@@ -15,11 +15,11 @@
 
 ## Current Position
 - **Milestone**: Custom-Stakes-and-Extras
-- **Phase**: Not started
-- **Status**: Milestone planned
+- **Phase**: 1
+- **Status**: Phase Completed
 
 ## Last Session Summary
-Meilenstein 'ToDo-Cycle' erfolgreich abgeschlossen, archiviert und getaggt. Alle offenen Punkte der TODO-Liste wurden implementiert, verifiziert und dokumentiert.
+Einsatz-Sets im Host definiert, WebRTC-Übertragung implementiert, Custom Stakes Definition im Controller-Client umgesetzt und erfolgreich verifiziert.
 
 ## Next Steps
-1. /plan 1 — Plane die erste Phase des neuen Meilensteins.
+1. /plan 2 — Plane die zweite Phase des neuen Meilensteins (Historie-Integration).

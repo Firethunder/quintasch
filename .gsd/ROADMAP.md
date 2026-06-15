@@ -16,7 +16,7 @@
 ## Phases
 
 ### Phase 1: Einsatz-Sets & Custom Stakes Definition
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Implement selectable stake presets on the host dashboard (Classic, Non-alcoholic, Family/Points) and sync them to mobile clients via WebRTC during the connection handshake and whenever configuration changes.
 
 ### Phase 2: Historie-Integration
