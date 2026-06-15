@@ -52,17 +52,8 @@ body {
     display: none;
 }
 
-.app-container.sidebar-hidden #history-panel {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-}
-
 .app-container.sidebar-hidden #history-list {
-    max-height: none;
-    flex: 1;
-    min-height: 0;
+    max-height: 600px;
 }
 
 /* Dashboard Panel (Main Screen) */
