@@ -1,12 +1,12 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase Completed
+> **Current Status**: Phase Planned
 > **Active Milestone**: Custom-Stakes-and-Extras
-> **Active Phase**: 1
+> **Active Phase**: 2
 
 ## Phase Progress
 - **Phase 1: Einsatz-Sets & Custom Stakes Definition**: ✅ Complete
-- **Phase 2: Historie-Integration**: ⬜ Not Started
+- **Phase 2: Historie-Integration**: 🔄 Planned
 - **Phase 3: Controller-Window Link & Desktop Support**: ⬜ Not Started
 - **Phase 4: Milestone Verification & Final Polish**: ⬜ Not Started
 
@@ -15,11 +15,11 @@
 
 ## Current Position
 - **Milestone**: Custom-Stakes-and-Extras
-- **Phase**: 1
-- **Status**: Phase Completed
+- **Phase**: 2
+- **Status**: Phase Planned
 
 ## Last Session Summary
-Einsatz-Sets im Host definiert, WebRTC-Übertragung implementiert, Custom Stakes Definition im Controller-Client umgesetzt und erfolgreich verifiziert.
+Einsatz-Sets im Host definiert, WebRTC-Übertragung und Anpassung der Spanien-Edition vollständig abgeschlossen und verifiziert. Phase 2 Plan (Historie-Integration) wurde erstellt.
 
 ## Next Steps
-1. /plan 2 — Plane die zweite Phase des neuen Meilensteins (Historie-Integration).
+1. /execute 2 — Starte die Ausführung der zweiten Phase des Meilensteins (Historie-Integration).
