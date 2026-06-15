@@ -7,14 +7,14 @@
 - [x] Service Worker auf Network-First Caching umstellen (Ctrl+F5 Bugfix)
 - [x] Dashboard Sync-Link via URL-Parameter auto-verbinden
 - [x] Button zum Kopieren des Dashboard-Sync-Links hinzufügen
-- [ ] Wetteinsatz-Suffixe wie "(2er-Pasch)" entfernen
-- [ ] Eingabe von Wetteinsätzen auf dem Smartphone während der Wartezeit erlauben
+- [x] Wetteinsatz-Suffixe wie "(2er-Pasch)" entfernen
+- [x] Eingabe von Wetteinsätzen auf dem Smartphone während der Wartezeit erlauben
 - [ ] Pausen-Funktion ("Aussetzen") für Spieler einbauen (mit Überspringer-Logik)
 - [ ] Dashboard um Online/Offline/Pausiert-Indikator neben Spielernamen erweitern
 
 ## Nice-to-Haves
 - [ ] Verlauf (Historie) auch auf dem Smartphone anzeigen
-- [ ] Vorauswahlen im Smartphone-LocalStorage speichern und editierbar machen
+- [x] Vorauswahlen im Smartphone-LocalStorage speichern und editierbar machen
 
 ## Phases
 
@@ -23,7 +23,7 @@
 **Objective**: Update caching strategy to Network-First, implement dashboard auto-sync from URL parameters (`?sync=ROOM_ID` / `?room=ROOM_ID`), and add a button to copy the Dashboard sync link to the clipboard.
 
 ### Phase 2: Text-Bereinigung & Wetteingabe im Warteraum
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Remove combination suffixes from select options, and refactor the mobile client UI so players can configure and edit their bets/stakes while waiting for their turn, preserving their choice. Make default stakes editable and stored in LocalStorage.
 
 ### Phase 3: Spieler-Pausenfunktion & Status-Indikatoren

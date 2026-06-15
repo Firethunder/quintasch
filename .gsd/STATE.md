@@ -1,12 +1,12 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase Planned
+> **Current Status**: Phase Complete
 > **Active Milestone**: ToDo-Cycle
-> **Active Phase**: 2
+> **Active Phase**: —
 
 ## Phase Progress
 - **Phase 1: Sharing- & Service-Worker-Optimierungen**: ✅ Complete
-- **Phase 2: Text-Bereinigung & Wetteingabe im Warteraum**: 🔄 Planned
+- **Phase 2: Text-Bereinigung & Wetteingabe im Warteraum**: ✅ Complete
 - **Phase 3: Spieler-Pausenfunktion & Status-Indikatoren**: ⬜ Not Started
 - **Phase 4: Mobiler Verlauf & Verifikation**: ⬜ Not Started
 
@@ -15,11 +15,11 @@
 
 ## Current Position
 - **Phase**: 2
-- **Task**: Planning complete
-- **Status**: Ready for execution
+- **Task**: Phase complete
+- **Status**: Verified
 
 ## Last Session Summary
-Meilenstein 'Mobile-3D-Dice-Animation' erfolgreich abgeschlossen, archiviert und getaggt. Phase 1 des neuen Meilensteins 'ToDo-Cycle' abgeschlossen (Service Worker auf Network-First umgestellt, URL Auto-Sync eingebaut, Sync-Link Kopierfunktion auf dem Dashboard hinzugefügt).
+Meilenstein 'Mobile-3D-Dice-Animation' erfolgreich abgeschlossen, archiviert und getaggt. Phase 2 des neuen Meilensteins 'ToDo-Cycle' abgeschlossen (Suffixe entfernt, Vorauswahl persistiert, in-wait Bet-Eingabe auf Smartphone ermöglicht).
 
 ## Next Steps
-1. /execute 2 — Führe die geplanten Aufgaben für Phase 2 aus.
+1. /plan 3 — Plan Phase 3 execution.
