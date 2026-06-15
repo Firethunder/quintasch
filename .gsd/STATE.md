@@ -1,13 +1,13 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase Planned
+> **Current Status**: Phase Completed
 > **Active Milestone**: Custom-Stakes-and-Extras
 > **Active Phase**: 3
 
 ## Phase Progress
 - **Phase 1: Einsatz-Sets & Custom Stakes Definition**: ✅ Complete
 - **Phase 2: Historie-Integration**: ✅ Complete
-- **Phase 3: Controller-Window Link & Desktop Support**: 🔄 Planned
+- **Phase 3: Controller-Window Link & Desktop Support**: ✅ Complete
 - **Phase 4: Milestone Verification & Final Polish**: ⬜ Not Started
 
 ## Blockers
@@ -16,10 +16,10 @@
 ## Current Position
 - **Milestone**: Custom-Stakes-and-Extras
 - **Phase**: 3
-- **Status**: Phase Planned
+- **Status**: Phase Completed
 
 ## Last Session Summary
-Historie-Integration für Einsätze (Host und Mobile Client) vollständig implementiert, verifiziert und dokumentiert. Phase 3 Plan (Controller-Window Link & Desktop Support) wurde erstellt.
+Dashboard-Buttons zum Kopieren und direktem Öffnen des Controllers side-by-side angeordnet, custom signaling Server-Parameter Weiterleitung implementiert und PWA-Untertitel für Desktop-Browser angepasst.
 
 ## Next Steps
-1. /execute 3 — Starte die Ausführung der dritten Phase des Meilensteins (Controller-Window Link & Desktop Support).
+1. /plan 4 — Plane die vierte Phase des neuen Meilensteins (Milestone Verification & Final Polish).

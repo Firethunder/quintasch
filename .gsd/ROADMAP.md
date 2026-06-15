@@ -24,7 +24,7 @@
 **Objective**: Update the host dashboard and mobile client history views to display the selected stakes alongside dice roll outcome records.
 
 ### Phase 3: Controller-Window Link & Desktop Support
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Provide a quick link on the host dashboard to launch a local controller window, and optimize the controller layout and WebRTC handling for desktop PC web browsers.
 
 ### Phase 4: Milestone Verification & Final Polish
