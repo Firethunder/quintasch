@@ -1,13 +1,13 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase Planned
+> **Current Status**: Phase Complete
 > **Active Milestone**: ToDo-Cycle
 > **Active Phase**: 3
 
 ## Phase Progress
 - **Phase 1: Sharing- & Service-Worker-Optimierungen**: ✅ Complete
 - **Phase 2: Text-Bereinigung & Wetteingabe im Warteraum**: ✅ Complete
-- **Phase 3: Spieler-Pausenfunktion & Status-Indikatoren**: 🔄 Planned
+- **Phase 3: Spieler-Pausenfunktion & Status-Indikatoren**: ✅ Complete
 - **Phase 4: Mobiler Verlauf & Verifikation**: ⬜ Not Started
 
 ## Blockers
@@ -15,11 +15,11 @@
 
 ## Current Position
 - **Phase**: 3
-- **Task**: Planning complete
-- **Status**: Ready for execution
+- **Task**: Execution complete
+- **Status**: Ready for review / Next phase planning
 
 ## Last Session Summary
-Meilenstein 'Mobile-3D-Dice-Animation' erfolgreich abgeschlossen, archiviert und getaggt. Phase 2 des neuen Meilensteins 'ToDo-Cycle' abgeschlossen (Suffixe entfernt, Vorauswahl persistiert, in-wait Bet-Eingabe auf Smartphone ermöglicht).
+Phase 3 des Meilensteins 'ToDo-Cycle' erfolgreich abgeschlossen. Client-Pause-Toggle, WebRTC-Übertragung, Überspringer-Logik im Host bei Inaktivität/Pausierung sowie farbcodierte Status-Indikatoren (Online, Pausiert, Offline) auf Dashboard und synchronisierten Dashboards implementiert.
 
 ## Next Steps
-1. /execute 3 — Führe die geplanten Aufgaben für Phase 3 aus.
+1. /plan 4 — Plane Phase 4 zur Anzeige des Spielverlaufs auf mobilen Clients.

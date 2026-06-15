@@ -9,8 +9,8 @@
 - [x] Button zum Kopieren des Dashboard-Sync-Links hinzufügen
 - [x] Wetteinsatz-Suffixe wie "(2er-Pasch)" entfernen
 - [x] Eingabe von Wetteinsätzen auf dem Smartphone während der Wartezeit erlauben
-- [ ] Pausen-Funktion ("Aussetzen") für Spieler einbauen (mit Überspringer-Logik)
-- [ ] Dashboard um Online/Offline/Pausiert-Indikator neben Spielernamen erweitern
+- [x] Pausen-Funktion ("Aussetzen") für Spieler einbauen (mit Überspringer-Logik)
+- [x] Dashboard um Online/Offline/Pausiert-Indikator neben Spielernamen erweitern
 
 ## Nice-to-Haves
 - [ ] Verlauf (Historie) auch auf dem Smartphone anzeigen
@@ -27,7 +27,7 @@
 **Objective**: Remove combination suffixes from select options, and refactor the mobile client UI so players can configure and edit their bets/stakes while waiting for their turn, preserving their choice. Make default stakes editable and stored in LocalStorage.
 
 ### Phase 3: Spieler-Pausenfunktion & Status-Indikatoren
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Implement a Pause toggle on the client and skip logic on the host. Retain disconnected players in the active game rotation as "Offline" instead of removing them. Add color-coded indicators (Online = Green, Pausiert = Yellow, Offline = Red) next to player names on the Dashboard.
 
 ### Phase 4: Mobiler Verlauf & Verifikation
