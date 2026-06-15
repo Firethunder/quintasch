@@ -26,14 +26,14 @@ graph TD
   - `index.html`: Layout of the game screen, landing/start overlay, room code, QR code container, 3D dice stage, scoreboard, and logs.
   - `js/app.js`: Orchestrates the PeerJS host peer or sync peer, parses client and sync messages (joining, rolling, command forwarding), updates game turns, manages localStorage history, and triggers 3D rolls and sound effects.
 - **Client (Controller)**:
-  - `controller.html`: Interface for inputting room code/name, selecting bets (Pasch, Trasch, Quintasch, etc.), triggering rolls, and displaying a scaled 3D dice animation during active rolls.
-  - `js/controller.js`: Connects to host via PeerJS, handles UI state changes (`yourTurn`, `waitTurn`, `rollStart`, `rollResult`), validates input, sends action payloads to the host, drives the mobile 3D dice animation, and manages local sound preferences via localStorage.
+  - `controller.html`: Interface for inputting room code/name, selecting bets (Pasch, Trasch, Quintasch, etc.), triggering rolls, showing a pause checkbox, a scrollable history log, and displaying a scaled 3D dice animation during active rolls.
+  - `js/controller.js`: Connects to host via PeerJS, handles UI state changes (`yourTurn`, `waitTurn`, `rollStart`, `rollResult`, `historyUpdate`), validates input, sends action payloads (including pauses) to the host, drives the mobile 3D dice animation, and manages local preferences via localStorage.
 - **Game Engine & Rules**:
   - `js/game.js`: Contains dice combinations, evaluation rules (`evaluateDiceRoll`), and rotation mathematics for the 3D CSS dice.
 - **Audio Synthesizer**:
   - `js/audio.js`: Generates procedurally synthesized sound effects (rattle, sweep, chime, buzzer) using browser-native Web Audio API.
 - **Progressive Web App (PWA)**:
-  - `sw.js`: Service worker containing a Cache-First fetching strategy for offline-first support.
+  - `sw.js`: Service worker containing a Network-First fetching strategy for reliable live updates and offline fallback.
   - `manifest.json`: Metadata for standalone homescreen installation.
 
 ## Data Flows

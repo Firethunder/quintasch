@@ -11,13 +11,13 @@ export const BET_RANKS = {
 
 export const BET_LABELS = {
     'none': 'Kein Einsatz',
-    'pasch': 'Pasch (2er)',
+    'pasch': 'Pasch',
     'doppelpasch': 'Doppelpasch',
-    'trasch': 'Trasch (3er)',
+    'trasch': 'Trasch',
     'fullhouse': 'Full House',
     'strasse': 'Straße',
-    'quadrasch': 'Quadrasch (4er)',
-    'quintasch': 'Quintasch (5er)'
+    'quadrasch': 'Quadrasch',
+    'quintasch': 'Quintasch'
 };
 
 export const BET_PROBABILITIES = {

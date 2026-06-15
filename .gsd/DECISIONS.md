@@ -1,5 +1,5 @@
 # Decisions
 
-> Previous milestone decisions archived in `.gsd/milestones/Mobile-3D-Dice-Animation/DECISIONS.md`
+> Previous milestone decisions archived in `.gsd/milestones/ToDo-Cycle/DECISIONS.md`
 
 ---
