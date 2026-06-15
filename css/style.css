@@ -47,11 +47,8 @@ body {
     }
 }
 
-.app-container.sidebar-hidden {
-    grid-template-columns: 1fr;
-}
-
-.app-container.sidebar-hidden .sidebar {
+.app-container.sidebar-hidden #test-rig-title,
+.app-container.sidebar-hidden #test-rig-panel {
     display: none;
 }
 
