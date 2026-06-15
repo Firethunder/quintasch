@@ -92,6 +92,15 @@ const resetSettingsButton = document.getElementById('reset-settings-button');
 document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
     setupPlayersListDisplay();
+
+    // Auto-Sync via URL-Parameter checken (?sync=ROOM_ID oder ?room=ROOM_ID)
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetRoomId = (urlParams.get('sync') || urlParams.get('room') || '').trim().toUpperCase();
+    if (targetRoomId) {
+        gameMode = 'sync';
+        initSyncPeer(targetRoomId);
+        if (landingOverlay) landingOverlay.style.display = 'none';
+    }
     // Start-Bildschirm Event Listeners
     if (hostGameBtn) {
         hostGameBtn.addEventListener('click', () => {
