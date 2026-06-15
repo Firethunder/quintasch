@@ -59,6 +59,16 @@
                 <button class="btn-neon" id="copy-sync-link-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); font-size: 0.8rem; padding: 4px 10px; min-height: auto; margin-top: 5px; box-shadow: none; text-shadow: none; display: none;">
                     Sync-Link kopieren
                 </button>
+                <div id="stake-set-container" style="width: 100%; text-align: left; margin: 10px 0; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px;">
+                    <label for="stake-set-select" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 240, 255, 0.2);">Einsatz-Set:</label>
+                    <select id="stake-set-select" class="form-control" style="margin-top: 5px; font-size: 0.9rem;">
+                        <option value="klassisch">Klassisch (Trinkspiel)</option>
+                        <option value="alkoholfrei">Alkoholfrei (Aktivität/Sport)</option>
+                        <option value="spanien">Spanien-Edition (¡Hola!)</option>
+                        <option value="mittelalter">Mittelalter-Markt-Edition (Seyd gegrüßt!)</option>
+                        <option value="eigenes">Eigenes Set (Spieler-definiert)</option>
+                    </select>
+                </div>
                 <div id="players-count-display" style="font-size: 0.95rem; color: var(--text-muted);">
                     Verbundene Spieler: 0
                 </div>
@@ -196,7 +206,7 @@
                 <div class="form-group">
                     <label for="player-stake">Wetteinsatz-Strafe</label>
                     <select id="player-stake" class="form-control">
-                        <option value="standard">Standard-Strafe</option>
+                        <option value="standard">Standard-Einsatz</option>
                         <option value="1 Schluck">1 Schluck</option>
                         <option value="2 Schlucke">2 Schlucke</option>
                         <option value="3 Schlucke">3 Schlucke</option>

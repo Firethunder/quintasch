@@ -11,6 +11,14 @@ const faceAngles = {
     5: { x: 90, y: 0 }
 };
 
+const STAKE_SETS = {
+    'klassisch': ['Standard-Einsatz', '1 Schluck (Pasch)', '2 Schlucke (Doppelpasch)', '3 Schlucke (Trasch)', 'Strong Zero kaufen (Full House)', '5 Schlucke (Straße)', '1 Shot (Quadrasch)', 'Rechnung zahlen (Quadrasch)', 'Geh heim! (Quintasch)', 'Nie wieder Toblerone! (Quintasch)'],
+    'alkoholfrei': ['Standard-Einsatz (5 Kniebeugen)', '5 Liegestütze (Pasch)', '10 Kniebeugen (Doppelpasch)', '15 Hampelmänner (Trasch)', '30s Planke (Full House)', '5 Burpees (Straße)', 'Am nächsten Sonntag in die Kirche (Quadrasch)', '1 Runde rennen (Quadrasch)', 'Geh heim! (Quintasch)', 'Nie wieder Toblerone! (Quintasch)'],
+    'spanien': ['Standard-Einsatz (Chupito trinken)', '¡Salud! rufen (Pasch)', 'Siesta machen (Doppelpasch)', 'Una sangría comprar (Full House)', 'Flamenco tanzen (Straße)', '1 Shot Licor 43 (Quadrasch)', 'Rechnung zahlen (Quadrasch)', '¡Adiós! Geh heim (Quintasch)', 'Nie wieder Tapas essen! (Quintasch)'],
+    'mittelalter': ['Standard-Einsatz (Humpen leeren)', 'Dem Marktvogt huldigen (Pasch)', 'Ganz laut auf die Gesundheit! rufen (Trasch)', 'Met für alle kaufen (Full House)', 'Einen Random volllabern (Quadrasch)', 'An den Pranger gestellt (Quadrasch)', 'Aus dem Königreich verbannt - Geh heim! (Quintasch)', 'Nie wieder Knoblauchbrot essen! (Quintasch)'],
+    'eigenes': []
+};
+
 // Akkumulierte Rotationen für jeden der 5 Würfel, um kontinuierlich vorwärts zu drehen.
 const currentRotations = [
     { x: 0, y: 0, z: 0 },
@@ -70,6 +78,9 @@ let hasAutoHiddenSidebar = false;
 // Rundenbasierter Spielzustand
 let gameState = 'lobby'; // 'lobby' oder 'playing'
 let activePlayerIndex = 0;
+
+let activeStakeSet = 'klassisch';
+let stakeSetSelect = null;
 
 // DOM-Elemente für PeerJS
 const roomIdDisplay = document.getElementById('room-id-display');
@@ -233,6 +244,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Kopieren fehlgeschlagen. Bitte kopiere die URL manuell.');
             });
         });
+    }
+
+    // Stake Set Select Listener
+    stakeSetSelect = document.getElementById('stake-set-select');
+    if (stakeSetSelect) {
+        stakeSetSelect.addEventListener('change', () => {
+            if (gameMode === 'sync') {
+                if (syncConn && syncConn.open) {
+                    syncConn.send({ action: 'syncCommand', type: 'changeStakeSet', value: stakeSetSelect.value });
+                }
+                return;
+            }
+            activeStakeSet = stakeSetSelect.value;
+            console.log(`Stake Set geändert auf: ${activeStakeSet}`);
+
+            // Lokales Test-Rig dropdown aktualisieren
+            updateTestRigStakeOptions(activeStakeSet);
+
+            // Broadcast an alle verbundenen Spieler
+            const currentOptions = STAKE_SETS[activeStakeSet] || [];
+            connections.forEach(conn => {
+                if (conn.open) {
+                    conn.send({
+                        action: 'stakeSetUpdate',
+                        stakeSet: activeStakeSet,
+                        stakeOptions: currentOptions
+                    });
+                }
+            });
+
+            // Synchronisiere Zustand mit sekundären Dashboards
+            broadcastSyncState();
+        });
+        
+        // Initiales Befüllen des Test-Rigs
+        updateTestRigStakeOptions(activeStakeSet);
     }
 });
 
@@ -742,7 +789,12 @@ function initHostPeer(forcedId = null) {
                     connections = connections.filter(c => c.peer !== conn.peer);
                     connections.push(conn);
 
-                    conn.send({ action: 'joinConfirm', success: true });
+                    conn.send({
+                        action: 'joinConfirm',
+                        success: true,
+                        stakeSet: activeStakeSet,
+                        stakeOptions: STAKE_SETS[activeStakeSet] || []
+                    });
                     const history = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
                     conn.send({ action: 'historyUpdate', history: history });
                     
@@ -771,7 +823,12 @@ function initHostPeer(forcedId = null) {
                 });
                 connections.push(conn);
 
-                conn.send({ action: 'joinConfirm', success: true });
+                conn.send({
+                    action: 'joinConfirm',
+                    success: true,
+                    stakeSet: activeStakeSet,
+                    stakeOptions: STAKE_SETS[activeStakeSet] || []
+                });
                 const history = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
                 conn.send({ action: 'historyUpdate', history: history });
                 updateLobbyDisplay();
@@ -911,6 +968,10 @@ function updateLobbyDisplay() {
         }
     } else {
         startGameButton.style.display = 'none';
+    }
+
+    if (stakeSetSelect) {
+        stakeSetSelect.disabled = (gameState !== 'lobby');
     }
 
     // Auto-Hide des Test-Rigs, sobald Spieler beitreten
@@ -1243,6 +1304,12 @@ function applySyncState(state) {
     players = state.players || [];
     gameState = state.gameState || 'lobby';
     activePlayerIndex = state.activePlayerIndex || 0;
+    
+    activeStakeSet = state.activeStakeSet || 'klassisch';
+    if (stakeSetSelect) {
+        stakeSetSelect.value = activeStakeSet;
+    }
+    updateTestRigStakeOptions(activeStakeSet);
 
     // Aktualisiere Lobby-Anzeige (broadcastSyncState() ist im Sync-Modus ein noop)
     updateLobbyDisplay();
@@ -1298,6 +1365,7 @@ function getSyncStatePayload() {
         players: players,
         gameState: gameState,
         activePlayerIndex: activePlayerIndex,
+        activeStakeSet: activeStakeSet,
         nextTurnButtonVisible: nextTurnButton.style.display === 'block',
         resultPanelClassName: resultPanel.className,
         resultTitleText: resultTitle.textContent,
@@ -1347,5 +1415,40 @@ function handleSyncCommand(data) {
         nextTurn();
     } else if (data.type === 'roll') {
         executeRoll(data.playerName, data.bet, data.stake, data.timer);
+    } else if (data.type === 'changeStakeSet') {
+        if (stakeSetSelect) {
+            stakeSetSelect.value = data.value;
+            stakeSetSelect.dispatchEvent(new Event('change'));
+        }
     }
+}
+
+function updateTestRigStakeOptions(activeSet) {
+    if (!playerStakeSelect) return;
+    playerStakeSelect.innerHTML = '';
+
+    if (activeSet === 'eigenes') {
+        const option = document.createElement('option');
+        option.value = 'custom';
+        option.textContent = 'Eigene Aktion...';
+        playerStakeSelect.appendChild(option);
+        return;
+    }
+
+    const options = STAKE_SETS[activeSet] || [];
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        if (opt.startsWith('Standard-Einsatz')) {
+            option.value = 'standard';
+        } else {
+            option.value = opt;
+        }
+        option.textContent = opt;
+        playerStakeSelect.appendChild(option);
+    });
+
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom';
+    customOpt.textContent = 'Eigene Aktion...';
+    playerStakeSelect.appendChild(customOpt);
 }
