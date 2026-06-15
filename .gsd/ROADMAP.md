@@ -13,7 +13,7 @@
 - [x] Dashboard um Online/Offline/Pausiert-Indikator neben Spielernamen erweitern
 
 ## Nice-to-Haves
-- [ ] Verlauf (Historie) auch auf dem Smartphone anzeigen
+- [x] Verlauf (Historie) auch auf dem Smartphone anzeigen
 - [x] Vorauswahlen im Smartphone-LocalStorage speichern und editierbar machen
 
 ## Phases
@@ -31,5 +31,5 @@
 **Objective**: Implement a Pause toggle on the client and skip logic on the host. Retain disconnected players in the active game rotation as "Offline" instead of removing them. Add color-coded indicators (Online = Green, Pausiert = Yellow, Offline = Red) next to player names on the Dashboard.
 
 ### Phase 4: Mobiler Verlauf & Verifikation
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Render the game history log on the smartphone client UI. Complete comprehensive multi-device verification, fix any remaining gaps, and finish the milestone.

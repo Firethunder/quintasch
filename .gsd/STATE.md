@@ -1,25 +1,25 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase Complete
+> **Current Status**: Milestone Complete
 > **Active Milestone**: ToDo-Cycle
-> **Active Phase**: 3
+> **Active Phase**: —
 
 ## Phase Progress
 - **Phase 1: Sharing- & Service-Worker-Optimierungen**: ✅ Complete
 - **Phase 2: Text-Bereinigung & Wetteingabe im Warteraum**: ✅ Complete
 - **Phase 3: Spieler-Pausenfunktion & Status-Indikatoren**: ✅ Complete
-- **Phase 4: Mobiler Verlauf & Verifikation**: ⬜ Not Started
+- **Phase 4: Mobiler Verlauf & Verifikation**: ✅ Complete
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Phase**: 3
+- **Phase**: 4
 - **Task**: Execution complete
-- **Status**: Ready for review / Next phase planning
+- **Status**: Finished
 
 ## Last Session Summary
-Phase 3 des Meilensteins 'ToDo-Cycle' erfolgreich abgeschlossen. Client-Pause-Toggle, WebRTC-Übertragung, Überspringer-Logik im Host bei Inaktivität/Pausierung sowie farbcodierte Status-Indikatoren (Online, Pausiert, Offline) auf Dashboard und synchronisierten Dashboards implementiert.
+Phase 4 des Meilensteins 'ToDo-Cycle' erfolgreich abgeschlossen. Real-time Spielverlauf-Synchronisation zwischen Host und Mobil-Clients sowie stilisierte mobile Verlaufsliste implementiert. Damit sind alle Phasen des Meilensteins abgeschlossen.
 
 ## Next Steps
-1. /plan 4 — Plane Phase 4 zur Anzeige des Spielverlaufs auf mobilen Clients.
+1. /complete-milestone — Schließe den Meilenstein ab und archiviere die Ergebnisse.
