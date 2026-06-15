@@ -14,19 +14,3 @@
 - [ ] Erweiterte Anpassungsmöglichkeit der Einsatz-Sets direkt im Lobby-Bildschirm
 
 ## Phases
-
-### Phase 1: Einsatz-Sets & Custom Stakes Definition
-**Status**: ✅ Complete
-**Objective**: Implement selectable stake presets on the host dashboard (Classic, Non-alcoholic, Family/Points) and sync them to mobile clients via WebRTC during the connection handshake and whenever configuration changes.
-
-### Phase 2: Historie-Integration
-**Status**: ✅ Complete
-**Objective**: Update the host dashboard and mobile client history views to display the selected stakes alongside dice roll outcome records.
-
-### Phase 3: Controller-Window Link & Desktop Support
-**Status**: ✅ Complete
-**Objective**: Provide a quick link on the host dashboard to launch a local controller window, and optimize the controller layout and WebRTC handling for desktop PC web browsers.
-
-### Phase 4: Milestone Verification & Final Polish
-**Status**: ✅ Complete
-**Objective**: Perform full multi-device and multi-browser verification of the new features, fix remaining edge cases, and complete the milestone.

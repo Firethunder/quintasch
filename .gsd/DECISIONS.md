@@ -1,5 +1,5 @@
 # Decisions
 
-> Previous milestone decisions archived in `.gsd/milestones/ToDo-Cycle/DECISIONS.md`
+> Previous milestone decisions archived in `.gsd/milestones/Custom-Stakes-and-Extras/DECISIONS.md`
 
 ---

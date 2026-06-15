@@ -1,5 +1,5 @@
 # Journal
 
-> Previous milestone journal archived in `.gsd/milestones/ToDo-Cycle/JOURNAL.md`
+> Previous milestone journal archived in `.gsd/milestones/Custom-Stakes-and-Extras/JOURNAL.md`
 
 ---
