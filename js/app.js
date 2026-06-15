@@ -498,7 +498,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
         }
 
         // Historie aktualisieren und speichern
-        saveRollToHistory(playerName, chosenBet, diceValues, rolledHandName, success);
+        saveRollToHistory(playerName, chosenBet, diceValues, rolledHandName, success, chosenStakeParam);
 
         // Broadcast roll result to all clients
         const currentHistory = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
@@ -642,7 +642,7 @@ function scheduleAutoTurn(delayMs) {
 /**
  * Speichert den Wurf in LocalStorage und aktualisiert die Sidebar.
  */
-function saveRollToHistory(player, bet, dice, hand, success) {
+function saveRollToHistory(player, bet, dice, hand, success, stake) {
     const history = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
     const newEntry = {
         player,
@@ -650,6 +650,7 @@ function saveRollToHistory(player, bet, dice, hand, success) {
         dice: dice.join(', '),
         hand,
         success,
+        stake: stake || 'Standard-Einsatz',
         time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
     
@@ -687,10 +688,11 @@ function renderHistory(history) {
         const li = document.createElement('li');
         li.className = `history-item ${item.success ? 'win' : 'fail'}`;
         
+        const stakeText = item.stake || 'Standard-Einsatz';
         li.innerHTML = `
             <div>
                 <strong>${item.player}</strong>: ${item.hand} <br>
-                <span style="font-size: 0.8rem; color: var(--text-muted)">Ziel: ${item.bet} | Wurf: [${item.dice}]</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted)">Ziel: ${item.bet} | Einsatz: ${stakeText} | Wurf: [${item.dice}]</span>
             </div>
             <div class="history-time">${item.time}</div>
         `;
