@@ -5,6 +5,8 @@
 - [x] Dem Benutzer im Dashboard-Interface ermöglichen, eigene PeerJS-Server-Verbindungsdaten einzutragen (Host, Port, Path, Secure).
 - [x] Eingabe von neuen Einsätzen während andere Spieler gerade am Würfeln sind
 - [x] Pausen Funktion für Spieler die aussetzen wollen
+- [ ] zeige die Einsätze in der Historie an
+
 
 ## Hohe Priorität
 - [x] Dashbboard die Auswahl ob neues Spiel oder einem bestehenden Hinzufügen wird nur mit STRG + F5 angezeigt
