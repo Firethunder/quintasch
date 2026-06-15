@@ -55,6 +55,7 @@ let gameplayCustomStakeInput = null;
 let gameplayCustomTimerGroup = null;
 let gameplayCustomTimerInput = null;
 let clientPauseToggle = null;
+let clientHistoryList = null;
 
 // Wurf-Ergebnis Overlay-Elemente
 let rollResultOverlay = null;
@@ -100,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gameplayCustomTimerGroup = document.getElementById('gameplay-custom-timer-group');
     gameplayCustomTimerInput = document.getElementById('gameplay-custom-timer');
     clientPauseToggle = document.getElementById('client-pause-toggle');
+    clientHistoryList = document.getElementById('client-history-list');
 
     // Wurf-Ergebnis Overlay-Elemente abrufen
     rollResultOverlay = document.getElementById('roll-result-overlay');
@@ -478,6 +480,11 @@ function handleNewConnection(newConn) {
             renderLobbyPlayers(data.players);
         }
 
+        // Historie-Update vom Host empfangen
+        if (data.action === 'historyUpdate') {
+            renderClientHistory(data.history);
+        }
+
         // Runden-Steuerungsbefehle empfangen
         if (data.action === 'yourTurn') {
             // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
@@ -795,4 +802,47 @@ function renderLobbyPlayers(players) {
         li.textContent = name;
         lobbyPlayersList.appendChild(li);
     });
+}
+
+/**
+ * Rendert den Spielverlauf in der mobilen Ansicht.
+ */
+function renderClientHistory(history) {
+    if (!clientHistoryList) return;
+    clientHistoryList.innerHTML = '';
+    
+    if (!history || history.length === 0) {
+        clientHistoryList.innerHTML = '<li class="history-item" style="color: var(--text-muted); justify-content: center;">Keine Würfe vorhanden</li>';
+        return;
+    }
+
+    history.forEach(item => {
+        const li = document.createElement('li');
+        li.className = `history-item ${item.success ? 'win' : 'fail'}`;
+        
+        const escapedPlayer = escapeHtml(item.player);
+        const escapedHand = escapeHtml(item.hand);
+        const escapedBet = escapeHtml(item.bet);
+        const escapedDice = escapeHtml(item.dice);
+        const escapedTime = escapeHtml(item.time);
+        
+        li.innerHTML = `
+            <div>
+                <strong>${escapedPlayer}</strong>: ${escapedHand} <br>
+                <span style="font-size: 0.8rem; color: var(--text-muted)">Ziel: ${escapedBet} | Wurf: [${escapedDice}]</span>
+            </div>
+            <div class="history-time">${escapedTime}</div>
+        `;
+        clientHistoryList.appendChild(li);
+    });
+}
+
+function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
