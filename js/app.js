@@ -731,8 +731,12 @@ function initHostPeer(forcedId = null) {
                 if (existingPlayerIndex !== -1) {
                     console.log(`Re-join erkannt für Spieler: ${data.playerName}`);
                     
-                    // Update peerId und Connection
+                    // Update peerId, Connection und Status
                     players[existingPlayerIndex].peerId = conn.peer;
+                    players[existingPlayerIndex].online = true;
+                    if (data.paused !== undefined) {
+                        players[existingPlayerIndex].paused = !!data.paused;
+                    }
                     connections = connections.filter(c => c.peer !== conn.peer);
                     connections.push(conn);
 
@@ -746,21 +750,46 @@ function initHostPeer(forcedId = null) {
                         } else {
                             conn.send({ action: 'waitTurn', activePlayerName: activePlayer ? activePlayer.name : '' });
                         }
-                    } else {
-                        updateLobbyDisplay();
-                        broadcastLobby();
                     }
+                    updateLobbyDisplay();
+                    broadcastLobby();
+                    broadcastSyncState();
                     return;
                 }
 
                 // Normaler Beitritt
-                // Spieler hinzufügen
-                players.push({ peerId: conn.peer, name: data.playerName });
+                // Spieler hinzufügen (mit default online/paused flags)
+                players.push({ 
+                    peerId: conn.peer, 
+                    name: data.playerName, 
+                    paused: !!data.paused, 
+                    online: true 
+                });
                 connections.push(conn);
 
                 conn.send({ action: 'joinConfirm', success: true });
                 updateLobbyDisplay();
                 broadcastLobby();
+                broadcastSyncState();
+            }
+
+            // Client signalisiert Pause-Toggle
+            if (data && data.action === 'togglePause') {
+                const playerIndex = players.findIndex(p => p.peerId === conn.peer);
+                if (playerIndex !== -1) {
+                    players[playerIndex].paused = !!data.paused;
+                    console.log(`Spieler ${players[playerIndex].name} Pause-Status geändert auf:`, data.paused);
+                    
+                    updateLobbyDisplay();
+                    broadcastLobby();
+                    broadcastSyncState();
+
+                    // Falls der aktive Spieler sich selbst pausiert hat, schalte weiter
+                    if (gameState === 'playing' && activePlayerIndex === playerIndex && data.paused) {
+                        console.log(`Aktiver Spieler ${players[playerIndex].name} hat sich selbst pausiert. Wechsle zum nächsten Spieler.`);
+                        nextTurn();
+                    }
+                }
             }
 
             // Client sendet Würfelwurf-Trigger
@@ -773,18 +802,33 @@ function initHostPeer(forcedId = null) {
         });
 
         const handleDisconnect = () => {
-            const isActiveDisconnect = players[activePlayerIndex] && players[activePlayerIndex].peerId === conn.peer;
+            const playerIndex = players.findIndex(p => p.peerId === conn.peer);
+            if (playerIndex === -1) return;
 
-            players = players.filter(p => p.peerId !== conn.peer);
+            const player = players[playerIndex];
+            const isActiveDisconnect = activePlayerIndex === playerIndex;
+
             connections = connections.filter(c => c.peer !== conn.peer);
             syncConnections = syncConnections.filter(c => c.peer !== conn.peer);
+
+            if (gameState === 'playing') {
+                // Im aktiven Spiel: Nicht löschen, sondern als offline markieren
+                player.online = false;
+                console.log(`Spieler ${player.name} ist offline gegangenen.`);
+            } else {
+                // In Lobby: Spieler komplett löschen
+                players = players.filter(p => p.peerId !== conn.peer);
+                console.log(`Spieler ${player.name} hat die Lobby verlassen.`);
+            }
+
             updateLobbyDisplay();
             broadcastLobby();
             broadcastSyncState();
 
             // Falls der aktive Spieler das Spiel verlässt
             if (gameState === 'playing' && isActiveDisconnect) {
-                startNextTurn();
+                console.log(`Aktiver Spieler ${player.name} ist offline gegangen. Wechsle zum nächsten.`);
+                nextTurn();
             }
         };
 
@@ -882,9 +926,21 @@ function startGame() {
     
     gameState = 'playing';
     startGameButton.style.display = 'none';
-    activePlayerIndex = 0;
-    startNextTurn();
-    broadcastSyncState();
+    
+    // Finde den ersten Spieler, der online und nicht pausiert ist
+    const firstActiveIndex = players.findIndex(p => p.online && !p.paused);
+    if (firstActiveIndex !== -1) {
+        activePlayerIndex = firstActiveIndex;
+        startNextTurn();
+    } else {
+        activePlayerIndex = 0;
+        resultPanel.className = 'panel result-panel';
+        resultTitle.textContent = 'Keine aktiven Spieler';
+        resultDescription.textContent = 'Alle Spieler sind pausiert. Warte auf Deaktivierung der Pause...';
+        resultAction.textContent = '';
+        nextTurnButton.style.display = 'none';
+        broadcastSyncState();
+    }
 }
 
 /**
@@ -957,9 +1013,36 @@ function nextTurn() {
         console.warn(`[Auto-Turn] Abbruch: gameState=${gameState}, Spielerzahl=${players.length}`);
         return;
     }
-    activePlayerIndex = (activePlayerIndex + 1) % players.length;
-    console.log(`[Auto-Turn] Neuer aktiver Spieler-Index: ${activePlayerIndex} (${players[activePlayerIndex]?.name})`);
-    startNextTurn();
+
+    // Prüfe, ob es überhaupt mindestens einen Spieler gibt, der online UND nicht pausiert ist
+    const hasActivePlayers = players.some(p => p.online && !p.paused);
+    if (!hasActivePlayers) {
+        console.warn('Keine aktiven (online & nicht pausierten) Spieler im Raum.');
+        resultPanel.className = 'panel result-panel';
+        resultTitle.textContent = 'Keine aktiven Spieler';
+        resultDescription.textContent = 'Alle Spieler sind pausiert oder offline. Warte auf Reconnect oder Aktivierung...';
+        resultAction.textContent = '';
+        nextTurnButton.style.display = 'none';
+        broadcastSyncState();
+        return;
+    }
+
+    // Suche rundenbasiert den nächsten berechtigten Spieler
+    let searchIndex = activePlayerIndex;
+    let found = false;
+    for (let i = 0; i < players.length; i++) {
+        searchIndex = (searchIndex + 1) % players.length;
+        if (players[searchIndex].online && !players[searchIndex].paused) {
+            activePlayerIndex = searchIndex;
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        console.log(`[Auto-Turn] Neuer aktiver Spieler-Index: ${activePlayerIndex} (${players[activePlayerIndex]?.name})`);
+        startNextTurn();
+    }
 }
 
 /**
