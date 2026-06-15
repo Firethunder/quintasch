@@ -52,6 +52,19 @@ body {
     display: none;
 }
 
+.app-container.sidebar-hidden #history-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.app-container.sidebar-hidden #history-list {
+    max-height: none;
+    flex: 1;
+    min-height: 0;
+}
+
 /* Dashboard Panel (Main Screen) */
 .dashboard {
     padding: 40px;
