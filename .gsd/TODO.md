@@ -12,6 +12,8 @@
 - [x] Dashbboard die Auswahl ob neues Spiel oder einem bestehenden Hinzufügen wird nur mit STRG + F5 angezeigt
 - [x] Dashboard Sync-Link mit bereits Vorausgewähltem Raum
 - [x] Entferne die Zusätze 2er-Pasch und co.
+- [ ] zusätzliche Einsätze, Brainstorming für weitere Einsätze. Auswahl von verschiedenen Einsatz-Sets für nicht alkoholiker und andere Gelegenheiten
+
 
 ## Low Prio
 - [x] Verlauf auch auf dem Smartphone anzeigen
