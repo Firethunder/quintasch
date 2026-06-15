@@ -148,6 +148,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clientPlayerNameInput) clientPlayerNameInput.disabled = true;
     }
 
+    // Parse URL-Parameter für Custom Peer Server-Konfiguration falls vorhanden
+    const urlParams = new URLSearchParams(window.location.search);
+    const hostParam = urlParams.get('host');
+    const portParam = urlParams.get('port');
+    const pathParam = urlParams.get('path');
+    const secureParam = urlParams.get('secure');
+
+    if (hostParam) {
+        const urlPeerConfig = {
+            host: hostParam,
+            port: portParam || '',
+            path: pathParam || '/',
+            secure: secureParam === 'true'
+        };
+        try {
+            localStorage.setItem('quintasch_peer_config', JSON.stringify(urlPeerConfig));
+        } catch (e) {
+            console.error('Fehler beim Speichern der Peer-Config aus URL:', e);
+        }
+    }
+
     // Lese Custom Config
     let peerConfig = null;
     try {
