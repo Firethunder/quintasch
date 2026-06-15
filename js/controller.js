@@ -54,6 +54,7 @@ let gameplayStakeSelect = null;
 let gameplayCustomStakeInput = null;
 let gameplayCustomTimerGroup = null;
 let gameplayCustomTimerInput = null;
+let clientPauseToggle = null;
 
 // Wurf-Ergebnis Overlay-Elemente
 let rollResultOverlay = null;
@@ -98,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gameplayCustomStakeInput = document.getElementById('gameplay-custom-stake');
     gameplayCustomTimerGroup = document.getElementById('gameplay-custom-timer-group');
     gameplayCustomTimerInput = document.getElementById('gameplay-custom-timer');
+    clientPauseToggle = document.getElementById('client-pause-toggle');
 
     // Wurf-Ergebnis Overlay-Elemente abrufen
     rollResultOverlay = document.getElementById('roll-result-overlay');
@@ -197,6 +199,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (clientSoundToggle) clientSoundToggle.checked = true;
             alert('Einstellungen zurückgesetzt auf Standard!');
             window.location.reload();
+        });
+    }
+
+    // Lese Pause-Einstellung
+    const savedPaused = localStorage.getItem('quintasch_client_paused');
+    if (clientPauseToggle) {
+        clientPauseToggle.checked = savedPaused === 'true';
+    }
+
+    if (clientPauseToggle) {
+        clientPauseToggle.addEventListener('change', () => {
+            const isPaused = clientPauseToggle.checked;
+            localStorage.setItem('quintasch_client_paused', isPaused ? 'true' : 'false');
+            if (conn && conn.open) {
+                conn.send({ action: 'togglePause', paused: isPaused });
+            }
         });
     }
 
@@ -414,7 +432,8 @@ function handleNewConnection(newConn) {
         // Handshake senden
         conn.send({
             action: 'join',
-            playerName: savedPlayerName
+            playerName: savedPlayerName,
+            paused: clientPauseToggle ? clientPauseToggle.checked : false
         });
     });
 
