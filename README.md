@@ -16,13 +16,13 @@ Die Verbindung zwischen den Handys (Controllern) und dem Dashboard (Host) wird p
 
 | Kombination | Wahrscheinlichkeit | Standard-Strafe (Aktion) |
 | :--- | :--- | :--- |
-| **Pasch** (2er-Pasch) | ~90 % | Trinke dein aktuelles Getränk innerhalb des 30-Sekunden-Timers. |
+| **Pasch** | ~90 % | Trinke dein aktuelles Getränk innerhalb des 30-Sekunden-Timers. |
 | **Doppelpasch** | ~23 % | "Doppelschlag" – Verteile 2 kräftige Schlucke an deine Mitspieler (Aufteilen erlaubt). |
-| **Trasch** (3er-Pasch) | ~15 % | Das Getränk wird auf Ex (in einem Zug) geleert. |
+| **Trasch** | ~15 % | Das Getränk wird auf Ex (in einem Zug) geleert. |
 | **Full House** | ~3,8 % | "Split-Strafe" – Verteile 1 Shot und ein halbes Getränk an zwei Mitspieler. |
 | **Straße** | ~3,1 % | "Wasserfall" – Alle trinken. Der Würfler startet und beendet den Wasserfall. |
-| **Quadrasch** (4er-Pasch) | ~1,9 % | Eskalation – Der Würfler trinkt 3 Shots hintereinander. |
-| **Quintasch** (5er-Pasch) | ~0,07 % | Tischregel – Alle außer dem Würfler leeren ihr Getränk sofort auf Ex. |
+| **Quadrasch** | ~1,9 % | Eskalation – Der Würfler trinkt 3 Shots hintereinander. |
+| **Quintasch** | ~0,07 % | Tischregel – Alle außer dem Würfler leeren ihr Getränk sofort auf Ex. |
 
 ---
 
