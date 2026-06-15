@@ -454,6 +454,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
         saveRollToHistory(playerName, chosenBet, diceValues, rolledHandName, success);
 
         // Broadcast roll result to all clients
+        const currentHistory = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
         connections.forEach(conn => {
             if (conn.open) {
                 conn.send({
@@ -468,6 +469,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
                     rule: actionText,
                     timer: customTimerParam
                 });
+                conn.send({ action: 'historyUpdate', history: currentHistory });
             }
         });
 
@@ -741,6 +743,8 @@ function initHostPeer(forcedId = null) {
                     connections.push(conn);
 
                     conn.send({ action: 'joinConfirm', success: true });
+                    const history = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
+                    conn.send({ action: 'historyUpdate', history: history });
                     
                     // Sende Rundenstatus falls bereits im Spiel
                     if (gameState === 'playing') {
@@ -768,6 +772,8 @@ function initHostPeer(forcedId = null) {
                 connections.push(conn);
 
                 conn.send({ action: 'joinConfirm', success: true });
+                const history = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
+                conn.send({ action: 'historyUpdate', history: history });
                 updateLobbyDisplay();
                 broadcastLobby();
                 broadcastSyncState();
