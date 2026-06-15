@@ -13,8 +13,8 @@ const faceAngles = {
 
 const STAKE_SETS = {
     'klassisch': ['Standard-Einsatz', '1 Schluck (Pasch)', '2 Schlucke (Doppelpasch)', '3 Schlucke (Trasch)', 'Strong Zero kaufen (Full House)', '5 Schlucke (Straße)', '1 Shot (Quadrasch)', 'Rechnung zahlen (Quadrasch)', 'Geh heim! (Quintasch)', 'Nie wieder Toblerone! (Quintasch)'],
-    'alkoholfrei': ['Standard-Einsatz (5 Kniebeugen)', '5 Liegestütze (Pasch)', '10 Kniebeugen (Doppelpasch)', '15 Hampelmänner (Trasch)', '30s Planke (Full House)', '5 Burpees (Straße)', 'Am nächsten Sonntag in die Kirche (Quadrasch)', '1 Runde rennen (Quadrasch)', 'Geh heim! (Quintasch)', 'Nie wieder Toblerone! (Quintasch)'],
-    'spanien': ['Standard-Einsatz (Cortado trinken)', '¡Figueres! rufen (Pasch)', 'Siesta machen (Doppelpasch)', 'Dein Getränk fällt in den Pool (Trasch)', 'Eine Flasche Sifón kaufen (Full House)', 'Springe in den Pool (Straße)', 'Reserviere einen Tisch im Restaurant (Quadrasch)', 'Rechnung zahlen (Quadrasch)', '¡Adiós! Geh heim (Quintasch)', 'Nie wieder Tapas essen! (Quintasch)'],
+    'alkoholfrei': ['Standard-Einsatz (5 Kniebeugen)', '5 Liegestütze (Pasch)', '10 Kniebeugen (Doppelpasch)', '15 Hampelmänner (Trasch)', '30s Planke (Full House)', '5 Burpees (Straße)', 'Am nächsten Sonntag in die Kirche (Quadrasch)', '1 Runde rennen (Quadrasch)', 'Geh heim! / Aufs Zimmer! (Quintasch)', 'Nie wieder Toblerone! (Quintasch)'],
+    'spanien': ['Standard-Einsatz (Cortado trinken)', '¡Figueres! rufen (Pasch)', 'Siesta machen (Doppelpasch)', 'Dein Getränk fällt in den Pool (Trasch)', 'Eine Flasche Sifón kaufen (Full House)', 'Springe in den Pool (Straße)', 'Reserviere einen Tisch im Restaurant (Quadrasch)', 'Rechnung zahlen (Quadrasch)', 'Geh heim oder auf dein Zimmer (Quintasch)', 'Nie wieder Tapas essen! (Quintasch)'],
     'mittelalter': ['Standard-Einsatz (Humpen leeren)', 'Dem Marktvogt huldigen (Pasch)', 'Ganz laut auf die Gesundheit! rufen (Trasch)', 'Met für alle kaufen (Full House)', 'Einen Random volllabern (Quadrasch)', 'An den Pranger gestellt (Quadrasch)', 'Aus dem Königreich verbannt - Geh heim! (Quintasch)', 'Nie wieder Knoblauchbrot essen! (Quintasch)'],
     'eigenes': []
 };
