@@ -154,6 +154,11 @@
                     <input type="checkbox" id="client-sound-toggle" checked>
                     <label for="client-sound-toggle" style="margin-bottom: 0; font-size: 0.85rem;">Rassel-Sound abspielen</label>
                 </div>
+                <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">Eigene Einsätze</h4>
+                <div class="form-group" style="margin-bottom: 10px; text-align: left;">
+                    <label for="client-custom-stakes-list" style="font-size: 0.8rem; display: block; margin-bottom: 5px;">Eigenes Einsatz-Set (ein Eintrag pro Zeile):</label>
+                    <textarea id="client-custom-stakes-list" class="form-control" rows="4" style="width: 100%; font-family: sans-serif; font-size: 0.9rem; padding: 6px 12px; box-sizing: border-box; resize: vertical;"></textarea>
+                </div>
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button class="btn-neon" id="save-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto;">Speichern</button>
                     <button class="btn-neon" id="reset-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto; --neon-cyan: var(--neon-magenta);">Reset</button>
@@ -197,7 +202,8 @@
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
                     <label for="gameplay-stake">Dein Einsatz</label>
                     <select id="gameplay-stake" class="form-control">
-                        <option value="standard">Standard-Strafe</option>
+                        <option value="custom" selected>Eigene Aktion...</option>
+                        <option value="standard">Standard-Einsatz</option>
                         <option value="1 Schluck">1 Schluck</option>
                         <option value="2 Schlucke">2 Schlucke</option>
                         <option value="3 Schlucke">3 Schlucke</option>
@@ -205,7 +211,6 @@
                         <option value="5 Schlucke">5 Schlucke</option>
                         <option value="1 Shot">1 Shot</option>
                         <option value="2 Shots">2 Shots</option>
-                        <option value="custom">Eigener...</option>
                     </select>
                     <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 3 Schlucke auf Ex" style="display: none; margin-top: 10px;" maxlength="30">
                     <div id="gameplay-custom-timer-group" style="display: none; margin-top: 10px;">

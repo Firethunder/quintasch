@@ -56,6 +56,9 @@ let gameplayCustomTimerGroup = null;
 let gameplayCustomTimerInput = null;
 let clientPauseToggle = null;
 let clientHistoryList = null;
+let clientCustomStakesList = null;
+let currentActiveStakeSet = 'klassisch';
+let currentActiveStakeOptions = [];
 
 // Wurf-Ergebnis Overlay-Elemente
 let rollResultOverlay = null;
@@ -102,6 +105,24 @@ document.addEventListener('DOMContentLoaded', () => {
     gameplayCustomTimerInput = document.getElementById('gameplay-custom-timer');
     clientPauseToggle = document.getElementById('client-pause-toggle');
     clientHistoryList = document.getElementById('client-history-list');
+    
+    // Eigene Einsätze initialisieren
+    clientCustomStakesList = document.getElementById('client-custom-stakes-list');
+    if (clientCustomStakesList) {
+        let storedCustom = localStorage.getItem('quintasch_custom_stakes');
+        if (!storedCustom) {
+            storedCustom = "1 Liegestütze machen\nEinen Witz erzählen\nLied summen (Erraten)\n10 Kniebeugen machen";
+            localStorage.setItem('quintasch_custom_stakes', storedCustom);
+        }
+        clientCustomStakesList.value = storedCustom;
+        
+        clientCustomStakesList.addEventListener('input', () => {
+            localStorage.setItem('quintasch_custom_stakes', clientCustomStakesList.value);
+            if (currentActiveStakeSet === 'eigenes') {
+                updateStakeOptions(currentActiveStakeSet, currentActiveStakeOptions);
+            }
+        });
+    }
 
     // Wurf-Ergebnis Overlay-Elemente abrufen
     rollResultOverlay = document.getElementById('roll-result-overlay');
@@ -222,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lese Wetteinsatz- und Einsatz-Vorauswahl
     const savedBet = localStorage.getItem('quintasch_default_bet');
-    const savedStake = localStorage.getItem('quintasch_default_stake');
+    const savedStake = localStorage.getItem('quintasch_default_stake') || 'custom';
     const savedCustomStake = localStorage.getItem('quintasch_default_custom_stake');
     const savedCustomTimer = localStorage.getItem('quintasch_default_custom_timer');
 
@@ -453,6 +474,12 @@ function handleNewConnection(newConn) {
                 if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'In der Lobby';
                 if (lobbySpinner) lobbySpinner.style.display = 'none';
                 
+                if (data.stakeSet !== undefined) {
+                    currentActiveStakeSet = data.stakeSet;
+                    currentActiveStakeOptions = data.stakeOptions || [];
+                    updateStakeOptions(currentActiveStakeSet, currentActiveStakeOptions);
+                }
+
                 // Wechsel in Gameplay-Ansicht als Standard (Formular bearbeitbar)
                 if (lobbyContainer) lobbyContainer.style.display = 'none';
                 if (gameplayContainer) gameplayContainer.style.display = 'block';
@@ -483,6 +510,13 @@ function handleNewConnection(newConn) {
         // Historie-Update vom Host empfangen
         if (data.action === 'historyUpdate') {
             renderClientHistory(data.history);
+        }
+
+        // Stake-Set-Update vom Host empfangen
+        if (data.action === 'stakeSetUpdate') {
+            currentActiveStakeSet = data.stakeSet;
+            currentActiveStakeOptions = data.stakeOptions || [];
+            updateStakeOptions(currentActiveStakeSet, currentActiveStakeOptions);
         }
 
         // Runden-Steuerungsbefehle empfangen
@@ -845,4 +879,72 @@ function escapeHtml(str) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+function updateStakeOptions(set, options) {
+    if (!gameplayStakeSelect) return;
+    gameplayStakeSelect.innerHTML = '';
+
+    // Standard-Eigene-Aktion option zuerst hinzufügen (Default-Auswahl)
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom';
+    customOpt.textContent = 'Eigene Aktion...';
+    gameplayStakeSelect.appendChild(customOpt);
+
+    if (set === 'eigenes') {
+        const customText = localStorage.getItem('quintasch_custom_stakes') || '';
+        const lines = customText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        
+        if (lines.length > 0) {
+            lines.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                gameplayStakeSelect.appendChild(option);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.value = 'standard';
+            option.textContent = 'Standard-Einsatz';
+            gameplayStakeSelect.appendChild(option);
+        }
+    } else {
+        const list = options && options.length > 0 ? options : ['Standard-Einsatz'];
+        list.forEach(opt => {
+            const option = document.createElement('option');
+            if (opt.startsWith('Standard-Einsatz')) {
+                option.value = 'standard';
+            } else {
+                option.value = opt;
+            }
+            option.textContent = opt;
+            gameplayStakeSelect.appendChild(option);
+        });
+    }
+
+    // Default-Einsatz wiederherstellen falls vorhanden, sonst 'custom'
+    const savedStake = localStorage.getItem('quintasch_default_stake') || 'custom';
+    const hasSavedStake = Array.from(gameplayStakeSelect.options).some(opt => opt.value === savedStake);
+    if (hasSavedStake) {
+        gameplayStakeSelect.value = savedStake;
+    } else {
+        gameplayStakeSelect.value = 'custom';
+        localStorage.setItem('quintasch_default_stake', 'custom');
+    }
+
+    // Toggle Custom inputs visibility
+    if (gameplayCustomStakeInput) {
+        gameplayCustomStakeInput.style.display = gameplayStakeSelect.value === 'custom' ? 'block' : 'none';
+        if (gameplayStakeSelect.value !== 'custom') {
+            gameplayCustomStakeInput.value = '';
+            localStorage.removeItem('quintasch_default_custom_stake');
+        }
+    }
+    if (gameplayCustomTimerGroup) {
+        gameplayCustomTimerGroup.style.display = gameplayStakeSelect.value === 'custom' ? 'block' : 'none';
+        if (gameplayStakeSelect.value !== 'custom' && gameplayCustomTimerInput) {
+            gameplayCustomTimerInput.value = '';
+            localStorage.removeItem('quintasch_default_custom_timer');
+        }
+    }
 }
