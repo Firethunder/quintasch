@@ -246,6 +246,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Controller öffnen
+    const openControllerBtn = document.getElementById('open-controller-btn');
+    if (openControllerBtn) {
+        openControllerBtn.addEventListener('click', () => {
+            if (!activeRoomId) return;
+            let joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${activeRoomId}`;
+            try {
+                const stored = localStorage.getItem('quintasch_peer_config');
+                if (stored) {
+                    const peerConfig = JSON.parse(stored);
+                    if (peerConfig && peerConfig.host) {
+                        joinUrl += `&host=${encodeURIComponent(peerConfig.host)}&port=${encodeURIComponent(peerConfig.port || '')}&path=${encodeURIComponent(peerConfig.path || '')}&secure=${encodeURIComponent(peerConfig.secure)}`;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            window.open(joinUrl, '_blank');
+        });
+    }
+
     // Stake Set Select Listener
     stakeSetSelect = document.getElementById('stake-set-select');
     if (stakeSetSelect) {
@@ -750,7 +771,13 @@ function initHostPeer(forcedId = null) {
         roomIdDisplay.textContent = id;
         const copySyncLinkBtn = document.getElementById('copy-sync-link-btn');
         if (copySyncLinkBtn) copySyncLinkBtn.style.display = 'inline-block';
-        const joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${id}`;
+        const openControllerBtn = document.getElementById('open-controller-btn');
+        if (openControllerBtn) openControllerBtn.style.display = 'inline-block';
+        
+        let joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${id}`;
+        if (peerConfig && peerConfig.host) {
+            joinUrl += `&host=${encodeURIComponent(peerConfig.host)}&port=${encodeURIComponent(peerConfig.port || '')}&path=${encodeURIComponent(peerConfig.path || '')}&secure=${encodeURIComponent(peerConfig.secure)}`;
+        }
         
         qrcodeContainer.innerHTML = '';
         new QRCode(qrcodeContainer, {
@@ -1197,12 +1224,17 @@ function initSyncPeer(targetRoomId) {
             roomIdDisplay.textContent = `${targetRoomId} (Sync)`;
             const copySyncLinkBtn = document.getElementById('copy-sync-link-btn');
             if (copySyncLinkBtn) copySyncLinkBtn.style.display = 'inline-block';
+            const openControllerBtn = document.getElementById('open-controller-btn');
+            if (openControllerBtn) openControllerBtn.style.display = 'inline-block';
             
             // Sende Join-Handshake
             syncConn.send({ action: 'syncDashboardJoin' });
             
             // Render den QR-Code des Hosts, damit Spieler beitreten können
-            const joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${targetRoomId}`;
+            let joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${targetRoomId}`;
+            if (peerConfig && peerConfig.host) {
+                joinUrl += `&host=${encodeURIComponent(peerConfig.host)}&port=${encodeURIComponent(peerConfig.port || '')}&path=${encodeURIComponent(peerConfig.path || '')}&secure=${encodeURIComponent(peerConfig.secure)}`;
+            }
             qrcodeContainer.innerHTML = '';
             new QRCode(qrcodeContainer, {
                 text: joinUrl,

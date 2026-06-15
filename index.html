@@ -56,9 +56,14 @@
                 <div style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; color: var(--neon-cyan); margin-top: 5px; word-break: break-all; max-width: 100%; padding: 0 10px; box-sizing: border-box;">
                     Raum-ID: <span id="room-id-display" style="user-select: all;">Wird generiert...</span>
                 </div>
-                <button class="btn-neon" id="copy-sync-link-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); font-size: 0.8rem; padding: 4px 10px; min-height: auto; margin-top: 5px; box-shadow: none; text-shadow: none; display: none;">
-                    Sync-Link kopieren
-                </button>
+                <div style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 5px;">
+                    <button class="btn-neon" id="copy-sync-link-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; display: none; flex: 1;">
+                        Sync-Link kopieren
+                    </button>
+                    <button class="btn-neon" id="open-controller-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; display: none; flex: 1;">
+                        Controller öffnen
+                    </button>
+                </div>
                 <div id="stake-set-container" style="width: 100%; text-align: left; margin: 10px 0; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px;">
                     <label for="stake-set-select" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 240, 255, 0.2);">Einsatz-Set:</label>
                     <select id="stake-set-select" class="form-control" style="margin-top: 5px; font-size: 0.9rem;">
