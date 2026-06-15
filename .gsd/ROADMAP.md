@@ -4,9 +4,9 @@
 > **Goal**: Abarbeiten der offenen TODO-Liste zur Optimierung der Benutzerfreundlichkeit, Synchronisation und Stabilität, inklusive Status-Indikatoren.
 
 ## Must-Haves
-- [ ] Service Worker auf Network-First Caching umstellen (Ctrl+F5 Bugfix)
-- [ ] Dashboard Sync-Link via URL-Parameter auto-verbinden
-- [ ] Button zum Kopieren des Dashboard-Sync-Links hinzufügen
+- [x] Service Worker auf Network-First Caching umstellen (Ctrl+F5 Bugfix)
+- [x] Dashboard Sync-Link via URL-Parameter auto-verbinden
+- [x] Button zum Kopieren des Dashboard-Sync-Links hinzufügen
 - [ ] Wetteinsatz-Suffixe wie "(2er-Pasch)" entfernen
 - [ ] Eingabe von Wetteinsätzen auf dem Smartphone während der Wartezeit erlauben
 - [ ] Pausen-Funktion ("Aussetzen") für Spieler einbauen (mit Überspringer-Logik)
@@ -19,7 +19,7 @@
 ## Phases
 
 ### Phase 1: Sharing- & Service-Worker-Optimierungen
-**Status**: ⬜ Not Started
+**Status**: ✅ Complete
 **Objective**: Update caching strategy to Network-First, implement dashboard auto-sync from URL parameters (`?sync=ROOM_ID` / `?room=ROOM_ID`), and add a button to copy the Dashboard sync link to the clipboard.
 
 ### Phase 2: Text-Bereinigung & Wetteingabe im Warteraum
