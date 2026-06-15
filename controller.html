@@ -168,18 +168,11 @@
             
             <div class="loading-pulse" id="lobby-spinner"></div>
             <div id="lobby-wait-text" style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 15px;">Warte in Lobby...</div>
-            
-            <div style="margin-top: 25px; text-align: left;">
-                <h3 class="sidebar-title" style="font-size: 1rem; border: none; margin-bottom: 10px; color: var(--text-muted);">Spieler im Raum:</h3>
-                <ul class="lobby-players" id="lobby-players-list">
-                    <!-- Dynamische Spielerliste -->
-                </ul>
-            </div>
         </main>
 
         <!-- GAMEPLAY-AKTIONSBEREICH -->
         <main class="panel" id="gameplay-container" style="display: none; text-align: center;">
-            <h2 class="sidebar-title" style="font-size: 1.5rem; margin-bottom: 20px; border: none; color: var(--neon-green); text-shadow: var(--glow-green);">Du bist dran!</h2>
+            <h2 class="sidebar-title" id="gameplay-status-title" style="font-size: 1.5rem; margin-bottom: 20px; border: none; color: var(--neon-green); text-shadow: var(--glow-green);">Du bist dran!</h2>
             
             <div id="gameplay-form-wrapper">
                 <div class="form-group" style="text-align: left;">
@@ -276,6 +269,13 @@
             </section>
 
             <button class="btn-neon" id="gameplay-roll-button" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 15px;">WÜRFELN!</button>
+            
+            <div style="margin-top: 25px; text-align: left; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 15px;">
+                <h3 class="sidebar-title" style="font-size: 1rem; border: none; margin-bottom: 10px; color: var(--text-muted);">Spieler im Raum:</h3>
+                <ul class="lobby-players" id="lobby-players-list">
+                    <!-- Dynamische Spielerliste -->
+                </ul>
+            </div>
         </main>
     </div>
 

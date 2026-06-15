@@ -47,6 +47,7 @@ let lobbySpinner = null;
 let lobbyPlayersList = null;
 let gameplayContainer = null;
 let gameplayBetSelect = null;
+let gameplayStatusTitle = null;
 let gameplayRollButton = null;
 let lobbyWaitText = null;
 let gameplayStakeSelect = null;
@@ -90,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lobbyPlayersList = document.getElementById('lobby-players-list');
     gameplayContainer = document.getElementById('gameplay-container');
     gameplayBetSelect = document.getElementById('gameplay-bet');
+    gameplayStatusTitle = document.getElementById('gameplay-status-title');
     gameplayRollButton = document.getElementById('gameplay-roll-button');
     lobbyWaitText = document.getElementById('lobby-wait-text');
     gameplayStakeSelect = document.getElementById('gameplay-stake');
@@ -429,6 +431,21 @@ function handleNewConnection(newConn) {
                 }
                 if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'In der Lobby';
                 if (lobbySpinner) lobbySpinner.style.display = 'none';
+                
+                // Wechsel in Gameplay-Ansicht als Standard (Formular bearbeitbar)
+                if (lobbyContainer) lobbyContainer.style.display = 'none';
+                if (gameplayContainer) gameplayContainer.style.display = 'block';
+                if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
+                if (mobileDiceTable) mobileDiceTable.style.display = 'none';
+                if (gameplayStatusTitle) {
+                    gameplayStatusTitle.textContent = 'In der Lobby';
+                    gameplayStatusTitle.style.color = 'var(--neon-cyan)';
+                    gameplayStatusTitle.style.textShadow = 'var(--glow-cyan)';
+                }
+                if (gameplayRollButton) {
+                    gameplayRollButton.disabled = true;
+                    gameplayRollButton.textContent = 'Warten auf Spielstart...';
+                }
             } else {
                 // Beitritt fehlgeschlagen (z.B. Name bereits vergeben)
                 isDisconnecting = true;
@@ -452,6 +469,11 @@ function handleNewConnection(newConn) {
             if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
             isAnimating = false;
             if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
+            if (gameplayStatusTitle) {
+                gameplayStatusTitle.textContent = 'Du bist dran!';
+                gameplayStatusTitle.style.color = 'var(--neon-green)';
+                gameplayStatusTitle.style.textShadow = 'var(--glow-green)';
+            }
             if (gameplayRollButton) {
                 gameplayRollButton.disabled = false;
                 gameplayRollButton.textContent = 'WÜRFELN!';
@@ -459,11 +481,22 @@ function handleNewConnection(newConn) {
         }
 
         if (data.action === 'waitTurn') {
-            // Inaktiver Spieler: Zeige Warteraum mit Name des aktiven Spielers
-            if (gameplayContainer) gameplayContainer.style.display = 'none';
-            if (lobbyContainer) lobbyContainer.style.display = 'block';
-            if (lobbySpinner) lobbySpinner.style.display = 'none'; // Verberge Ladekreis
-            if (lobbyWaitText) lobbyWaitText.textContent = `Warten auf ${data.activePlayerName}...`;
+            // Inaktiver Spieler: Halte Gameplay-Formular sichtbar für Eingaben
+            if (lobbyContainer) lobbyContainer.style.display = 'none';
+            if (gameplayContainer) gameplayContainer.style.display = 'block';
+            if (mobileDiceTable) mobileDiceTable.style.display = 'none';
+            if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
+            isAnimating = false;
+            if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
+            if (gameplayStatusTitle) {
+                gameplayStatusTitle.textContent = `Warten auf ${data.activePlayerName}...`;
+                gameplayStatusTitle.style.color = 'var(--text-muted)';
+                gameplayStatusTitle.style.textShadow = 'none';
+            }
+            if (gameplayRollButton) {
+                gameplayRollButton.disabled = true;
+                gameplayRollButton.textContent = 'Warten...';
+            }
         }
 
         // Host signalisiert Start des Würfelns mit den Werten (nur für aktives Gerät)
