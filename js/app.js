@@ -860,8 +860,37 @@ function updateLobbyDisplay() {
     
     players.forEach(p => {
         const badge = document.createElement('span');
-        badge.textContent = p.name;
-        badge.style.cssText = 'background: rgba(0, 240, 255, 0.1); border: 1px solid var(--neon-cyan); padding: 4px 10px; border-radius: 4px; font-family: "Orbitron", sans-serif; font-size: 0.9rem; text-shadow: var(--glow-cyan); box-shadow: 0 0 5px rgba(0, 240, 255, 0.2);';
+        
+        let badgeStyle = 'display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--neon-cyan); padding: 4px 10px; border-radius: 4px; font-family: "Orbitron", sans-serif; font-size: 0.9rem; text-shadow: var(--glow-cyan); box-shadow: 0 0 5px rgba(0, 240, 255, 0.2); transition: all 0.3s ease;';
+        
+        const dot = document.createElement('span');
+        dot.style.cssText = 'display: inline-block; width: 8px; height: 8px; border-radius: 50%;';
+        
+        let prefix = '';
+        const isOnline = p.online !== false;
+        const isPaused = !!p.paused;
+        
+        if (!isOnline) {
+            badgeStyle = 'display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 51, 102, 0.05); border: 1px solid rgba(255, 51, 102, 0.4); padding: 4px 10px; border-radius: 4px; font-family: "Orbitron", sans-serif; font-size: 0.9rem; opacity: 0.5; box-shadow: none; transition: all 0.3s ease;';
+            dot.style.background = '#ff3366';
+            dot.style.boxShadow = '0 0 5px #ff3366';
+        } else if (isPaused) {
+            badgeStyle = 'display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 204, 0, 0.08); border: 1px solid rgba(255, 204, 0, 0.6); padding: 4px 10px; border-radius: 4px; font-family: "Orbitron", sans-serif; font-size: 0.9rem; text-shadow: 0 0 5px rgba(255, 204, 0, 0.5); box-shadow: 0 0 5px rgba(255, 204, 0, 0.15); transition: all 0.3s ease;';
+            dot.style.background = '#ffcc00';
+            dot.style.boxShadow = '0 0 5px #ffcc00';
+            prefix = '⏸️ ';
+        } else {
+            dot.style.background = '#00ff66';
+            dot.style.boxShadow = '0 0 5px #00ff66';
+        }
+        
+        badge.style.cssText = badgeStyle;
+        badge.appendChild(dot);
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = prefix + p.name;
+        badge.appendChild(nameSpan);
+        
         playersListDisplay.appendChild(badge);
     });
 
