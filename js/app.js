@@ -19,6 +19,13 @@ const STAKE_SETS = {
     'eigenes': []
 };
 
+// Kopie der Einsatz-Sets für Bearbeitungen (sicherstellen, dass 'eigenes' 10 Plätze hat)
+const customStakeSets = JSON.parse(JSON.stringify(STAKE_SETS));
+if (!customStakeSets['eigenes'] || customStakeSets['eigenes'].length === 0) {
+    customStakeSets['eigenes'] = Array(10).fill('');
+}
+
+
 // Akkumulierte Rotationen für jeden der 5 Würfel, um kontinuierlich vorwärts zu drehen.
 const currentRotations = [
     { x: 0, y: 0, z: 0 },
@@ -284,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTestRigStakeOptions(activeStakeSet);
 
             // Broadcast an alle verbundenen Spieler
-            const currentOptions = STAKE_SETS[activeStakeSet] || [];
+            const currentOptions = customStakeSets[activeStakeSet] || [];
             connections.forEach(conn => {
                 if (conn.open) {
                     conn.send({
@@ -301,6 +308,86 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Initiales Befüllen des Test-Rigs
         updateTestRigStakeOptions(activeStakeSet);
+    }
+
+    // Stake Editor Event Listeners
+    const editStakesBtn = document.getElementById('edit-stakes-btn');
+    const stakeEditorModal = document.getElementById('stake-editor-modal');
+    const saveEditedStakesBtn = document.getElementById('save-edited-stakes-btn');
+    const resetEditedStakesBtn = document.getElementById('reset-edited-stakes-btn');
+    const closeEditorModalBtn = document.getElementById('close-editor-modal-btn');
+
+    if (editStakesBtn && stakeEditorModal) {
+        editStakesBtn.addEventListener('click', () => {
+            // Befülle die Inputs mit aktuellen Werten
+            const currentStakes = customStakeSets[activeStakeSet] || [];
+            for (let i = 0; i < 10; i++) {
+                const input = document.getElementById(`edit-stake-${i}`);
+                if (input) {
+                    input.value = currentStakes[i] || '';
+                }
+            }
+            stakeEditorModal.style.display = 'flex';
+        });
+
+        closeEditorModalBtn.addEventListener('click', () => {
+            stakeEditorModal.style.display = 'none';
+        });
+
+        // Schließen bei Klick auf das Overlay (außerhalb des modal-panel)
+        stakeEditorModal.addEventListener('click', (e) => {
+            if (e.target === stakeEditorModal) {
+                stakeEditorModal.style.display = 'none';
+            }
+        });
+
+        saveEditedStakesBtn.addEventListener('click', () => {
+            const currentStakes = [];
+            for (let i = 0; i < 10; i++) {
+                const input = document.getElementById(`edit-stake-${i}`);
+                currentStakes.push(input ? input.value.trim() : '');
+            }
+            customStakeSets[activeStakeSet] = currentStakes;
+            
+            // Lokales Test-Rig dropdown aktualisieren
+            updateTestRigStakeOptions(activeStakeSet);
+
+            // Broadcast an alle verbundenen Spieler
+            connections.forEach(conn => {
+                if (conn.open) {
+                    conn.send({
+                        action: 'stakeSetUpdate',
+                        stakeSet: activeStakeSet,
+                        stakeOptions: currentStakes
+                    });
+                }
+            });
+
+            // Synchronisiere Zustand mit sekundären Dashboards
+            broadcastSyncState();
+
+            stakeEditorModal.style.display = 'none';
+        });
+
+        resetEditedStakesBtn.addEventListener('click', () => {
+            // Stelle Originalwerte wieder her
+            const originalPreset = STAKE_SETS[activeStakeSet] || [];
+            customStakeSets[activeStakeSet] = activeStakeSet === 'eigenes' 
+                ? Array(10).fill('') 
+                : [...originalPreset];
+
+            // Aktualisiere Modal-Inputs
+            const currentStakes = customStakeSets[activeStakeSet];
+            for (let i = 0; i < 10; i++) {
+                const input = document.getElementById(`edit-stake-${i}`);
+                if (input) {
+                    input.value = currentStakes[i] || '';
+                }
+            }
+
+            // Lokales Test-Rig dropdown aktualisieren
+            updateTestRigStakeOptions(activeStakeSet);
+        });
     }
 });
 
@@ -822,7 +909,7 @@ function initHostPeer(forcedId = null) {
                         action: 'joinConfirm',
                         success: true,
                         stakeSet: activeStakeSet,
-                        stakeOptions: STAKE_SETS[activeStakeSet] || []
+                        stakeOptions: customStakeSets[activeStakeSet] || []
                     });
                     const history = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
                     conn.send({ action: 'historyUpdate', history: history });
@@ -856,7 +943,7 @@ function initHostPeer(forcedId = null) {
                     action: 'joinConfirm',
                     success: true,
                     stakeSet: activeStakeSet,
-                    stakeOptions: STAKE_SETS[activeStakeSet] || []
+                    stakeOptions: customStakeSets[activeStakeSet] || []
                 });
                 const history = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
                 conn.send({ action: 'historyUpdate', history: history });
@@ -1461,7 +1548,8 @@ function updateTestRigStakeOptions(activeSet) {
     if (!playerStakeSelect) return;
     playerStakeSelect.innerHTML = '';
 
-    if (activeSet === 'eigenes') {
+    const options = customStakeSets[activeSet] || [];
+    if (options.length === 0 || options.every(opt => opt === '')) {
         const option = document.createElement('option');
         option.value = 'custom';
         option.textContent = 'Eigene Aktion...';
@@ -1469,8 +1557,8 @@ function updateTestRigStakeOptions(activeSet) {
         return;
     }
 
-    const options = STAKE_SETS[activeSet] || [];
     options.forEach(opt => {
+        if (opt.trim() === '') return;
         const option = document.createElement('option');
         if (opt.startsWith('Standard-Einsatz')) {
             option.value = 'standard';
