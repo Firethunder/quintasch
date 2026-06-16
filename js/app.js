@@ -433,6 +433,95 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Host-Player Event-Listeners & Initialisierung
+    const hostPlayToggle = document.getElementById('host-play-toggle');
+    const hostNameGroup = document.getElementById('host-name-group');
+    const hostPlayerNameInput = document.getElementById('host-player-name');
+    const hostPauseToggle = document.getElementById('host-pause-toggle');
+    const sidebarPlayerTitle = document.getElementById('sidebar-player-title');
+
+    if (hostPlayToggle) {
+        hostPlayToggle.addEventListener('change', () => {
+            const isPlaying = hostPlayToggle.checked;
+            if (isPlaying) {
+                if (hostNameGroup) hostNameGroup.style.display = 'flex';
+                
+                const hostName = (hostPlayerNameInput ? hostPlayerNameInput.value.trim() : '') || 'Spielleiter';
+                
+                // Host in Spielerliste aufnehmen falls nicht vorhanden
+                if (!players.some(p => p.peerId === 'host')) {
+                    players.push({
+                        peerId: 'host',
+                        name: hostName,
+                        paused: hostPauseToggle ? hostPauseToggle.checked : false,
+                        online: true
+                    });
+                }
+                
+                if (sidebarPlayerTitle) {
+                    sidebarPlayerTitle.textContent = `Spieler: ${hostName}`;
+                }
+            } else {
+                if (hostNameGroup) hostNameGroup.style.display = 'none';
+                
+                // Host aus Spielerliste entfernen
+                players = players.filter(p => p.peerId !== 'host');
+                
+                if (sidebarPlayerTitle) {
+                    sidebarPlayerTitle.textContent = 'Lokal Test-Rig';
+                }
+            }
+            
+            updateHostControlsState();
+            updateLobbyDisplay();
+            broadcastLobby();
+            broadcastSyncState();
+        });
+    }
+
+    if (hostPlayerNameInput) {
+        hostPlayerNameInput.addEventListener('input', () => {
+            if (hostPlayToggle && hostPlayToggle.checked) {
+                const hostName = hostPlayerNameInput.value.trim() || 'Spielleiter';
+                const hostPlayer = players.find(p => p.peerId === 'host');
+                if (hostPlayer) {
+                    hostPlayer.name = hostName;
+                }
+                if (sidebarPlayerTitle) {
+                    sidebarPlayerTitle.textContent = `Spieler: ${hostName}`;
+                }
+                updateLobbyDisplay();
+                broadcastLobby();
+                broadcastSyncState();
+            }
+        });
+    }
+
+    if (hostPauseToggle) {
+        hostPauseToggle.addEventListener('change', () => {
+            const isPaused = hostPauseToggle.checked;
+            const hostPlayer = players.find(p => p.peerId === 'host');
+            if (hostPlayer) {
+                hostPlayer.paused = isPaused;
+                console.log(`Host Pause-Status geändert auf:`, isPaused);
+                
+                updateHostControlsState();
+                updateLobbyDisplay();
+                broadcastLobby();
+                broadcastSyncState();
+                
+                // Falls der Host am Zug ist und sich pausiert, springe zum nächsten
+                if (gameState === 'playing' && players[activePlayerIndex]?.peerId === 'host' && isPaused) {
+                    console.log(`Host hat sich pausiert, während er am Zug war. Wechsle zum nächsten Spieler.`);
+                    nextTurn();
+                }
+            }
+        });
+    }
+
+    // Initiale Steuerung-Aktualisierung
+    updateHostControlsState();
 });
 
 function setupPlayersListDisplay() {
@@ -446,7 +535,16 @@ function setupPlayersListDisplay() {
 rollButton.addEventListener('click', () => {
     if (isRolling) return;
     
-    const playerName = playerNameInput.value.trim() || 'Test-Spieler';
+    // Check if roll is allowed
+    const activePlayer = gameState === 'playing' ? players[activePlayerIndex] : null;
+    if (players.length > 0 && (!activePlayer || activePlayer.peerId !== 'host')) {
+        console.warn('Roll not allowed: not host\'s turn');
+        return;
+    }
+    
+    const playerName = (activePlayer && activePlayer.peerId === 'host') 
+        ? activePlayer.name 
+        : (playerNameInput.value.trim() || 'Test-Spieler');
     const chosenBet = playerBetSelect.value;
     
     // Lies den gewählten Einsatz aus
@@ -674,8 +772,7 @@ function executeRoll(playerNameParam = null, chosenBetParam = null, chosenStakeP
 
         // Buttons freischalten
         isRolling = false;
-        rollButton.disabled = false;
-        rollButton.textContent = 'Würfeln (Test)';
+        updateHostControlsState();
 
         // Wenn wir aktiv im Spiel sind, zeige den "Nächste Runde" Button an
         if (gameState === 'playing') {
@@ -967,6 +1064,7 @@ function initHostPeer(forcedId = null) {
                             conn.send({ action: 'waitTurn', activePlayerName: activePlayer ? activePlayer.name : '' });
                         }
                     }
+                    updateHostControlsState();
                     updateLobbyDisplay();
                     broadcastLobby();
                     broadcastSyncState();
@@ -991,6 +1089,7 @@ function initHostPeer(forcedId = null) {
                 });
                 const history = JSON.parse(localStorage.getItem('quintasch_history') || '[]');
                 conn.send({ action: 'historyUpdate', history: history });
+                updateHostControlsState();
                 updateLobbyDisplay();
                 broadcastLobby();
                 broadcastSyncState();
@@ -1003,6 +1102,7 @@ function initHostPeer(forcedId = null) {
                     players[playerIndex].paused = !!data.paused;
                     console.log(`Spieler ${players[playerIndex].name} Pause-Status geändert auf:`, data.paused);
                     
+                    updateHostControlsState();
                     updateLobbyDisplay();
                     broadcastLobby();
                     broadcastSyncState();
@@ -1044,6 +1144,7 @@ function initHostPeer(forcedId = null) {
                 console.log(`Spieler ${player.name} hat die Lobby verlassen.`);
             }
 
+            updateHostControlsState();
             updateLobbyDisplay();
             broadcastLobby();
             broadcastSyncState();
@@ -1156,6 +1257,62 @@ function updateLobbyDisplay() {
 }
 
 /**
+ * Aktualisiert den Aktivierungszustand der Host-Spieler-Steuerelemente
+ * basierend auf dem Spielstatus und wer an der Reihe ist.
+ */
+function updateHostControlsState() {
+    if (gameMode === 'sync') return;
+
+    const testRigPanel = document.getElementById('test-rig-panel');
+
+    if (gameState === 'playing') {
+        const activePlayer = players[activePlayerIndex];
+        if (activePlayer && activePlayer.peerId === 'host') {
+            if (playerBetSelect) playerBetSelect.disabled = false;
+            if (playerStakeSelect) playerStakeSelect.disabled = false;
+            if (playerCustomStakeInput) playerCustomStakeInput.disabled = false;
+            if (rollButton && !isRolling) {
+                rollButton.disabled = false;
+                rollButton.textContent = 'Jetzt Würfeln!';
+            }
+            if (testRigPanel) testRigPanel.classList.add('active-turn');
+        } else {
+            if (playerBetSelect) playerBetSelect.disabled = true;
+            if (playerStakeSelect) playerStakeSelect.disabled = true;
+            if (playerCustomStakeInput) playerCustomStakeInput.disabled = true;
+            if (rollButton) {
+                rollButton.disabled = true;
+                rollButton.textContent = activePlayer ? `Warte auf ${activePlayer.name}...` : 'Warte auf Mitspieler...';
+            }
+            if (testRigPanel) testRigPanel.classList.remove('active-turn');
+        }
+    } else {
+        // Lobby Zustand
+        if (players.length === 0) {
+            // Entwickler Test-Rig Fallback (keine Spieler registriert)
+            if (playerBetSelect) playerBetSelect.disabled = false;
+            if (playerStakeSelect) playerStakeSelect.disabled = false;
+            if (playerCustomStakeInput) playerCustomStakeInput.disabled = false;
+            if (rollButton && !isRolling) {
+                rollButton.disabled = false;
+                rollButton.textContent = 'Würfeln (Test)';
+            }
+            if (testRigPanel) testRigPanel.classList.remove('active-turn');
+        } else {
+            // Lobby mit Spielern: Würfeln nicht erlaubt bis Spiel gestartet wird
+            if (playerBetSelect) playerBetSelect.disabled = true;
+            if (playerStakeSelect) playerStakeSelect.disabled = true;
+            if (playerCustomStakeInput) playerCustomStakeInput.disabled = true;
+            if (rollButton) {
+                rollButton.disabled = true;
+                rollButton.textContent = 'Warte auf Spielstart...';
+            }
+            if (testRigPanel) testRigPanel.classList.remove('active-turn');
+        }
+    }
+}
+
+/**
  * Sendet die aktuelle Spielerliste an alle verbundenen Clients.
  */
 function broadcastLobby() {
@@ -1203,6 +1360,7 @@ function startGame() {
         resultDescription.textContent = 'Alle Spieler sind pausiert. Warte auf Deaktivierung der Pause...';
         resultAction.textContent = '';
         nextTurnButton.style.display = 'none';
+        updateHostControlsState();
         broadcastSyncState();
     }
 }
@@ -1224,6 +1382,7 @@ function startNextTurn() {
         resultDescription.textContent = 'Warte auf neue Spieler...';
         resultAction.textContent = '';
         nextTurnButton.style.display = 'none';
+        updateHostControlsState();
         broadcastSyncState();
         return;
     }
@@ -1243,6 +1402,8 @@ function startNextTurn() {
     nextTurnButton.textContent = 'Nächster Spieler';
     nextTurnButton.style.display = 'none';
     resetTimer();
+
+    updateHostControlsState();
 
     // Broadcast Rundenstatus
     connections.forEach(conn => {
@@ -1287,6 +1448,7 @@ function nextTurn() {
         resultDescription.textContent = 'Alle Spieler sind pausiert oder offline. Warte auf Reconnect oder Aktivierung...';
         resultAction.textContent = '';
         nextTurnButton.style.display = 'none';
+        updateHostControlsState();
         broadcastSyncState();
         return;
     }
