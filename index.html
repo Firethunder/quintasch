@@ -117,9 +117,9 @@
                             <input type="checkbox" id="peer-secure" checked>
                             <label for="peer-secure" style="margin-bottom: 0; font-size: 0.85rem;">Sicher (SSL/HTTPS)</label>
                         </div>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button class="btn-neon" id="save-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto;">Speichern</button>
-                            <button class="btn-neon" id="reset-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto; --neon-cyan: var(--neon-magenta);">Reset</button>
+                        <div style="display: flex; gap: 10px; margin-top: 10px; box-sizing: border-box;">
+                            <button class="btn-neon" id="save-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto; width: auto; box-sizing: border-box;">Speichern</button>
+                            <button class="btn-neon" id="reset-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto; --neon-cyan: var(--neon-magenta); width: auto; box-sizing: border-box;">Reset</button>
                         </div>
                     </div>
                     <button id="toggle-settings-button" style="background: none; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline; font-size: 0.85rem; margin-top: 5px;">Server-Einstellungen anzeigen</button>
@@ -335,14 +335,14 @@
                 </div>
             </div>
             
-            <div style="display: flex; gap: 10px; width: 100%; margin-top: 20px; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 15px;">
-                <button class="btn-neon" id="save-edited-stakes-btn" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); flex: 1;">
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: 20px; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 15px; box-sizing: border-box;">
+                <button class="btn-neon" id="save-edited-stakes-btn" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); flex: 1; width: auto; box-sizing: border-box;">
                     Speichern
                 </button>
-                <button class="btn-neon" id="reset-edited-stakes-btn" style="border-color: var(--neon-yellow); color: var(--neon-yellow); box-shadow: 0 0 5px rgba(255, 221, 0, 0.3); text-shadow: 0 0 5px rgba(255, 221, 0, 0.3); flex: 1;">
+                <button class="btn-neon" id="reset-edited-stakes-btn" style="border-color: var(--neon-yellow); color: var(--neon-yellow); box-shadow: 0 0 5px rgba(255, 221, 0, 0.3); text-shadow: 0 0 5px rgba(255, 221, 0, 0.3); flex: 1; width: auto; box-sizing: border-box;">
                     Zurücksetzen
                 </button>
-                <button class="btn-neon" id="close-editor-modal-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); flex: 1;">
+                <button class="btn-neon" id="close-editor-modal-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); flex: 1; width: auto; box-sizing: border-box;">
                     Abbrechen
                 </button>
             </div>
