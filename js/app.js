@@ -1024,9 +1024,9 @@ function initHostPeer(forcedId = null) {
         activeRoomId = id;
         roomIdDisplay.textContent = id;
         const copySyncLinkBtn = document.getElementById('copy-sync-link-btn');
-        if (copySyncLinkBtn) copySyncLinkBtn.style.display = 'inline-block';
+        if (copySyncLinkBtn) copySyncLinkBtn.style.display = 'block';
         const openControllerBtn = document.getElementById('open-controller-btn');
-        if (openControllerBtn) openControllerBtn.style.display = 'inline-block';
+        if (openControllerBtn) openControllerBtn.style.display = 'block';
         
         let joinUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}controller.html?room=${id}`;
         if (peerConfig && peerConfig.host) {
@@ -1550,9 +1550,9 @@ function initSyncPeer(targetRoomId) {
             activeRoomId = targetRoomId;
             roomIdDisplay.textContent = `${targetRoomId} (Sync)`;
             const copySyncLinkBtn = document.getElementById('copy-sync-link-btn');
-            if (copySyncLinkBtn) copySyncLinkBtn.style.display = 'inline-block';
+            if (copySyncLinkBtn) copySyncLinkBtn.style.display = 'block';
             const openControllerBtn = document.getElementById('open-controller-btn');
-            if (openControllerBtn) openControllerBtn.style.display = 'inline-block';
+            if (openControllerBtn) openControllerBtn.style.display = 'block';
             
             // Sende Join-Handshake
             syncConn.send({ action: 'syncDashboardJoin' });
