@@ -69,20 +69,18 @@
                             Controller öffnen
                         </button>
                     </div>
-                    <div id="stake-set-container" style="width: 100%; text-align: left; margin: 10px 0; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px;">
+                    <div id="stake-set-container" style="width: 100%; text-align: left; margin: 10px 0; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px; display: flex; flex-direction: column; gap: 8px;">
                         <label for="stake-set-select" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 240, 255, 0.2);">Einsatz-Set:</label>
-                        <div style="display: flex; gap: 10px; margin-top: 5px; align-items: center;">
-                            <select id="stake-set-select" class="form-control" style="font-size: 0.9rem; margin-top: 0; flex: 1;">
-                                <option value="klassisch">Klassisch (Trinkspiel)</option>
-                                <option value="alkoholfrei">Alkoholfrei (Aktivität/Sport)</option>
-                                <option value="spanien">Spanien-Edition (¡Hola!)</option>
-                                <option value="mittelalter">Mittelalter-Markt-Edition (Seyd gegrüßt!)</option>
-                                <option value="eigenes">Eigenes Set (Spieler-definiert)</option>
-                            </select>
-                            <button class="btn-neon" id="edit-stakes-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; width: auto; white-space: nowrap; margin-top: 0;">
-                                Set bearbeiten
-                            </button>
-                        </div>
+                        <select id="stake-set-select" class="form-control" style="font-size: 0.95rem; width: 100%; box-sizing: border-box; font-family: 'Orbitron', sans-serif; margin-top: 0;">
+                            <option value="klassisch">Klassisch (Trinkspiel)</option>
+                            <option value="alkoholfrei">Alkoholfrei (Aktivität/Sport)</option>
+                            <option value="spanien">Spanien-Edition (¡Hola!)</option>
+                            <option value="mittelalter">Mittelalter-Markt-Edition (Seyd gegrüßt!)</option>
+                            <option value="eigenes">Eigenes Set (Spieler-definiert)</option>
+                        </select>
+                        <button class="btn-neon" id="edit-stakes-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.85rem; padding: 6px 12px; min-height: auto; width: 100%; box-sizing: border-box; text-align: center; margin-top: 0;">
+                            Set bearbeiten
+                        </button>
                     </div>
                     <div id="host-play-container" style="width: 100%; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px; margin-top: 5px; text-align: left; display: flex; flex-direction: column; gap: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
