@@ -20,7 +20,22 @@ const STAKE_SETS = {
 };
 
 // Kopie der Einsatz-Sets für Bearbeitungen (sicherstellen, dass 'eigenes' 10 Plätze hat)
-const customStakeSets = JSON.parse(JSON.stringify(STAKE_SETS));
+let customStakeSets = JSON.parse(JSON.stringify(STAKE_SETS));
+try {
+    const storedStakes = localStorage.getItem('quintasch_custom_stakes');
+    if (storedStakes) {
+        const parsed = JSON.parse(storedStakes);
+        if (parsed && typeof parsed === 'object') {
+            for (const key in parsed) {
+                if (Array.isArray(parsed[key])) {
+                    customStakeSets[key] = parsed[key];
+                }
+            }
+        }
+    }
+} catch (e) {
+    console.error('Fehler beim Laden der benutzerdefinierten Einsätze:', e);
+}
 if (!customStakeSets['eigenes'] || customStakeSets['eigenes'].length === 0) {
     customStakeSets['eigenes'] = Array(10).fill('');
 }
@@ -349,6 +364,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             customStakeSets[activeStakeSet] = currentStakes;
             
+            try {
+                localStorage.setItem('quintasch_custom_stakes', JSON.stringify(customStakeSets));
+            } catch (e) {
+                console.error('Fehler beim Speichern der benutzerdefinierten Einsätze:', e);
+            }
+            
             // Lokales Test-Rig dropdown aktualisieren
             updateTestRigStakeOptions(activeStakeSet);
 
@@ -375,6 +396,12 @@ document.addEventListener('DOMContentLoaded', () => {
             customStakeSets[activeStakeSet] = activeStakeSet === 'eigenes' 
                 ? Array(10).fill('') 
                 : [...originalPreset];
+
+            try {
+                localStorage.setItem('quintasch_custom_stakes', JSON.stringify(customStakeSets));
+            } catch (e) {
+                console.error('Fehler beim Speichern der benutzerdefinierten Einsätze:', e);
+            }
 
             // Aktualisiere Modal-Inputs
             const currentStakes = customStakeSets[activeStakeSet];
