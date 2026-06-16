@@ -6,9 +6,10 @@
 
 ## Phase Progress
 - **Phase 1: Lobby Editor UI & Local Editing Logic**: ⬜ Not Started
-- **Phase 2: WebRTC Syncing & Controller Integration**: ⬜ Not Started
-- **Phase 3: LocalStorage Persistence & Settings Link**: ⬜ Not Started
-- **Phase 4: Verification & Polish**: ⬜ Not Started
+- **Phase 2: Dashboard Mobile Layout & Responsive CSS**: ⬜ Not Started
+- **Phase 3: Host Player Integration**: ⬜ Not Started
+- **Phase 4: WebRTC Sync & Multi-Client Broadcast**: ⬜ Not Started
+- **Phase 5: Verification & Polish**: ⬜ Not Started
 
 ## Blockers
 - Keine
