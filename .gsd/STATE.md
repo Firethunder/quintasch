@@ -1,25 +1,26 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Milestone Completed
-> **Active Milestone**: Custom-Stakes-and-Extras
+> **Current Status**: Milestone Planned
+> **Active Milestone**: Lobby-Stake-Editor
 > **Active Phase**: —
 
 ## Phase Progress
-- **Phase 1: Einsatz-Sets & Custom Stakes Definition**: ✅ Complete
-- **Phase 2: Historie-Integration**: ✅ Complete
-- **Phase 3: Controller-Window Link & Desktop Support**: ✅ Complete
-- **Phase 4: Milestone Verification & Final Polish**: ✅ Complete
+- **Phase 1: Lobby Editor UI & Local Editing Logic**: ⬜ Not Started
+- **Phase 2: WebRTC Syncing & Controller Integration**: ⬜ Not Started
+- **Phase 3: LocalStorage Persistence & Settings Link**: ⬜ Not Started
+- **Phase 4: Verification & Polish**: ⬜ Not Started
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Milestone**: Custom-Stakes-and-Extras
+- **Milestone**: Lobby-Stake-Editor
 - **Phase**: —
-- **Status**: Milestone Completed
+- **Status**: Milestone Planned
 
 ## Last Session Summary
-Meilenstein 'Custom-Stakes-and-Extras' vollständig abgeschlossen, verifiziert und dokumentiert. Alle Aufgaben wurden erfolgreich absolviert und die TODO-Liste wurde bereinigt.
+Meilenstein 'Custom-Stakes-and-Extras' wurde erfolgreich abgeschlossen und archiviert. Der neue Meilenstein 'Lobby-Stake-Editor' wurde zusammen mit dem restlichen Backlog definiert und geplant.
 
 ## Next Steps
-1. /complete-milestone — Schließe den aktuellen Meilenstein ab und archiviere ihn.
+1. /plan 1 — Erstelle den detaillierten Ausführungsplan für Phase 1 (Lobby Editor UI & Local Editing Logic).
+
