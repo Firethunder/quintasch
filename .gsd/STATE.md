@@ -1,6 +1,6 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Executing
+> **Current Status**: Complete
 > **Active Milestone**: Lobby-Stake-Editor
 > **Active Phase**: 5
 
@@ -9,7 +9,7 @@
 - **Phase 2: Dashboard Mobile Layout & Responsive CSS**: ✅ Complete
 - **Phase 3: Host Player Integration**: ✅ Complete
 - **Phase 4: WebRTC Sync & Multi-Client Broadcast**: ✅ Complete
-- **Phase 5: Verification & Polish**: ⬜ Not Started
+- **Phase 5: Verification & Polish**: ✅ Complete
 
 ## Blockers
 - Keine
@@ -17,13 +17,13 @@
 ## Current Position
 - **Milestone**: Lobby-Stake-Editor
 - **Phase**: 5
-- **Status**: Ready for Phase 5 Planning
+- **Status**: Milestone Completed
 
 ## Last Session Summary
-Phase 4 'WebRTC Sync & Multi-Client Broadcast' wurde erfolgreich implementiert. Die bearbeiteten Einsatz-Sets des Hosts werden nun persistent im localStorage gespeichert, damit sie bei Reloads nicht verloren gehen. Auf der Client-Seite wurde die Steuerung so korrigiert, dass auch das 'eigenes' Set ordnungsgemäß synchronisiert und priorisiert wird, falls der Host Anpassungen vornimmt.
+Phase 5 'Verification & Polish' wurde erfolgreich abgeschlossen. Die gesamte Funktionalität des Meilensteins 'Lobby-Stake-Editor' (Lobby Editor UI, mobiles Layout & Nav-Tabs, Host als Spieler, WebRTC Synchronisation und PWA/Offline-Fähigkeit) ist vollständig verifiziert und funktionstüchtig.
 
 ## Next Steps
-1. /plan 5 — Erstelle den detaillierten Ausführungsplan für Phase 5 (Verification & Polish).
+1. /complete-milestone — Schließe den aktuellen Meilenstein 'Lobby-Stake-Editor' ab.
 
 
 
