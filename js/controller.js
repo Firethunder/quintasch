@@ -913,36 +913,32 @@ function updateStakeOptions(set, options) {
     customOpt.textContent = 'Eigene Aktion...';
     gameplayStakeSelect.appendChild(customOpt);
 
-    if (set === 'eigenes') {
+    let list = options && options.length > 0 ? options : [];
+
+    if (set === 'eigenes' && list.length === 0) {
+        // Fallback: Lade lokale Client-Eigene-Aktion aus localStorage
         const customText = localStorage.getItem('quintasch_custom_stakes') || '';
         const lines = customText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-        
         if (lines.length > 0) {
-            lines.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = opt;
-                option.textContent = opt;
-                gameplayStakeSelect.appendChild(option);
-            });
+            list = lines;
         } else {
-            const option = document.createElement('option');
-            option.value = 'standard';
-            option.textContent = 'Standard-Einsatz';
-            gameplayStakeSelect.appendChild(option);
+            list = ['Standard-Einsatz'];
         }
-    } else {
-        const list = options && options.length > 0 ? options : ['Standard-Einsatz'];
-        list.forEach(opt => {
-            const option = document.createElement('option');
-            if (opt.startsWith('Standard-Einsatz')) {
-                option.value = 'standard';
-            } else {
-                option.value = opt;
-            }
-            option.textContent = opt;
-            gameplayStakeSelect.appendChild(option);
-        });
+    } else if (list.length === 0) {
+        list = ['Standard-Einsatz'];
     }
+
+    list.forEach(opt => {
+        if (!opt || opt.trim() === '') return;
+        const option = document.createElement('option');
+        if (opt.startsWith('Standard-Einsatz')) {
+            option.value = 'standard';
+        } else {
+            option.value = opt;
+        }
+        option.textContent = opt;
+        gameplayStakeSelect.appendChild(option);
+    });
 
     // Default-Einsatz wiederherstellen falls vorhanden, sonst 'custom'
     const savedStake = localStorage.getItem('quintasch_default_stake') || 'custom';
