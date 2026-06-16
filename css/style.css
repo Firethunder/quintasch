@@ -537,4 +537,47 @@ select.form-control option {
     background: rgba(0, 240, 255, 0.5);
 }
 
+/* Smartphone Media Query Overrides (under 600px width) */
+@media (max-width: 600px) {
+    .header h1 {
+        font-size: 2.2rem;
+        letter-spacing: 2px;
+        margin-bottom: 5px;
+    }
+    .header p {
+        font-size: 0.95rem;
+    }
+    .dashboard {
+        padding: 15px 10px;
+    }
+    .panel {
+        padding: 15px;
+    }
+    
+    /* Mobile fluid 3D dice table */
+    .dice-table {
+        gap: 8px;
+        margin: 20px 0;
+    }
+    .dice-table .cube-container {
+        width: 50px;
+        height: 50px;
+        perspective: 300px;
+    }
+    .dice-table .face {
+        width: 50px;
+        height: 50px;
+        font-size: 1.4rem;
+        border-radius: 8px;
+    }
+    /* Adjusted 3D translation for 50px cube (translateZ = 25px) */
+    .dice-table .front  { transform: rotateY(0deg) translateZ(25px); }
+    .dice-table .back   { transform: rotateY(180deg) translateZ(25px); }
+    .dice-table .right  { transform: rotateY(90deg) translateZ(25px); }
+    .dice-table .left   { transform: rotateY(-90deg) translateZ(25px); }
+    .dice-table .top    { transform: rotateX(90deg) translateZ(25px); }
+    .dice-table .bottom { transform: rotateX(-90deg) translateZ(25px); }
+}
+
+
 
