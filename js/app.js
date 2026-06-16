@@ -965,11 +965,16 @@ function renderHistory(history) {
         
         const stakeText = item.stake || 'Standard-Einsatz';
         li.innerHTML = `
-            <div>
-                <strong>${item.player}</strong>: ${item.hand} <br>
-                <span style="font-size: 0.8rem; color: var(--text-muted)">Ziel: ${item.bet} | Einsatz: ${stakeText} | Wurf: [${item.dice}]</span>
+            <div style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px; gap: 8px;">
+                    <strong style="font-size: 1.05rem; color: var(--text-main); font-family: 'Rajdhani', sans-serif; word-break: break-word; min-width: 0;">${item.player}: ${item.hand}</strong>
+                    <span class="history-time" style="font-size: 0.8rem; color: var(--text-muted); font-family: 'Orbitron', sans-serif; flex-shrink: 0; margin-left: auto;">${item.time}</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; word-break: break-word;">
+                    Ziel: ${item.bet} | Einsatz: ${stakeText} <br>
+                    Wurf: [${item.dice}]
+                </div>
             </div>
-            <div class="history-time">${item.time}</div>
         `;
         historyList.appendChild(li);
     });

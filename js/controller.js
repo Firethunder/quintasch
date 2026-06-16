@@ -883,11 +883,16 @@ function renderClientHistory(history) {
         const escapedTime = escapeHtml(item.time);
         
         li.innerHTML = `
-            <div>
-                <strong>${escapedPlayer}</strong>: ${escapedHand} <br>
-                <span style="font-size: 0.8rem; color: var(--text-muted)">Ziel: ${escapedBet} | Einsatz: ${escapedStake} | Wurf: [${escapedDice}]</span>
+            <div style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px; gap: 8px;">
+                    <strong style="font-size: 1.05rem; color: var(--text-main); font-family: 'Rajdhani', sans-serif; word-break: break-word; min-width: 0;">${escapedPlayer}: ${escapedHand}</strong>
+                    <span class="history-time" style="font-size: 0.8rem; color: var(--text-muted); font-family: 'Orbitron', sans-serif; flex-shrink: 0; margin-left: auto;">${escapedTime}</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; word-break: break-word;">
+                    Ziel: ${escapedBet} | Einsatz: ${escapedStake} <br>
+                    Wurf: [${escapedDice}]
+                </div>
             </div>
-            <div class="history-time">${escapedTime}</div>
         `;
         clientHistoryList.appendChild(li);
     });
