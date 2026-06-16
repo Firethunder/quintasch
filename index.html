@@ -84,6 +84,16 @@
                             </button>
                         </div>
                     </div>
+                    <div id="host-play-container" style="width: 100%; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px; margin-top: 5px; text-align: left; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="host-play-toggle" style="cursor: pointer;">
+                            <label for="host-play-toggle" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); cursor: pointer; text-shadow: 0 0 5px rgba(0, 240, 255, 0.2);">Als Host mitspielen</label>
+                        </div>
+                        <div id="host-name-group" style="display: none; flex-direction: column; gap: 5px; margin-left: 20px; transition: all 0.3s ease;">
+                            <label for="host-player-name" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Name des Hosts</label>
+                            <input type="text" id="host-player-name" class="form-control" value="Spielleiter" style="padding: 6px 12px; font-size: 0.95rem; width: 100%; box-sizing: border-box; font-family: 'Orbitron', sans-serif;">
+                        </div>
+                    </div>
                     <div id="players-count-display" style="font-size: 0.95rem; color: var(--text-muted);">
                         Verbundene Spieler: 0
                     </div>
@@ -198,9 +208,13 @@
 
         <!-- Sidebar (Lokal-Testumgebung / Test-Rig) -->
         <aside class="sidebar">
-            <h2 class="sidebar-title" id="test-rig-title">Lokal Test-Rig</h2>
+            <h2 class="sidebar-title" id="sidebar-player-title">Lokal Test-Rig</h2>
             
             <div class="panel" id="test-rig-panel">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding-bottom: 10px;">
+                    <input type="checkbox" id="host-pause-toggle" style="cursor: pointer;">
+                    <label for="host-pause-toggle" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-magenta); cursor: pointer; text-shadow: 0 0 5px rgba(255, 0, 127, 0.2); text-transform: uppercase; letter-spacing: 1px;">Pausieren (Runde auslassen)</label>
+                </div>
                 <div class="form-group">
                     <label for="player-name">Spielername</label>
                     <input type="text" id="player-name" class="form-control" value="Test-Spieler">
