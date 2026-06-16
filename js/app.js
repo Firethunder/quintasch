@@ -421,7 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabBtnGame = document.getElementById('tab-btn-game');
     const tabBtnHistory = document.getElementById('tab-btn-history');
     const tabBtnTest = document.getElementById('tab-btn-test');
-    const appContainer = document.querySelector('.app-container');
 
     const switchTab = (activeBtn, tabClassToRemove1, tabClassToRemove2, tabClassToAdd) => {
         [tabBtnGame, tabBtnHistory, tabBtnTest].forEach(btn => {
