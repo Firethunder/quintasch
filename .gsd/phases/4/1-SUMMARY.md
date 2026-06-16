@@ -18,7 +18,7 @@ duration_minutes: 10
 | 2 | Client-seitige Behebung der Einsatz-Synchronisierung für 'eigenes' Set | 93d7ff1 | ✅ |
 
 ## Deviations Applied
-None — executed as planned.
+- [Rule 1 - Bug] Removed duplicate `appContainer` declaration in `js/app.js` inside the `DOMContentLoaded` event listener that caused a `SyntaxError` on load.
 
 ## Files Changed
 - [js/app.js](file:///D:/Coding/gemini/quintasch/js/app.js) - Added try-catch localStorage loading logic for `customStakeSets` on start, and save logic in edit/reset handlers.
