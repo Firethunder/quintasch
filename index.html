@@ -47,70 +47,76 @@
                 <h1>Quintasch</h1>
                 <p>Würfel-Chaos Multiplayer</p>
             </header>
+            <section class="panel" style="max-width: 400px; text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative;">
+                <!-- Collapsible Toggle Header/Button -->
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding-bottom: 8px; margin-bottom: 5px;">
+                    <span style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 240, 255, 0.2); text-transform: uppercase; letter-spacing: 1px;">Verbindung & Lobby</span>
+                    <button id="toggle-connection-panel-btn" style="background: none; border: 1px solid var(--neon-cyan); border-radius: 4px; color: var(--neon-cyan); cursor: pointer; font-size: 0.75rem; padding: 2px 8px; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 4px rgba(0, 240, 255, 0.2); transition: all 0.2s ease;">Einklappen</button>
+                </div>
 
-            <!-- Verbindungs-Panel (Host-Info & QR-Code) -->
-            <section class="panel" style="max-width: 400px; text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                <div id="qrcode-container" style="background: white; padding: 10px; border-radius: 8px; width: 160px; height: 160px; display: flex; justify-content: center; align-items: center;">
-                    <span style="color: #0b0b0f; font-size: 0.95rem; font-weight: bold;">Initialisiere Peer...</span>
-                </div>
-                <div style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; color: var(--neon-cyan); margin-top: 5px; word-break: break-all; max-width: 100%; padding: 0 10px; box-sizing: border-box;">
-                    Raum-ID: <span id="room-id-display" style="user-select: all;">Wird generiert...</span>
-                </div>
-                <div style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 5px;">
-                    <button class="btn-neon" id="copy-sync-link-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; display: none; flex: 1;">
-                        Sync-Link kopieren
-                    </button>
-                    <button class="btn-neon" id="open-controller-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; display: none; flex: 1;">
-                        Controller öffnen
-                    </button>
-                </div>
-                <div id="stake-set-container" style="width: 100%; text-align: left; margin: 10px 0; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px;">
-                    <label for="stake-set-select" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 240, 255, 0.2);">Einsatz-Set:</label>
-                    <div style="display: flex; gap: 10px; margin-top: 5px; align-items: center;">
-                        <select id="stake-set-select" class="form-control" style="font-size: 0.9rem; margin-top: 0; flex: 1;">
-                            <option value="klassisch">Klassisch (Trinkspiel)</option>
-                            <option value="alkoholfrei">Alkoholfrei (Aktivität/Sport)</option>
-                            <option value="spanien">Spanien-Edition (¡Hola!)</option>
-                            <option value="mittelalter">Mittelalter-Markt-Edition (Seyd gegrüßt!)</option>
-                            <option value="eigenes">Eigenes Set (Spieler-definiert)</option>
-                        </select>
-                        <button class="btn-neon" id="edit-stakes-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; width: auto; white-space: nowrap; margin-top: 0;">
-                            Set bearbeiten
+                <div id="collapsible-connection-content" style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; transition: all 0.3s ease;">
+                    <div id="qrcode-container" style="background: white; padding: 10px; border-radius: 8px; width: 160px; height: 160px; display: flex; justify-content: center; align-items: center;">
+                        <span style="color: #0b0b0f; font-size: 0.95rem; font-weight: bold;">Initialisiere Peer...</span>
+                    </div>
+                    <div style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; color: var(--neon-cyan); margin-top: 5px; word-break: break-all; max-width: 100%; padding: 0 10px; box-sizing: border-box;">
+                        Raum-ID: <span id="room-id-display" style="user-select: all;">Wird generiert...</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 5px;">
+                        <button class="btn-neon" id="copy-sync-link-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; display: none; flex: 1;">
+                            Sync-Link kopieren
+                        </button>
+                        <button class="btn-neon" id="open-controller-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; display: none; flex: 1;">
+                            Controller öffnen
                         </button>
                     </div>
-                </div>
-                <div id="players-count-display" style="font-size: 0.95rem; color: var(--text-muted);">
-                    Verbundene Spieler: 0
-                </div>
-                <button class="btn-neon" id="start-game-button" disabled style="margin-top: 10px; display: none;">Spiel starten</button>
-
-                <div id="settings-panel" style="display: none; width: 100%; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px; margin-top: 10px; text-align: left;">
-                    <h4 style="margin: 0 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem;">Peer-Server Einstellungen</h4>
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label for="peer-host" style="font-size: 0.8rem;">Host</label>
-                        <input type="text" id="peer-host" class="form-control" placeholder="0.peerjs.com" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
-                    </div>
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label for="peer-port" style="font-size: 0.8rem;">Port</label>
-                            <input type="number" id="peer-port" class="form-control" placeholder="443" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
-                        </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label for="peer-path" style="font-size: 0.8rem;">Pfad</label>
-                            <input type="text" id="peer-path" class="form-control" placeholder="/" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                    <div id="stake-set-container" style="width: 100%; text-align: left; margin: 10px 0; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px;">
+                        <label for="stake-set-select" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 240, 255, 0.2);">Einsatz-Set:</label>
+                        <div style="display: flex; gap: 10px; margin-top: 5px; align-items: center;">
+                            <select id="stake-set-select" class="form-control" style="font-size: 0.9rem; margin-top: 0; flex: 1;">
+                                <option value="klassisch">Klassisch (Trinkspiel)</option>
+                                <option value="alkoholfrei">Alkoholfrei (Aktivität/Sport)</option>
+                                <option value="spanien">Spanien-Edition (¡Hola!)</option>
+                                <option value="mittelalter">Mittelalter-Markt-Edition (Seyd gegrüßt!)</option>
+                                <option value="eigenes">Eigenes Set (Spieler-definiert)</option>
+                            </select>
+                            <button class="btn-neon" id="edit-stakes-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; width: auto; white-space: nowrap; margin-top: 0;">
+                                Set bearbeiten
+                            </button>
                         </div>
                     </div>
-                    <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                        <input type="checkbox" id="peer-secure" checked>
-                        <label for="peer-secure" style="margin-bottom: 0; font-size: 0.85rem;">Sicher (SSL/HTTPS)</label>
+                    <div id="players-count-display" style="font-size: 0.95rem; color: var(--text-muted);">
+                        Verbundene Spieler: 0
                     </div>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button class="btn-neon" id="save-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto;">Speichern</button>
-                        <button class="btn-neon" id="reset-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto; --neon-cyan: var(--neon-magenta);">Reset</button>
+                    <button class="btn-neon" id="start-game-button" disabled style="margin-top: 10px; display: none;">Spiel starten</button>
+     
+                    <div id="settings-panel" style="display: none; width: 100%; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px; margin-top: 10px; text-align: left;">
+                        <h4 style="margin: 0 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem;">Peer-Server Einstellungen</h4>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label for="peer-host" style="font-size: 0.8rem;">Host</label>
+                            <input type="text" id="peer-host" class="form-control" placeholder="0.peerjs.com" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label for="peer-port" style="font-size: 0.8rem;">Port</label>
+                                <input type="number" id="peer-port" class="form-control" placeholder="443" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label for="peer-path" style="font-size: 0.8rem;">Pfad</label>
+                                <input type="text" id="peer-path" class="form-control" placeholder="/" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                            <input type="checkbox" id="peer-secure" checked>
+                            <label for="peer-secure" style="margin-bottom: 0; font-size: 0.85rem;">Sicher (SSL/HTTPS)</label>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button class="btn-neon" id="save-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto;">Speichern</button>
+                            <button class="btn-neon" id="reset-settings-button" style="padding: 5px 10px; font-size: 0.8rem; flex: 1; min-height: auto; --neon-cyan: var(--neon-magenta);">Reset</button>
+                        </div>
                     </div>
+                    <button id="toggle-settings-button" style="background: none; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline; font-size: 0.85rem; margin-top: 5px;">Server-Einstellungen anzeigen</button>
+                    <button id="toggle-sidebar-button" style="background: none; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline; font-size: 0.85rem; margin-top: 5px;">Lokal Test-Rig ausblenden</button>
                 </div>
-                <button id="toggle-settings-button" style="background: none; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline; font-size: 0.85rem; margin-top: 5px;">Server-Einstellungen anzeigen</button>
-                <button id="toggle-sidebar-button" style="background: none; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline; font-size: 0.85rem; margin-top: 5px;">Lokal Test-Rig ausblenden</button>
             </section>
 
             <!-- Spielfeld mit 5 3D-CSS-Würfeln -->
@@ -250,6 +256,22 @@
             </div>
         </aside>
     </div>
+
+    <!-- Mobile Navigation Tabs (visible only under 1024px) -->
+    <nav id="mobile-nav-tabs" style="display: none;">
+        <button class="tab-btn active" id="tab-btn-game">
+            <span class="tab-icon">🎲</span>
+            <span class="tab-label">Spiel</span>
+        </button>
+        <button class="tab-btn" id="tab-btn-history">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label">Verlauf</span>
+        </button>
+        <button class="tab-btn" id="tab-btn-test">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-label">Test-Rig</span>
+        </button>
+    </nav>
 
     <!-- Einsatz-Set Editor Modal -->
     <div id="stake-editor-modal" class="modal-overlay" style="display: none;">

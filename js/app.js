@@ -389,6 +389,50 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTestRigStakeOptions(activeStakeSet);
         });
     }
+
+    // Mobile Navigation Tab Handlers (under 1024px)
+    const tabBtnGame = document.getElementById('tab-btn-game');
+    const tabBtnHistory = document.getElementById('tab-btn-history');
+    const tabBtnTest = document.getElementById('tab-btn-test');
+    const appContainer = document.querySelector('.app-container');
+
+    const switchTab = (activeBtn, tabClassToRemove1, tabClassToRemove2, tabClassToAdd) => {
+        [tabBtnGame, tabBtnHistory, tabBtnTest].forEach(btn => {
+            if (btn) btn.classList.remove('active');
+        });
+        if (activeBtn) activeBtn.classList.add('active');
+        
+        if (appContainer) {
+            if (tabClassToRemove1) appContainer.classList.remove(tabClassToRemove1);
+            if (tabClassToRemove2) appContainer.classList.remove(tabClassToRemove2);
+            if (tabClassToAdd) appContainer.classList.add(tabClassToAdd);
+        }
+    };
+
+    if (tabBtnGame) {
+        tabBtnGame.addEventListener('click', () => switchTab(tabBtnGame, 'show-history', 'show-test-rig', null));
+    }
+    if (tabBtnHistory) {
+        tabBtnHistory.addEventListener('click', () => switchTab(tabBtnHistory, 'show-test-rig', null, 'show-history'));
+    }
+    if (tabBtnTest) {
+        tabBtnTest.addEventListener('click', () => switchTab(tabBtnTest, 'show-history', null, 'show-test-rig'));
+    }
+
+    // Host Connection Panel Collapsible Handler
+    const toggleConnBtn = document.getElementById('toggle-connection-panel-btn');
+    const collapsibleContent = document.getElementById('collapsible-connection-content');
+    if (toggleConnBtn && collapsibleContent) {
+        toggleConnBtn.addEventListener('click', () => {
+            if (collapsibleContent.style.display === 'none') {
+                collapsibleContent.style.display = 'flex';
+                toggleConnBtn.textContent = 'Einklappen';
+            } else {
+                collapsibleContent.style.display = 'none';
+                toggleConnBtn.textContent = 'Ausklappen';
+            }
+        });
+    }
 });
 
 function setupPlayersListDisplay() {
@@ -1138,6 +1182,14 @@ function startGame() {
     
     gameState = 'playing';
     startGameButton.style.display = 'none';
+    
+    // Auto-collapse Verbindungs-Panel bei Spielstart
+    const connectionContent = document.getElementById('collapsible-connection-content');
+    const toggleConnBtn = document.getElementById('toggle-connection-panel-btn');
+    if (connectionContent && toggleConnBtn) {
+        connectionContent.style.display = 'none';
+        toggleConnBtn.textContent = 'Ausklappen';
+    }
     
     // Finde den ersten Spieler, der online und nicht pausiert ist
     const firstActiveIndex = players.findIndex(p => p.online && !p.paused);
