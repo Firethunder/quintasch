@@ -66,13 +66,18 @@
                 </div>
                 <div id="stake-set-container" style="width: 100%; text-align: left; margin: 10px 0; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px;">
                     <label for="stake-set-select" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); text-shadow: 0 0 5px rgba(0, 240, 255, 0.2);">Einsatz-Set:</label>
-                    <select id="stake-set-select" class="form-control" style="margin-top: 5px; font-size: 0.9rem;">
-                        <option value="klassisch">Klassisch (Trinkspiel)</option>
-                        <option value="alkoholfrei">Alkoholfrei (Aktivität/Sport)</option>
-                        <option value="spanien">Spanien-Edition (¡Hola!)</option>
-                        <option value="mittelalter">Mittelalter-Markt-Edition (Seyd gegrüßt!)</option>
-                        <option value="eigenes">Eigenes Set (Spieler-definiert)</option>
-                    </select>
+                    <div style="display: flex; gap: 10px; margin-top: 5px; align-items: center;">
+                        <select id="stake-set-select" class="form-control" style="font-size: 0.9rem; margin-top: 0; flex: 1;">
+                            <option value="klassisch">Klassisch (Trinkspiel)</option>
+                            <option value="alkoholfrei">Alkoholfrei (Aktivität/Sport)</option>
+                            <option value="spanien">Spanien-Edition (¡Hola!)</option>
+                            <option value="mittelalter">Mittelalter-Markt-Edition (Seyd gegrüßt!)</option>
+                            <option value="eigenes">Eigenes Set (Spieler-definiert)</option>
+                        </select>
+                        <button class="btn-neon" id="edit-stakes-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); font-size: 0.8rem; padding: 4px 10px; min-height: auto; box-shadow: none; text-shadow: none; width: auto; white-space: nowrap; margin-top: 0;">
+                            Set bearbeiten
+                        </button>
+                    </div>
                 </div>
                 <div id="players-count-display" style="font-size: 0.95rem; color: var(--text-muted);">
                     Verbundene Spieler: 0
@@ -244,6 +249,70 @@
                 </ul>
             </div>
         </aside>
+    </div>
+
+    <!-- Einsatz-Set Editor Modal -->
+    <div id="stake-editor-modal" class="modal-overlay" style="display: none;">
+        <div class="panel modal-panel">
+            <header class="header" style="margin-bottom: 20px; border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding-bottom: 10px; width: 100%;">
+                <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: var(--neon-cyan); text-shadow: var(--glow-cyan); margin: 0; text-transform: uppercase; letter-spacing: 1px;">Einsatz-Set bearbeiten</h2>
+            </header>
+            
+            <div class="modal-body" style="width: 100%; display: flex; flex-direction: column; gap: 12px; max-height: 50vh; overflow-y: auto; padding-right: 5px;">
+                <div class="form-group-row">
+                    <label for="edit-stake-0">Standard-Einsatz</label>
+                    <input type="text" id="edit-stake-0" class="form-control" placeholder="z. B. Standard-Strafe">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-1">Pasch</label>
+                    <input type="text" id="edit-stake-1" class="form-control" placeholder="z. B. 1 Schluck">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-2">Doppelpasch</label>
+                    <input type="text" id="edit-stake-2" class="form-control" placeholder="z. B. 2 Schlucke">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-3">Trasch</label>
+                    <input type="text" id="edit-stake-3" class="form-control" placeholder="z. B. 3 Schlucke">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-4">Full House</label>
+                    <input type="text" id="edit-stake-4" class="form-control" placeholder="z. B. 30s Planke">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-5">Straße</label>
+                    <input type="text" id="edit-stake-5" class="form-control" placeholder="z. B. Wasserfall">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-6">Quadrasch Option 1</label>
+                    <input type="text" id="edit-stake-6" class="form-control" placeholder="z. B. 1 Shot">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-7">Quadrasch Option 2</label>
+                    <input type="text" id="edit-stake-7" class="form-control" placeholder="z. B. Rechnung zahlen">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-8">Quintasch Option 1</label>
+                    <input type="text" id="edit-stake-8" class="form-control" placeholder="z. B. Geh heim!">
+                </div>
+                <div class="form-group-row">
+                    <label for="edit-stake-9">Quintasch Option 2</label>
+                    <input type="text" id="edit-stake-9" class="form-control" placeholder="z. B. Nie wieder Toblerone!">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: 20px; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 15px;">
+                <button class="btn-neon" id="save-edited-stakes-btn" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); flex: 1;">
+                    Speichern
+                </button>
+                <button class="btn-neon" id="reset-edited-stakes-btn" style="border-color: var(--neon-yellow); color: var(--neon-yellow); box-shadow: 0 0 5px rgba(255, 221, 0, 0.3); text-shadow: 0 0 5px rgba(255, 221, 0, 0.3); flex: 1;">
+                    Zurücksetzen
+                </button>
+                <button class="btn-neon" id="close-editor-modal-btn" style="border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); flex: 1;">
+                    Abbrechen
+                </button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="js/app.js"></script>
