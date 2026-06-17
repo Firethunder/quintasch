@@ -16,8 +16,12 @@ let rattleInterval = null;
 let clientVolumeInput = null;
 let clientVolumeDisplay = null;
 let clientMuteInput = null;
+let clientVibrateInput = null;
 let mobileDiceTable = null;
 let gameplayFormWrapper = null;
+
+let isVibrateEnabled = true;
+let isMyTurn = false;
 
 // Rotationswinkel für die verschiedenen Augenzahlen, damit sie nach vorne zeigen.
 const faceAngles = {
@@ -82,6 +86,20 @@ let resetSettingsButton = null;
 // Raum-ID aus der URL auslesen (z.B. controller.html?room=xxxx)
 const roomId = new URLSearchParams(window.location.search).get('room');
 
+/**
+ * Triggert eine Vibration auf dem Client-Gerät, falls aktiviert und unterstützt.
+ * @param {number|number[]} pattern - Vibrationsmuster in ms.
+ */
+function triggerVibration(pattern) {
+    if (isVibrateEnabled && 'vibrate' in navigator) {
+        try {
+            navigator.vibrate(pattern);
+        } catch (e) {
+            console.warn('Vibration fehlgeschlagen:', e);
+        }
+    }
+}
+
 // Initialisierung bei Seitenaufruf
 document.addEventListener('DOMContentLoaded', () => {
     // DOM-Elemente abrufen
@@ -95,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clientVolumeInput = document.getElementById('client-volume');
     clientVolumeDisplay = document.getElementById('client-volume-display');
     clientMuteInput = document.getElementById('client-mute');
+    clientVibrateInput = document.getElementById('client-vibrate');
     mobileDiceTable = document.getElementById('mobile-dice-table');
     gameplayFormWrapper = document.getElementById('gameplay-form-wrapper');
     lobbyPlayersList = document.getElementById('lobby-players-list');
@@ -216,6 +235,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Vibration-Einstellungen initialisieren
+    const savedVibrate = localStorage.getItem('quintasch_client_vibrate');
+    isVibrateEnabled = savedVibrate !== 'false';
+    if (clientVibrateInput) {
+        clientVibrateInput.checked = isVibrateEnabled;
+        clientVibrateInput.addEventListener('change', () => {
+            isVibrateEnabled = clientVibrateInput.checked;
+            localStorage.setItem('quintasch_client_vibrate', isVibrateEnabled.toString());
+        });
+    }
+
     // Settings toggle
     if (toggleSettingsButton && settingsPanel) {
         toggleSettingsButton.addEventListener('click', () => {
@@ -255,15 +285,18 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('quintasch_peer_config');
             localStorage.removeItem('quintasch_client_volume');
             localStorage.removeItem('quintasch_client_muted');
+            localStorage.removeItem('quintasch_client_vibrate');
             if (peerHostInput) peerHostInput.value = '';
             if (peerPortInput) peerPortInput.value = '';
             if (peerPathInput) peerPathInput.value = '';
             if (peerSecureInput) peerSecureInput.checked = true;
             setVolume(0.5);
             setMuted(false);
+            isVibrateEnabled = true;
             if (clientVolumeInput) clientVolumeInput.value = 50;
             if (clientVolumeDisplay) clientVolumeDisplay.textContent = '50%';
             if (clientMuteInput) clientMuteInput.checked = false;
+            if (clientVibrateInput) clientVibrateInput.checked = true;
             alert('Einstellungen zurückgesetzt auf Standard!');
             window.location.reload();
         });
@@ -565,6 +598,7 @@ function handleNewConnection(newConn) {
 
         // Runden-Steuerungsbefehle empfangen
         if (data.action === 'yourTurn') {
+            isMyTurn = true;
             // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
             if (lobbyContainer) lobbyContainer.style.display = 'none';
             if (gameplayContainer) gameplayContainer.style.display = 'block';
@@ -585,6 +619,7 @@ function handleNewConnection(newConn) {
         }
 
         if (data.action === 'waitTurn') {
+            isMyTurn = false;
             // Inaktiver Spieler: Halte Gameplay-Formular sichtbar für Eingaben
             if (lobbyContainer) lobbyContainer.style.display = 'none';
             if (gameplayContainer) gameplayContainer.style.display = 'block';
@@ -623,18 +658,19 @@ function handleNewConnection(newConn) {
             // Bestehenden Rassel-Interval bereinigen (Defense-in-depth)
             if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
 
-            // Spiele lokalen Rassel-Sound ab, falls nicht stummgeschaltet
-            if (!getMuted()) {
-                let shakeCount = 0;
-                rattleInterval = setInterval(() => {
+            // Spiele lokalen Rassel-Sound und Vibration ab
+            let shakeCount = 0;
+            rattleInterval = setInterval(() => {
+                if (!getMuted()) {
                     playRollSound();
-                    shakeCount++;
-                    if (shakeCount >= 8) {
-                        clearInterval(rattleInterval);
-                        rattleInterval = null;
-                    }
-                }, 150);
-            }
+                }
+                triggerVibration(50);
+                shakeCount++;
+                if (shakeCount >= 8) {
+                    clearInterval(rattleInterval);
+                    rattleInterval = null;
+                }
+            }, 150);
 
             // Warte einen Frame, damit der Browser die Würfel erst sichtbar rendert (display:none → flex),
             // bevor die CSS Transition gestartet wird — sonst wird die Transition übersprungen.
@@ -671,6 +707,15 @@ function handleNewConnection(newConn) {
             // Animations-Flag und Rassel-Interval zurücksetzen
             isAnimating = false;
             if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
+
+            // Erfolg oder Fehlversuch Vibration triggern
+            if (isMyTurn) {
+                if (data.success) {
+                    triggerVibration([150, 100, 150]);
+                } else {
+                    triggerVibration(300);
+                }
+            }
 
             // Verberge Würfeltisch auf dem rollenden Gerät (falls aktiv gewesen) und zeige Form wieder an
             if (mobileDiceTable) mobileDiceTable.style.display = 'none';
@@ -723,6 +768,11 @@ function handleNewConnection(newConn) {
 
                 rollResultOverlay.style.display = 'flex';
             }
+        }
+
+        // Timer abgelaufen Signal empfangen
+        if (data.action === 'timerExpired') {
+            triggerVibration([200, 100, 200, 100, 200]);
         }
     });
 
