@@ -1,6 +1,6 @@
 # STATE.md — Project Memory
 
-> **Current Status**: In Progress
+> **Current Status**: Milestone Ready for Audit
 > **Active Milestone**: Haptic-and-Audio-UX
 > **Active Phase**: 5
 
@@ -9,7 +9,7 @@
 - **Phase 2: Client-seitiges Vibrations-Feedback (Web Haptic API)**: ✅ Complete
 - **Phase 3: Soundboard-Panel auf dem Host-Dashboard**: ✅ Complete
 - **Phase 4: WebRTC Soundboard- & Audio-Sync**: ✅ Complete
-- **Phase 5: Verification & Polish**: ⬜ Not Started
+- **Phase 5: Verification & Polish**: ✅ Complete
 
 ## Blockers
 - Keine
@@ -17,10 +17,11 @@
 ## Current Position
 - **Milestone**: Haptic-and-Audio-UX
 - **Phase**: 5
-- **Status**: Phase 4 Completed
+- **Status**: Milestone Complete & Verified
 
 ## Last Session Summary
-Phase 4 'WebRTC Soundboard- & Audio-Sync' wurde erfolgreich abgeschlossen. Die manuellen Soundboard-Aktionen auf dem Host-Dashboard werden nun per WebRTC-Datenkanal an alle verbundenen sekundären Dashboards übertragen. Umgekehrt können sekundäre Dashboards ebenfalls Töne auslösen, die über den Host an alle anderen Dashboards verteilt werden, wobei das auslösende Dashboard durch gezieltes Sender-Filtering vor Doppel-Wiedergaben geschützt ist.
+Phase 5 'Verification & Polish' wurde erfolgreich abgeschlossen. Der gesamte Code für Audio-Routing, LocalStorage-Konfigurationen und Haptik-Steuerung wurde auditiert. Alle Töne laufen über den zentralen Master-Gain-Kanal, die Einstellungen-Schlüssel kollidieren nicht und WebRTC-Wiedergaben werden sauber ohne Rückkopplungsschleifen verteilt. Haptische Vibrationsaufrufe sind mit Try-Catch und API-Prüfungen abgesichert.
 
 ## Next Steps
-1. /plan 5 — Erstelle den Ausführungsplan für Phase 5 'Verification & Polish'.
+1. /audit-milestone — Führe den Milestone-Audit durch, um die Qualität zu verifizieren.
+2. /complete-milestone — Schließe den aktuellen Milestone 'Haptic-and-Audio-UX' ab und archiviere ihn.
