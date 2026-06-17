@@ -2,10 +2,10 @@
 
 > **Current Status**: In Progress
 > **Active Milestone**: Haptic-and-Audio-UX
-> **Active Phase**: 1
+> **Active Phase**: 2
 
 ## Phase Progress
-- **Phase 1: Sound-Einstellungen & Mute/Volume-Support**: ⬜ Not Started
+- **Phase 1: Sound-Einstellungen & Mute/Volume-Support**: ✅ Complete
 - **Phase 2: Client-seitiges Vibrations-Feedback (Web Haptic API)**: ⬜ Not Started
 - **Phase 3: Soundboard-Panel auf dem Host-Dashboard**: ⬜ Not Started
 - **Phase 4: WebRTC Soundboard- & Audio-Sync**: ⬜ Not Started
@@ -16,11 +16,11 @@
 
 ## Current Position
 - **Milestone**: Haptic-and-Audio-UX
-- **Phase**: 1
-- **Status**: Milestone planned
+- **Phase**: 2
+- **Status**: Phase 1 Completed
 
 ## Last Session Summary
-Milestone 'Lobby-Stake-Editor' wurde archiviert. Der neue Meilenstein 'Haptic-and-Audio-UX' wurde definiert und in ROADMAP.md integriert.
+Phase 1 'Sound-Einstellungen & Mute/Volume-Support' wurde erfolgreich abgeschlossen. Beide Oberflächen (Host Dashboard und Client Controller) wurden um Lautstärkeregler und Stummschaltungs-Optionen ergänzt, die in LocalStorage gespeichert und über ein masterGainNode im Web Audio API sofort angewendet werden. Die Straf-Timer geben nun auch ein akustisches Signal bei Ablauf.
 
 ## Next Steps
-1. /plan 1 — Erstelle den detaillierten Ausführungsplan für Phase 1 'Sound-Einstellungen & Mute/Volume-Support'.
+1. /plan 2 — Erstelle den Ausführungsplan für Phase 2 'Client-seitiges Vibrations-Feedback (Web Haptic API)'.
