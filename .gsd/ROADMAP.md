@@ -1,31 +1,47 @@
 # ROADMAP.md
 
-> **Current Milestone**: Lobby-Stake-Editor
-> **Goal**: Einführung einer erweiterten Anpassungsmöglichkeit der Einsatz-Sets im Lobby-Bildschirm des Dashboards, mobile Optimierung des Dashboards sowie die Integration des Dashboards als aktiven Mitspieler (Host-Player).
+> **Current Milestone**: Haptic-and-Audio-UX
+> **Goal**: Integration of client-side vibration (Web Haptic API) on rolls/penalties, host soundboard control, and local mute/volume preferences.
 
 ## Must-Haves
-- [x] Host Dashboard UI zur dynamischen Bearbeitung der 10 Strafeinträge für jedes Einsatz-Set
-- [x] Live-Synchronisation bearbeiteter Einsätze via WebRTC an alle verbundenen Controller-Apps
-- [x] Persistente Speicherung modifizierter Einsatz-Sets im `localStorage` des Hosts
-- [x] Mobiles Layout für das Dashboard (50px 3D-Würfel-Geometrie, mobile Navigationstabs, einklappbarer QR-Bereich)
-- [x] Host-Spieler-Modus (Registrierung als Spieler, automatische Rundenaktivierung, Deaktivierungs-Zustände, Pause-Support)
+- [ ] Lautstärke- & Mute-Einstellungen auf Dashboard und Controller (persistiert in LocalStorage)
+- [ ] Client-Vibration (Web Haptic API) bei Würfen (z.B. pulsierendes Rasseln) und ablaufenden Strafen-Timern
+- [ ] UI-Soundboard Panel auf dem Host-Dashboard zum manuellen Abspielen von Tönen
+- [ ] WebRTC-Synchronisation von manuellen Soundboard-Aktionen an Sync-Dashboards
 
 ## Nice-to-Haves
-- [x] Reset-Button im Editor, um geänderte Werte wieder auf die Standard-Vorgaben zurückzusetzen
+- [ ] Custom Vibrations-Muster (z.B. unterschiedliche Sequenzen für verschiedene Strafen)
+- [ ] Einstellungsoption im Controller zum Deaktivieren der Vibration
 
 ## Phases
+
+### Phase 1: Sound-Einstellungen & Mute/Volume-Support
+**Status**: ⬜ Not Started
+**Objective**: Einführung von Lautstärkereglern und Stummschaltungs-Optionen im Einstellungs-Panel des Dashboards und des Client-Controllers (persistiert in LocalStorage).
+
+### Phase 2: Client-seitiges Vibrations-Feedback (Web Haptic API)
+**Status**: ⬜ Not Started
+**Objective**: Integration von Vibrations-Mustern auf Smartphones bei Würfelwürfen und ablaufenden Strafen-Timern. Inklusive Konfigurations-Schalter in den Einstellungen.
+
+### Phase 3: Soundboard-Panel auf dem Host-Dashboard
+**Status**: ⬜ Not Started
+**Objective**: Hinzufügen eines Soundboard-UI-Bereichs auf dem Host-Dashboard zum manuellen Triggern von Sounds.
+
+### Phase 4: WebRTC Soundboard- & Audio-Sync
+**Status**: ⬜ Not Started
+**Objective**: Synchronisation von manuellen Soundboard-Aktionen an Sync-Dashboards über WebRTC-Datenkanäle.
+
+### Phase 5: Verifizierung & Polish
+**Status**: ⬜ Not Started
+**Objective**: Cross-Device-Audiorundgänge, haptisches Testen auf Mobilgeräten und Behebung von Synchronisations-Lags.
 
 
 ---
 
 ## Future Milestones (Backlog)
 
-### 2. Haptic-and-Audio-UX
-**Goal**: Integration of client-side vibration (Web Haptic API) on rolls/penalties, host soundboard control, and local mute/volume preferences.
-
-### 3. Gamification-and-Stats
+### 2. Gamification-and-Stats
 **Goal**: Local statistics tracking (luck factor, drinks count), CSS-styled leaderboards on the host, and fun gameplay achievements.
 
-### 4. Team-and-Alternative-Modes
+### 3. Team-and-Alternative-Modes
 **Goal**: Support for teams/co-op mode, fast-paced speed run timers, and alternative dice target challenges.
-
