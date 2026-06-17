@@ -716,3 +716,9 @@ select.form-control option {
         border-color: rgba(0, 255, 102, 0.3);
     }
 }
+
+/* Soundboard Button Active State */
+#soundboard-panel .sound-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 0 15px currentColor !important;
+}

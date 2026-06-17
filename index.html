@@ -271,6 +271,18 @@
                 <button class="btn-neon" id="roll-button">Würfeln (Test)</button>
             </div>
 
+            <!-- Soundboard Panel -->
+            <div class="panel" id="soundboard-panel">
+                <h3 class="sidebar-title" style="font-size: 1.1rem; border: none; margin-bottom: 15px; margin-top: 0; padding-top: 0;">Soundboard</h3>
+                <div class="soundboard-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; box-sizing: border-box; width: 100%;">
+                    <button class="btn-neon sound-btn" data-sound="roll" style="font-size: 0.8rem; padding: 8px; min-height: auto; width: 100%; border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: none; text-shadow: none; box-sizing: border-box;">🎲 Rasseln</button>
+                    <button class="btn-neon sound-btn" data-sound="win" style="font-size: 0.8rem; padding: 8px; min-height: auto; width: 100%; border-color: var(--neon-green); color: var(--neon-green); box-shadow: none; text-shadow: none; box-sizing: border-box;">🎉 Erfolg</button>
+                    <button class="btn-neon sound-btn" data-sound="fail" style="font-size: 0.8rem; padding: 8px; min-height: auto; width: 100%; border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: none; text-shadow: none; box-sizing: border-box;">💥 Fehlwurf</button>
+                    <button class="btn-neon sound-btn" data-sound="tick" style="font-size: 0.8rem; padding: 8px; min-height: auto; width: 100%; border-color: var(--neon-yellow); color: var(--neon-yellow); box-shadow: none; text-shadow: none; box-sizing: border-box;">⏱️ Ticken</button>
+                    <button class="btn-neon sound-btn" data-sound="buzzer" style="font-size: 0.8rem; padding: 8px; min-height: auto; width: 100%; grid-column: span 2; border-color: var(--neon-magenta); color: var(--neon-magenta); --neon-cyan: var(--neon-magenta); box-shadow: none; text-shadow: none; box-sizing: border-box;">🚨 Buzzer</button>
+                </div>
+            </div>
+
             <!-- Historie / Spielprotokoll -->
             <div class="panel history-panel" id="history-panel">
                 <h3 class="sidebar-title" style="font-size: 1.1rem; border: none; margin-bottom: 15px;">Wurfliste</h3>
