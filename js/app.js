@@ -1111,7 +1111,7 @@ function initHostPeer(forcedId = null) {
             }
 
             if (data && data.action === 'syncCommand') {
-                handleSyncCommand(data);
+                handleSyncCommand(data, conn);
                 return;
             }
 
@@ -1824,7 +1824,7 @@ function broadcastSyncState() {
 /**
  * Verarbeitet Befehle, die von sekundären Dashboards gesendet wurden (Host-seitig).
  */
-function handleSyncCommand(data) {
+function handleSyncCommand(data, conn = null) {
     if (gameMode === 'sync') return;
     
     console.log('Verarbeite Sync-Befehl auf Host:', data);
@@ -1839,7 +1839,33 @@ function handleSyncCommand(data) {
             stakeSetSelect.value = data.value;
             stakeSetSelect.dispatchEvent(new Event('change'));
         }
+    } else if (data.type === 'playSound') {
+        playProceduralSound(data.sound);
+        broadcastSound(data.sound, conn ? conn.peer : null);
     }
+}
+
+/**
+ * Spielt einen Sound basierend auf dem Typ-String ab.
+ */
+function playProceduralSound(soundType) {
+    if (soundType === 'roll') playRollSound();
+    else if (soundType === 'win') playWinSound();
+    else if (soundType === 'fail') playFailSound();
+    else if (soundType === 'tick') playTimerTick();
+    else if (soundType === 'buzzer') playTimerBuzzer();
+}
+
+/**
+ * Sendet ein Soundboard-Ereignis an alle registrierten Sync-Dashboards, optional ausgenommen ein bestimmter Peer.
+ */
+function broadcastSound(soundType, excludePeerId = null) {
+    if (gameMode === 'sync') return;
+    syncConnections.forEach(conn => {
+        if (conn.open && conn.peer !== excludePeerId) {
+            conn.send({ action: 'syncPlaySound', sound: soundType });
+        }
+    });
 }
 
 function updateTestRigStakeOptions(activeSet) {
