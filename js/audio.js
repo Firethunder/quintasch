@@ -1,4 +1,21 @@
 let audioCtx = null;
+let masterGainNode = null;
+let volume = 0.5;
+let isMuted = false;
+
+// Lese Einstellungen aus LocalStorage
+try {
+    const savedVol = localStorage.getItem('quintasch_volume');
+    if (savedVol !== null) {
+        volume = parseFloat(savedVol);
+    }
+    const savedMute = localStorage.getItem('quintasch_muted');
+    if (savedMute !== null) {
+        isMuted = savedMute === 'true';
+    }
+} catch (e) {
+    console.error('Fehler beim Laden der Audio-Einstellungen:', e);
+}
 
 /**
  * Lazy-initialisiert den AudioContext nach Benutzerinteraktion.
@@ -7,11 +24,42 @@ let audioCtx = null;
 function getAudioContext() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGainNode = audioCtx.createGain();
+        masterGainNode.gain.setValueAtTime(isMuted ? 0 : volume, audioCtx.currentTime);
+        masterGainNode.connect(audioCtx.destination);
     }
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
     return audioCtx;
+}
+
+export function setVolume(val) {
+    volume = Math.max(0, Math.min(1, val));
+    try {
+        localStorage.setItem('quintasch_volume', volume.toString());
+    } catch (e) {}
+    if (audioCtx && masterGainNode) {
+        masterGainNode.gain.setValueAtTime(isMuted ? 0 : volume, audioCtx.currentTime);
+    }
+}
+
+export function setMuted(muted) {
+    isMuted = !!muted;
+    try {
+        localStorage.setItem('quintasch_muted', isMuted.toString());
+    } catch (e) {}
+    if (audioCtx && masterGainNode) {
+        masterGainNode.gain.setValueAtTime(isMuted ? 0 : volume, audioCtx.currentTime);
+    }
+}
+
+export function getVolume() {
+    return volume;
+}
+
+export function getMuted() {
+    return isMuted;
 }
 
 /**
@@ -32,7 +80,7 @@ export function playRollSound() {
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
             
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(masterGainNode);
             
             osc.start(time);
             osc.stop(time + 0.05);
@@ -70,7 +118,7 @@ export function playWinSound() {
             gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.8);
             
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(masterGainNode);
             
             osc.start(now + idx * 0.08);
             osc.stop(now + idx * 0.08 + 0.8);
@@ -103,7 +151,7 @@ export function playFailSound() {
         
         osc.connect(filter);
         filter.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(masterGainNode);
         
         osc.start(now);
         osc.stop(now + 0.7);
@@ -129,7 +177,7 @@ export function playTimerTick() {
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
         
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(masterGainNode);
         
         osc.start(now);
         osc.stop(now + 0.04);
@@ -158,7 +206,7 @@ export function playTimerBuzzer() {
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
             
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(masterGainNode);
             
             osc.start(time);
             osc.stop(time + 0.2);
