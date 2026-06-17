@@ -2,13 +2,13 @@
 
 > **Current Status**: In Progress
 > **Active Milestone**: Haptic-and-Audio-UX
-> **Active Phase**: 4
+> **Active Phase**: 5
 
 ## Phase Progress
 - **Phase 1: Sound-Einstellungen & Mute/Volume-Support**: ✅ Complete
 - **Phase 2: Client-seitiges Vibrations-Feedback (Web Haptic API)**: ✅ Complete
 - **Phase 3: Soundboard-Panel auf dem Host-Dashboard**: ✅ Complete
-- **Phase 4: WebRTC Soundboard- & Audio-Sync**: ⬜ Not Started
+- **Phase 4: WebRTC Soundboard- & Audio-Sync**: ✅ Complete
 - **Phase 5: Verification & Polish**: ⬜ Not Started
 
 ## Blockers
@@ -16,11 +16,11 @@
 
 ## Current Position
 - **Milestone**: Haptic-and-Audio-UX
-- **Phase**: 4
-- **Status**: Phase 3 Completed
+- **Phase**: 5
+- **Status**: Phase 4 Completed
 
 ## Last Session Summary
-Phase 3 'Soundboard-Panel auf dem Host-Dashboard' wurde erfolgreich abgeschlossen. Ein Soundboard-Panel wurde in der Sidebar des Host-Dashboards integriert, mit fünf neonfarbenen Buttons für Spiel-Sounds (Roll, Win, Fail, Tick, Buzzer). Die Buttons bieten aktive Klick-Skalierungen und sind mit den prozeduralen Audio-Synthese-Funktionen in `js/audio.js` verdrahtet.
+Phase 4 'WebRTC Soundboard- & Audio-Sync' wurde erfolgreich abgeschlossen. Die manuellen Soundboard-Aktionen auf dem Host-Dashboard werden nun per WebRTC-Datenkanal an alle verbundenen sekundären Dashboards übertragen. Umgekehrt können sekundäre Dashboards ebenfalls Töne auslösen, die über den Host an alle anderen Dashboards verteilt werden, wobei das auslösende Dashboard durch gezieltes Sender-Filtering vor Doppel-Wiedergaben geschützt ist.
 
 ## Next Steps
-1. /plan 4 — Erstelle den Ausführungsplan für Phase 4 'WebRTC Soundboard- & Audio-Sync'.
+1. /plan 5 — Erstelle den Ausführungsplan für Phase 5 'Verification & Polish'.
