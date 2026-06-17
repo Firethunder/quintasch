@@ -880,6 +880,14 @@ function startTimer(seconds) {
             clearInterval(timerInterval);
             timerInterval = null;
             playTimerBuzzer();
+
+            // Sende Signal an alle offenen Client-Verbindungen
+            connections.forEach(c => {
+                if (c.open) {
+                    c.send({ action: 'timerExpired' });
+                }
+            });
+
             timerText.textContent = 'ZEIT ABGELAUFEN!';
             timerText.style.color = 'var(--neon-magenta)';
             timerText.style.textShadow = 'var(--glow-magenta)';
