@@ -3,13 +3,17 @@ let masterGainNode = null;
 let volume = 0.5;
 let isMuted = false;
 
+const isController = window.location.pathname.includes('controller.html');
+const volKey = isController ? 'quintasch_client_volume' : 'quintasch_volume';
+const muteKey = isController ? 'quintasch_client_muted' : 'quintasch_muted';
+
 // Lese Einstellungen aus LocalStorage
 try {
-    const savedVol = localStorage.getItem('quintasch_volume');
+    const savedVol = localStorage.getItem(volKey);
     if (savedVol !== null) {
         volume = parseFloat(savedVol);
     }
-    const savedMute = localStorage.getItem('quintasch_muted');
+    const savedMute = localStorage.getItem(muteKey);
     if (savedMute !== null) {
         isMuted = savedMute === 'true';
     }
@@ -37,7 +41,7 @@ function getAudioContext() {
 export function setVolume(val) {
     volume = Math.max(0, Math.min(1, val));
     try {
-        localStorage.setItem('quintasch_volume', volume.toString());
+        localStorage.setItem(volKey, volume.toString());
     } catch (e) {}
     if (audioCtx && masterGainNode) {
         masterGainNode.gain.setValueAtTime(isMuted ? 0 : volume, audioCtx.currentTime);
@@ -47,7 +51,7 @@ export function setVolume(val) {
 export function setMuted(muted) {
     isMuted = !!muted;
     try {
-        localStorage.setItem('quintasch_muted', isMuted.toString());
+        localStorage.setItem(muteKey, isMuted.toString());
     } catch (e) {}
     if (audioCtx && masterGainNode) {
         masterGainNode.gain.setValueAtTime(isMuted ? 0 : volume, audioCtx.currentTime);
