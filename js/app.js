@@ -243,6 +243,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Soundboard Klick-Listeners registrieren
+    const soundboardButtons = document.querySelectorAll('#soundboard-panel .sound-btn');
+    soundboardButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const soundType = btn.getAttribute('data-sound');
+            if (soundType === 'roll') playRollSound();
+            else if (soundType === 'win') playWinSound();
+            else if (soundType === 'fail') playFailSound();
+            else if (soundType === 'tick') playTimerTick();
+            else if (soundType === 'buzzer') playTimerBuzzer();
+        });
+    });
+
     // Settings save
     saveSettingsButton.addEventListener('click', () => {
         const host = peerHostInput.value.trim();
