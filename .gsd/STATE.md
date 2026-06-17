@@ -2,11 +2,11 @@
 
 > **Current Status**: In Progress
 > **Active Milestone**: Haptic-and-Audio-UX
-> **Active Phase**: 2
+> **Active Phase**: 3
 
 ## Phase Progress
 - **Phase 1: Sound-Einstellungen & Mute/Volume-Support**: ✅ Complete
-- **Phase 2: Client-seitiges Vibrations-Feedback (Web Haptic API)**: ⬜ Not Started
+- **Phase 2: Client-seitiges Vibrations-Feedback (Web Haptic API)**: ✅ Complete
 - **Phase 3: Soundboard-Panel auf dem Host-Dashboard**: ⬜ Not Started
 - **Phase 4: WebRTC Soundboard- & Audio-Sync**: ⬜ Not Started
 - **Phase 5: Verification & Polish**: ⬜ Not Started
@@ -16,11 +16,11 @@
 
 ## Current Position
 - **Milestone**: Haptic-and-Audio-UX
-- **Phase**: 2
-- **Status**: Phase 1 Completed
+- **Phase**: 3
+- **Status**: Phase 2 Completed
 
 ## Last Session Summary
-Phase 1 'Sound-Einstellungen & Mute/Volume-Support' wurde erfolgreich abgeschlossen. Beide Oberflächen (Host Dashboard und Client Controller) wurden um Lautstärkeregler und Stummschaltungs-Optionen ergänzt, die in LocalStorage gespeichert und über ein masterGainNode im Web Audio API sofort angewendet werden. Die Straf-Timer geben nun auch ein akustisches Signal bei Ablauf.
+Phase 2 'Client-seitiges Vibrations-Feedback (Web Haptic API)' wurde erfolgreich abgeschlossen. Die Smartphones vibrieren nun in Sync mit dem Würfel-Rasseln (Rattle-Vibration), geben ein haptisches Feedback bei Erfolg (Doppelpuls) oder Fehlversuch (langer Einzelpuls) und warnen mit einer Dreifachvibration, sobald die Host-Dashboard-Strafzeit abgelaufen ist. Die Vibration lässt sich im Einstellungs-Panel des Controllers ausschalten und ist persistent in LocalStorage hinterlegt.
 
 ## Next Steps
-1. /plan 2 — Erstelle den Ausführungsplan für Phase 2 'Client-seitiges Vibrations-Feedback (Web Haptic API)'.
+1. /plan 3 — Erstelle den Ausführungsplan für Phase 3 'Soundboard-Panel auf dem Host-Dashboard'.
