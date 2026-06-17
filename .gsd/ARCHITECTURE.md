@@ -23,11 +23,11 @@ graph TD
 ## Component Architecture
 
 - **Host (Dashboard)**:
-  - `index.html`: Layout of the game screen, landing/start overlay, room code, QR code container, 3D dice stage, scoreboard, and logs.
-  - `js/app.js`: Orchestrates the PeerJS host peer or sync peer, parses client and sync messages (joining, rolling, command forwarding), updates game turns, manages localStorage history, and triggers 3D rolls and sound effects.
+  - `index.html`: Layout of the game screen, landing/start overlay, room code, QR code container, 3D dice stage, scoreboard, logs, and the Stake Editor modal (`#stake-editor-modal`).
+  - `js/app.js`: Orchestrates the PeerJS host peer or sync peer, parses client and sync messages (joining, rolling, command forwarding), updates game turns (including the Host-Player registration and local pause toggle in the sidebar-player title), manages localStorage history and custom stakes, and triggers 3D rolls and sound effects.
 - **Client (Controller)**:
-  - `controller.html`: Interface for inputting room code/name, selecting bets (Pasch, Trasch, Quintasch, etc.), triggering rolls, showing a pause checkbox, a scrollable history log, and displaying a scaled 3D dice animation during active rolls.
-  - `js/controller.js`: Connects to host via PeerJS, handles UI state changes (`yourTurn`, `waitTurn`, `rollStart`, `rollResult`, `historyUpdate`), validates input, sends action payloads (including pauses) to the host, drives the mobile 3D dice animation, and manages local preferences via localStorage.
+  - `controller.html`: Interface for inputting room code/name, selecting bets (Pasch, Trasch, Quintasch, etc.), triggering rolls, showing a pause checkbox, a scrollable history log, and displaying a scaled 3D dice animation during active rolls. Adaptable for viewports under 600px.
+  - `js/controller.js`: Connects to host via PeerJS, handles UI state changes (`yourTurn`, `waitTurn`, `rollStart`, `rollResult`, `historyUpdate`), validates input, sends action payloads (including pauses) to the host, drives the mobile 3D dice animation, manages local preferences via localStorage, and dynamically overrides stake/consequence lists based on WebRTC sync data received from the Host.
 - **Game Engine & Rules**:
   - `js/game.js`: Contains dice combinations, evaluation rules (`evaluateDiceRoll`), and rotation mathematics for the 3D CSS dice.
 - **Audio Synthesizer**:
@@ -53,6 +53,11 @@ graph TD
 2. Host registers the connection and responds with the current game state payload (players, history, active turn, active timer).
 3. Any game state changes (turns, timer changes) or dice rolls trigger a broadcast from Host to all connected Sync Dashboards.
 4. UI commands triggered on Sync Dashboards (game start, next turn, roll) are forwarded to Host via `{ action: "syncCommand" }` and processed.
+
+### Stake Set Customization & Sync Flow
+1. Host clicks 'Set bearbeiten' next to the active stake preset and customizes any of the 10 penalties in the `#stake-editor-modal`.
+2. Host clicks 'Speichern' or 'Zurücksetzen'. The host updates its `customStakeSets` memory copy, saves it to `localStorage` under `quintasch_custom_stakes`, and immediately broadcasts the updated stakes to all connected controller apps using a `{ action: "syncStakes", stakeSet: activeStakeSet, stakes: customStakeSets[activeStakeSet] }` message.
+3. Connected client controllers receive the `syncStakes` message, update their local selection listings, and prioritize host-transmitted custom stakes during turn selection, ensuring clients show the edited penalties.
 
 ### Host Failover & Client Reconnection Flow
 1. Host dashboard disconnects or closes connection.

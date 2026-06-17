@@ -13,6 +13,6 @@ This document details the technologies and dependencies used in Quintasch.
 
 ## Browser API Integrations
 - **Web Audio API**: Native synthesis of retro drinking game sound effects (frequencies, white noise nodes, sweep envelopes).
-- **LocalStorage API**: Local database persistence on the Host device for match history and leaderboard.
+- **LocalStorage API**: Local database persistence on the Host device for match history, leaderboard, and custom stake sets.
 - **Service Workers**: Local offline assets caching.
 - **Web App Manifest**: Home screen install capability.
