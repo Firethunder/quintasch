@@ -1,5 +1,5 @@
 import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, BET_PROBABILITIES } from './game.js';
-import { playRollSound, playWinSound, playFailSound, playTimerTick } from './audio.js';
+import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
 
 // Rotationswinkel für die verschiedenen Augenzahlen, damit sie nach vorne zeigen.
 const faceAngles = {
@@ -121,6 +121,9 @@ const peerPathInput = document.getElementById('peer-path');
 const peerSecureInput = document.getElementById('peer-secure');
 const saveSettingsButton = document.getElementById('save-settings-button');
 const resetSettingsButton = document.getElementById('reset-settings-button');
+const audioVolumeInput = document.getElementById('audio-volume');
+const audioVolumeDisplay = document.getElementById('audio-volume-display');
+const audioMuteInput = document.getElementById('audio-mute');
 
 // Initialisierung bei Seitenaufruf
 document.addEventListener('DOMContentLoaded', () => {
@@ -216,6 +219,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Audio-Einstellungen initialisieren
+    if (audioVolumeInput && audioMuteInput) {
+        const currentVol = getVolume();
+        const currentMute = getMuted();
+        
+        audioVolumeInput.value = Math.round(currentVol * 100);
+        if (audioVolumeDisplay) {
+            audioVolumeDisplay.textContent = `${Math.round(currentVol * 100)}%`;
+        }
+        audioMuteInput.checked = currentMute;
+        
+        audioVolumeInput.addEventListener('input', () => {
+            const val = parseFloat(audioVolumeInput.value) / 100;
+            setVolume(val);
+            if (audioVolumeDisplay) {
+                audioVolumeDisplay.textContent = `${audioVolumeInput.value}%`;
+            }
+        });
+        
+        audioMuteInput.addEventListener('change', () => {
+            setMuted(audioMuteInput.checked);
+        });
+    }
+
     // Settings save
     saveSettingsButton.addEventListener('click', () => {
         const host = peerHostInput.value.trim();
@@ -237,10 +264,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Settings reset
     resetSettingsButton.addEventListener('click', () => {
         localStorage.removeItem('quintasch_peer_config');
+        localStorage.removeItem('quintasch_volume');
+        localStorage.removeItem('quintasch_muted');
         peerHostInput.value = '';
         peerPortInput.value = '';
         peerPathInput.value = '';
         peerSecureInput.checked = true;
+        setVolume(0.5);
+        setMuted(false);
         alert('Einstellungen zurückgesetzt auf Standard! Seite wird neu geladen.');
         window.location.reload();
     });
@@ -848,6 +879,7 @@ function startTimer(seconds) {
         if (timerTimeLeft <= 0) {
             clearInterval(timerInterval);
             timerInterval = null;
+            playTimerBuzzer();
             timerText.textContent = 'ZEIT ABGELAUFEN!';
             timerText.style.color = 'var(--neon-magenta)';
             timerText.style.textShadow = 'var(--glow-magenta)';
