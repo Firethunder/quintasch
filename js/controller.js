@@ -101,14 +101,25 @@ function triggerVibration(pattern) {
 }
 
 /**
- * Spielt einen Sound basierend auf dem Typ-String ab.
+ * Spielt einen Sound basierend auf dem Typ-String ab und triggert optional Vibration.
  */
 function playProceduralSound(soundType) {
-    if (soundType === 'roll') playRollSound();
-    else if (soundType === 'win') playWinSound();
-    else if (soundType === 'fail') playFailSound();
-    else if (soundType === 'tick') playTimerTick();
-    else if (soundType === 'buzzer') playTimerBuzzer();
+    if (soundType === 'roll') {
+        playRollSound();
+        triggerVibration(50);
+    } else if (soundType === 'win') {
+        playWinSound();
+        triggerVibration([100, 50, 100]);
+    } else if (soundType === 'fail') {
+        playFailSound();
+        triggerVibration(200);
+    } else if (soundType === 'tick') {
+        playTimerTick();
+        triggerVibration(10);
+    } else if (soundType === 'buzzer') {
+        playTimerBuzzer();
+        triggerVibration([150, 50, 150, 50, 150]);
+    }
 }
 
 // Initialisierung bei Seitenaufruf
@@ -249,7 +260,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Vibration-Einstellungen initialisieren
     const savedVibrate = localStorage.getItem('quintasch_client_vibrate');
     isVibrateEnabled = savedVibrate !== 'false';
-    if (clientVibrateInput) {
+    
+    // Haptik-Unterstützung prüfen
+    const vibrationWarning = document.getElementById('vibration-warning');
+    if (!('vibrate' in navigator)) {
+        isVibrateEnabled = false;
+        if (vibrationWarning) vibrationWarning.style.display = 'block';
+        if (clientVibrateInput) {
+            clientVibrateInput.checked = false;
+            clientVibrateInput.disabled = true;
+        }
+    } else if (clientVibrateInput) {
         clientVibrateInput.checked = isVibrateEnabled;
         clientVibrateInput.addEventListener('change', () => {
             isVibrateEnabled = clientVibrateInput.checked;
@@ -464,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Lokalen Rassel-Sound auf dem Handy abspielen
             playRollSound();
+            triggerVibration(100);
             
             // Deaktivieren und Text ändern
             gameplayRollButton.disabled = true;
