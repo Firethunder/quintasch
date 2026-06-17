@@ -2,12 +2,12 @@
 
 > **Current Status**: In Progress
 > **Active Milestone**: Haptic-and-Audio-UX
-> **Active Phase**: 3
+> **Active Phase**: 4
 
 ## Phase Progress
 - **Phase 1: Sound-Einstellungen & Mute/Volume-Support**: ✅ Complete
 - **Phase 2: Client-seitiges Vibrations-Feedback (Web Haptic API)**: ✅ Complete
-- **Phase 3: Soundboard-Panel auf dem Host-Dashboard**: ⬜ Not Started
+- **Phase 3: Soundboard-Panel auf dem Host-Dashboard**: ✅ Complete
 - **Phase 4: WebRTC Soundboard- & Audio-Sync**: ⬜ Not Started
 - **Phase 5: Verification & Polish**: ⬜ Not Started
 
@@ -16,11 +16,11 @@
 
 ## Current Position
 - **Milestone**: Haptic-and-Audio-UX
-- **Phase**: 3
-- **Status**: Phase 2 Completed
+- **Phase**: 4
+- **Status**: Phase 3 Completed
 
 ## Last Session Summary
-Phase 2 'Client-seitiges Vibrations-Feedback (Web Haptic API)' wurde erfolgreich abgeschlossen. Die Smartphones vibrieren nun in Sync mit dem Würfel-Rasseln (Rattle-Vibration), geben ein haptisches Feedback bei Erfolg (Doppelpuls) oder Fehlversuch (langer Einzelpuls) und warnen mit einer Dreifachvibration, sobald die Host-Dashboard-Strafzeit abgelaufen ist. Die Vibration lässt sich im Einstellungs-Panel des Controllers ausschalten und ist persistent in LocalStorage hinterlegt.
+Phase 3 'Soundboard-Panel auf dem Host-Dashboard' wurde erfolgreich abgeschlossen. Ein Soundboard-Panel wurde in der Sidebar des Host-Dashboards integriert, mit fünf neonfarbenen Buttons für Spiel-Sounds (Roll, Win, Fail, Tick, Buzzer). Die Buttons bieten aktive Klick-Skalierungen und sind mit den prozeduralen Audio-Synthese-Funktionen in `js/audio.js` verdrahtet.
 
 ## Next Steps
-1. /plan 3 — Erstelle den Ausführungsplan für Phase 3 'Soundboard-Panel auf dem Host-Dashboard'.
+1. /plan 4 — Erstelle den Ausführungsplan für Phase 4 'WebRTC Soundboard- & Audio-Sync'.
