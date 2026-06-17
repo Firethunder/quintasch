@@ -248,11 +248,18 @@ document.addEventListener('DOMContentLoaded', () => {
     soundboardButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const soundType = btn.getAttribute('data-sound');
-            if (soundType === 'roll') playRollSound();
-            else if (soundType === 'win') playWinSound();
-            else if (soundType === 'fail') playFailSound();
-            else if (soundType === 'tick') playTimerTick();
-            else if (soundType === 'buzzer') playTimerBuzzer();
+            
+            // Lokal abspielen
+            playProceduralSound(soundType);
+
+            // Synchronisieren
+            if (gameMode === 'sync') {
+                if (syncConn && syncConn.open) {
+                    syncConn.send({ action: 'syncCommand', type: 'playSound', sound: soundType });
+                }
+            } else {
+                broadcastSound(soundType);
+            }
         });
     });
 
@@ -1643,6 +1650,8 @@ function initSyncPeer(targetRoomId) {
                 startTimer(data.seconds);
             } else if (data.action === 'syncTimerReset') {
                 resetTimer();
+            } else if (data.action === 'syncPlaySound') {
+                playProceduralSound(data.sound);
             }
         });
 
