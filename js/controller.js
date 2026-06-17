@@ -1,5 +1,5 @@
 // Client PeerJS-Variablen
-import { playRollSound, setVolume, setMuted, getVolume, getMuted } from './audio.js';
+import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
 
 let peer = null;
 let conn = null;
@@ -98,6 +98,17 @@ function triggerVibration(pattern) {
             console.warn('Vibration fehlgeschlagen:', e);
         }
     }
+}
+
+/**
+ * Spielt einen Sound basierend auf dem Typ-String ab.
+ */
+function playProceduralSound(soundType) {
+    if (soundType === 'roll') playRollSound();
+    else if (soundType === 'win') playWinSound();
+    else if (soundType === 'fail') playFailSound();
+    else if (soundType === 'tick') playTimerTick();
+    else if (soundType === 'buzzer') playTimerBuzzer();
 }
 
 // Initialisierung bei Seitenaufruf
@@ -249,12 +260,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Settings toggle
     if (toggleSettingsButton && settingsPanel) {
         toggleSettingsButton.addEventListener('click', () => {
-            if (settingsPanel.style.display === 'none') {
-                settingsPanel.style.display = 'block';
-                toggleSettingsButton.textContent = 'Server-Einstellungen ausblenden';
+            if (settingsPanel.style.display === 'none' || settingsPanel.style.display === '') {
+                settingsPanel.style.display = 'flex';
+                toggleSettingsButton.textContent = 'Einstellungen ausblenden';
             } else {
                 settingsPanel.style.display = 'none';
-                toggleSettingsButton.textContent = 'Server-Einstellungen anzeigen';
+                toggleSettingsButton.textContent = 'Einstellungen anzeigen';
+            }
+        });
+    }
+
+    // Header Settings gear button click
+    const headerSettingsBtn = document.getElementById('header-settings-btn');
+    if (headerSettingsBtn && settingsPanel) {
+        headerSettingsBtn.addEventListener('click', () => {
+            settingsPanel.style.display = 'flex';
+        });
+    }
+
+    // Close Settings button click
+    const closeSettingsButton = document.getElementById('close-settings-button');
+    if (closeSettingsButton && settingsPanel) {
+        closeSettingsButton.addEventListener('click', () => {
+            settingsPanel.style.display = 'none';
+            if (toggleSettingsButton) {
+                toggleSettingsButton.textContent = 'Einstellungen anzeigen';
             }
         });
     }
@@ -773,6 +803,11 @@ function handleNewConnection(newConn) {
         // Timer abgelaufen Signal empfangen
         if (data.action === 'timerExpired') {
             triggerVibration([200, 100, 200, 100, 200]);
+        }
+
+        // Soundboard-Sync empfangen
+        if (data.action === 'syncPlaySound') {
+            playProceduralSound(data.sound);
         }
     });
 

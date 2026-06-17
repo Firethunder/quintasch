@@ -1875,6 +1875,11 @@ function broadcastSound(soundType, excludePeerId = null) {
             conn.send({ action: 'syncPlaySound', sound: soundType });
         }
     });
+    connections.forEach(conn => {
+        if (conn.open && conn.peer !== excludePeerId) {
+            conn.send({ action: 'syncPlaySound', sound: soundType });
+        }
+    });
 }
 
 function updateTestRigStakeOptions(activeSet) {
