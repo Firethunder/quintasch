@@ -1,5 +1,5 @@
 // Client PeerJS-Variablen
-import { playRollSound } from './audio.js';
+import { playRollSound, setVolume, setMuted, getVolume, getMuted } from './audio.js';
 
 let peer = null;
 let conn = null;
@@ -13,7 +13,9 @@ let isAnimating = false;
 let rattleInterval = null;
 
 // Audio-Checkbox DOM-Element & mobile-specials
-let clientSoundToggle = null;
+let clientVolumeInput = null;
+let clientVolumeDisplay = null;
+let clientMuteInput = null;
 let mobileDiceTable = null;
 let gameplayFormWrapper = null;
 
@@ -90,7 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
     joinErrorMsg = document.getElementById('join-error-msg');
     lobbyStatusTitle = document.getElementById('lobby-status-title');
     lobbySpinner = document.getElementById('lobby-spinner');
-    clientSoundToggle = document.getElementById('client-sound-toggle');
+    clientVolumeInput = document.getElementById('client-volume');
+    clientVolumeDisplay = document.getElementById('client-volume-display');
+    clientMuteInput = document.getElementById('client-mute');
     mobileDiceTable = document.getElementById('mobile-dice-table');
     gameplayFormWrapper = document.getElementById('gameplay-form-wrapper');
     lobbyPlayersList = document.getElementById('lobby-players-list');
@@ -188,10 +192,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (peerSecureInput) peerSecureInput.checked = peerConfig.secure !== false;
     }
 
-    // Lese Sound-Einstellung
-    const savedSoundPref = localStorage.getItem('quintasch_client_sound');
-    if (clientSoundToggle) {
-        clientSoundToggle.checked = savedSoundPref !== 'false';
+    // Audio-Einstellungen initialisieren
+    if (clientVolumeInput && clientMuteInput) {
+        const currentVol = getVolume();
+        const currentMute = getMuted();
+        
+        clientVolumeInput.value = Math.round(currentVol * 100);
+        if (clientVolumeDisplay) {
+            clientVolumeDisplay.textContent = `${Math.round(currentVol * 100)}%`;
+        }
+        clientMuteInput.checked = currentMute;
+        
+        clientVolumeInput.addEventListener('input', () => {
+            const val = parseFloat(clientVolumeInput.value) / 100;
+            setVolume(val);
+            if (clientVolumeDisplay) {
+                clientVolumeDisplay.textContent = `${clientVolumeInput.value}%`;
+            }
+        });
+        
+        clientMuteInput.addEventListener('change', () => {
+            setMuted(clientMuteInput.checked);
+        });
     }
 
     // Settings toggle
@@ -221,10 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 localStorage.removeItem('quintasch_peer_config');
             }
-
-            if (clientSoundToggle) {
-                localStorage.setItem('quintasch_client_sound', clientSoundToggle.checked ? 'true' : 'false');
-            }
             
             alert('Einstellungen gespeichert!');
             window.location.reload();
@@ -235,12 +253,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resetSettingsButton) {
         resetSettingsButton.addEventListener('click', () => {
             localStorage.removeItem('quintasch_peer_config');
-            localStorage.removeItem('quintasch_client_sound');
+            localStorage.removeItem('quintasch_client_volume');
+            localStorage.removeItem('quintasch_client_muted');
             if (peerHostInput) peerHostInput.value = '';
             if (peerPortInput) peerPortInput.value = '';
             if (peerPathInput) peerPathInput.value = '';
             if (peerSecureInput) peerSecureInput.checked = true;
-            if (clientSoundToggle) clientSoundToggle.checked = true;
+            setVolume(0.5);
+            setMuted(false);
+            if (clientVolumeInput) clientVolumeInput.value = 50;
+            if (clientVolumeDisplay) clientVolumeDisplay.textContent = '50%';
+            if (clientMuteInput) clientMuteInput.checked = false;
             alert('Einstellungen zurückgesetzt auf Standard!');
             window.location.reload();
         });
@@ -600,8 +623,8 @@ function handleNewConnection(newConn) {
             // Bestehenden Rassel-Interval bereinigen (Defense-in-depth)
             if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
 
-            // Spiele lokalen Rassel-Sound ab, falls aktiviert
-            if (clientSoundToggle && clientSoundToggle.checked) {
+            // Spiele lokalen Rassel-Sound ab, falls nicht stummgeschaltet
+            if (!getMuted()) {
                 let shakeCount = 0;
                 rattleInterval = setInterval(() => {
                     playRollSound();

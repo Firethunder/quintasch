@@ -150,9 +150,16 @@
                     <label for="peer-secure" style="margin-bottom: 0; font-size: 0.85rem;">Sicher (SSL/HTTPS)</label>
                 </div>
                 <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">Audio Einstellungen</h4>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="client-volume" style="font-size: 0.8rem; display: flex; justify-content: space-between;">
+                        <span>Lautstärke</span>
+                        <span id="client-volume-display">50%</span>
+                    </label>
+                    <input type="range" id="client-volume" min="0" max="100" value="50" style="width: 100%; cursor: pointer;">
+                </div>
                 <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                    <input type="checkbox" id="client-sound-toggle" checked>
-                    <label for="client-sound-toggle" style="margin-bottom: 0; font-size: 0.85rem;">Rassel-Sound abspielen</label>
+                    <input type="checkbox" id="client-mute">
+                    <label for="client-mute" style="margin-bottom: 0; font-size: 0.85rem;">Stummschalten (Mute)</label>
                 </div>
                 <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">Eigene Einsätze</h4>
                 <div class="form-group" style="margin-bottom: 10px; text-align: left;">
