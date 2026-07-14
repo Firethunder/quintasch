@@ -4,95 +4,98 @@ plan: 1
 wave: 1
 depends_on: []
 files_modified:
+  - js/audio.js
   - index.html
-  - css/style.css
   - js/app.js
+  - controller.html
+  - js/controller.js
 autonomous: true
 must_haves:
   truths:
-    - "Host UI features an 'Edit Set' button next to the stake set dropdown in the lobby panel"
-    - "Clicking 'Edit Set' opens a modal displaying the 10 penalty slots for the currently active stake set"
-    - "Each input field is labeled with its corresponding game combination (Standard, Pasch, Doppelpasch, Trasch, Full House, Straße, Quadrasch 1/2, Quintasch 1/2)"
-    - "Clicking 'Save' applies changes locally and updates the active stake options used in game and the test rig"
-    - "Clicking 'Reset' restores the selected preset's default values and refreshes the UI"
+    - "Host dashboard settings UI includes volume slider and mute checkbox"
+    - "Client controller settings UI includes volume slider and mute checkbox"
+    - "Audio volume scales instantly and muting stops all audio output"
+    - "Settings persist in localStorage for both host and client"
   artifacts:
-    - "index.html updated with editor button and modal structure"
-    - "css/style.css styled with cyberpunk neon modal layout"
-    - "js/app.js contains customStakeSets state management, input populate logic, save/reset handlers, and redirects references"
+    - "js/audio.js implements masterGainNode, setVolume, and setMuted"
 ---
 
-# Plan 1.1: Lobby Editor UI & Local Editing Logic
+# Plan 1.1: Audio Settings & Persistence
 
 <objective>
-Implement a customizable lobby editor on the Host Dashboard, allowing the host to dynamically customize the 10 individual penalties for any selected stake preset (including standard presets and the custom set) and immediately apply the changes locally.
+Introduce volume sliders and mute checkboxes to both Host Dashboard and Client Controller settings panels, persisting these preferences in localStorage and applying them dynamically via Web Audio API.
+
+Purpose: Allow players to adjust audio levels or mute the game without reloading.
+Output: Integrated master gain controls and settings UI wiring.
 </objective>
 
 <context>
 Load for context:
+- .gsd/SPEC.md
+- .gsd/STACK.md
+- js/audio.js
 - index.html
-- css/style.css
 - js/app.js
+- controller.html
+- js/controller.js
 </context>
 
 <tasks>
 
 <task type="auto">
-  <name>Einsatz-Set Editor UI & Styles hinzufügen</name>
-  <files>index.html,css/style.css</files>
+  <name>Implement Master Gain Control and State in js/audio.js</name>
+  <files>js/audio.js</files>
   <action>
-    1. In index.html, next to the '#stake-set-select' dropdown inside the '#stake-set-container', add a neon button '#edit-stakes-btn' labeled 'Set bearbeiten'.
-    2. Add the modal markup '#stake-editor-modal' at the bottom of the body. The modal should include a header 'Einsatz-Set bearbeiten', a form with 10 input fields (each with a label representing its index/combination name), and a footer with 'Speichern' (#save-edited-stakes-btn), 'Zurücksetzen' (#reset-edited-stakes-btn), and 'Abbrechen' (#close-editor-modal-btn) buttons.
-    3. The labels should map to:
-       - Slot 0: Standard-Einsatz
-       - Slot 1: Pasch
-       - Slot 2: Doppelpasch
-       - Slot 3: Trasch
-       - Slot 4: Full House
-       - Slot 5: Straße
-       - Slot 6: Quadrasch Option 1
-       - Slot 7: Quadrasch Option 2
-       - Slot 8: Quintasch Option 1
-       - Slot 9: Quintasch Option 2
-    4. In css/style.css, add modal overlay styling. Use 'position: fixed', 'z-index: 10000', 'background: rgba(11, 11, 15, 0.95)', 'backdrop-filter: blur(10px)'. Style the modal container with 'border: 2px solid var(--neon-cyan)', 'box-shadow: var(--glow-cyan)', and a scrollable body. Customize the inputs with standard form styling and neon borders on focus. Ensure responsive layout so it sits well on desktop and mobile.
-    AVOID: Using generic/plain white modal styles. Keep the theme dark obsidian with cyan and magenta neon glowing accents.
+    Add module variables `volume = 0.5` and `isMuted = false`.
+    On load, check and load these from localStorage using keys `quintasch_volume` and `quintasch_muted`.
+    In `getAudioContext()`, create a `masterGainNode = audioCtx.createGain()`, set its gain value to `isMuted ? 0 : volume`, and connect it to `ctx.destination`.
+    Export `setVolume(val)`, `setMuted(muted)`, `getVolume()`, and `getMuted()`.
+    Update `setVolume` and `setMuted` to save to localStorage and update `masterGainNode.gain` dynamically if initialized.
+    Update `playRollSound`, `playWinSound`, `playFailSound`, `playTimerTick`, and `playTimerBuzzer` to connect their final gain nodes to `masterGainNode` instead of `ctx.destination`.
+    AVOID: Connecting nodes directly to `ctx.destination` since it bypasses the master volume controls.
   </action>
-  <verify>Check that the '#edit-stakes-btn' is rendered in index.html, and the modal container '#stake-editor-modal' is present in the DOM with correct labels.</verify>
-  <done>UI elements and modal styles are added and look premium.</done>
+  <verify>Call `setVolume(0.25)` and verify the return of `getVolume()` is `0.25` and the localStorage value updates.</verify>
+  <done>Master volume and mute setters modify master gain value and persist to localStorage.</done>
 </task>
 
 <task type="auto">
-  <name>Editor-Logik und Zustandshandhabung implementieren</name>
-  <files>js/app.js</files>
+  <name>Integrate Audio Settings in Host Dashboard (index.html & js/app.js)</name>
+  <files>index.html,js/app.js</files>
   <action>
-    1. In js/app.js, define a mutable deep-copy of the 'STAKE_SETS' object named 'customStakeSets' to store the active modifications.
-    2. Add event listeners to '#edit-stakes-btn' to show the modal (set 'display: flex' on overlay) and populate the 10 input fields with the current values of the active preset from 'customStakeSets[activeStakeSet]'.
-    3. Add event listener to '#save-edited-stakes-btn' to:
-       - Read all 10 input values.
-       - Update the corresponding array entries in 'customStakeSets[activeStakeSet]'.
-       - Trigger 'updateTestRigStakeOptions(activeStakeSet)' so the local test dropdown refreshes immediately.
-       - Close the modal.
-    4. Add event listener to '#reset-edited-stakes-btn' to:
-       - Restore the selected preset values in 'customStakeSets[activeStakeSet]' from the original 'STAKE_SETS' object.
-       - Populate the modal input fields immediately with the restored values.
-       - Refresh the test rig dropdown.
-    5. Add event listener to '#close-editor-modal-btn' (and clicking the overlay background) to close/hide the modal without saving.
-    6. Replace references to 'STAKE_SETS[activeStakeSet]' in js/app.js (e.g. connections, broadcasts, test-rig updates) with 'customStakeSets[activeStakeSet]' so that all modules consume the edited stakes.
-    AVOID: Overwriting the original 'STAKE_SETS' object directly without keeping a backup, otherwise resetting defaults will be impossible.
+    In `index.html`, inside `#settings-panel`, add a new section 'Audio Einstellungen' containing an input slider `#audio-volume` (min 0, max 100, step 1) and a checkbox `#audio-mute`. Add a text display `#audio-volume-display` to show the volume percentage.
+    In `js/app.js`, import `setVolume`, `setMuted`, `getVolume`, `getMuted` from `./audio.js`.
+    On DOMContentLoaded, prefill `#audio-volume` and `#audio-mute` with values from `getVolume()` and `getMuted()`.
+    Add an input listener to `#audio-volume` to dynamically update volume and text display.
+    Add a change listener to `#audio-mute` to dynamically toggle mute state.
+    Update the `#reset-settings-button` click listener to reset volume to `50` and mute to unchecked.
+    AVOID: Triggering page reload when adjusting volume or mute settings, as they should be applied live.
   </action>
-  <verify>
-    Select 'Klassisch' preset, click 'Set bearbeiten', change 'Pasch' penalty value to '5 Kniebeugen', click 'Speichern'. Open the test rig stake dropdown and confirm it shows '5 Kniebeugen'. Click 'Set bearbeiten' again, click 'Zurücksetzen', and verify it restores to '1 Schluck (Pasch)'.
-  </verify>
-  <done>Modified stakes are successfully saved, updated in dropdowns, and can be restored to defaults.</done>
+  <verify>Adjusting the dashboard volume slider changes the displayed percentage text and persists the change in localStorage without refreshing the page.</verify>
+  <done>Host dashboard features functional volume and mute controls that save and apply instantly.</done>
+</task>
+
+<task type="auto">
+  <name>Integrate Audio Settings in Client Controller (controller.html & js/controller.js)</name>
+  <files>controller.html,js/controller.js</files>
+  <action>
+    In `controller.html`, inside `#settings-panel`, replace the `#client-sound-toggle` container with a new 'Audio Einstellungen' section including a volume slider `#client-volume` (min 0, max 100, step 1), a volume percentage display `#client-volume-display`, and a checkbox `#client-mute` (or reuse `#client-sound-toggle` as mute checkbox).
+    In `js/controller.js`, import `setVolume`, `setMuted`, `getVolume`, `getMuted` from `./audio.js`.
+    On DOMContentLoaded, prefill `#client-volume` and `#client-mute` from `./audio.js`.
+    Wire up input/change event listeners to update volume and mute live.
+    Update the `#reset-settings-button` click listener in `js/controller.js` to reset volume to `50` and mute to unchecked.
+    AVOID: Relying on page reloads for volume adjustment.
+  </action>
+  <verify>Dragging the client volume slider updates the percentage text display and persists the value in localStorage instantly.</verify>
+  <done>Client controller has interactive, persistent volume and mute settings.</done>
 </task>
 
 </tasks>
 
 <verification>
 After all tasks, verify:
-- [ ] 'Set bearbeiten' button displays next to preset selector
-- [ ] Clicking it opens a cyberpunk modal with 10 labeled text fields
-- [ ] Editing fields and saving updates the stakes in the local test rig select options
-- [ ] Resetting restores original values for the active preset
+- [ ] Changing the dashboard volume/mute settings updates the sound level of dice rolls and victory sounds instantly without page reload.
+- [ ] Changing the client volume/mute settings updates the sound level of roll sounds locally without page reload.
+- [ ] Refreshed pages reload the saved volume/mute values from localStorage.
 </verification>
 
 <success_criteria>

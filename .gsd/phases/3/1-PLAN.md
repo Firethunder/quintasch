@@ -5,95 +5,81 @@ wave: 1
 depends_on: []
 files_modified:
   - index.html
+  - css/style.css
   - js/app.js
 autonomous: true
 must_haves:
   truths:
-    - "Host connection panel includes an 'Als Host mitspielen' toggle and a custom Host name input field"
-    - "Toggling host-play pushes/removes the Host player object (peerId: 'host') in the players list, syncing it with connections"
-    - "When it is the host's turn, the Host Player Panel controls (bet select, stake select, roll button) are enabled and a visual active state is shown"
-    - "When it is not the host's turn, all controls in the Host Player Panel are disabled to prevent accidental rolling"
-    - "Toggling the pause checkbox on the Host Player Panel updates the host's pause status and broadcasts it to connected clients"
+    - "Host dashboard features a dedicated Soundboard panel in the right sidebar"
+    - "Soundboard panel remains visible when the simulated Test-Rig is collapsed"
+    - "Clicking each soundboard button triggers the corresponding procedural sound effect"
+    - "Buttons provide active-state scale feedback on click"
   artifacts:
-    - "index.html contains the Host Play toggle in lobby and pause toggle in sidebar panel"
-    - "js/app.js manages host player insertion/removal, turn-based input state enabling/disabling, roll integration, and pause state synchronization"
+    - "index.html has #soundboard-panel with five neon buttons"
+    - "js/app.js listens to sound button click events and invokes sound play functions"
 ---
 
-# Plan 3.1: Host Player Integration
+# Plan 3.1: Host Soundboard Panel
 
 <objective>
-Transform the local Test-Rig into a functional Host Player Panel. Register the host as a real player with a dedicated 'host' peerId in the central players list, wire the turn state to enable/disable controls, and implement a local pause option.
+Implement a beautiful, theme-conforming Soundboard panel in the dashboard sidebar, allowing the host to manually trigger game sounds (rattle, success, failure, timer tick, buzzer) with active-state micro-animations.
+
+Purpose: Let the host manually control the sound effects of the game session.
+Output: Soundboard sidebar panel and event hookups.
 </objective>
 
 <context>
 Load for context:
+- .gsd/SPEC.md
 - index.html
+- css/style.css
 - js/app.js
 </context>
 
 <tasks>
 
 <task type="auto">
-  <name>Host-Spieler Registrierungs-UI & Lobby-Logik einrichten</name>
-  <files>index.html,js/app.js</files>
+  <name>Implement Soundboard UI and Styles in index.html & css/style.css</name>
+  <files>index.html,css/style.css</files>
   <action>
-    1. In index.html, inside the Host connection panel (above '#players-count-display'), add a play toggle container. It must contain a checkbox '#host-play-toggle' ('Als Host mitspielen') and a collapsible input group '#host-name-group' with a text field '#host-player-name' (defaulting to 'Spielleiter').
-    2. Inside the sidebar panel ('#test-rig-panel'), rename the title to '#sidebar-player-title' ('Host-Spieler'). Add a flex row at the top of the panel with a checkbox '#host-pause-toggle' labeled 'Pausieren (Runde auslassen)'.
-    3. In js/app.js:
-       - Listen to changes on '#host-play-toggle'. When checked:
-         - Show the '#host-name-group' input.
-         - Retrieve the host name and push a local player object to the central 'players' array: '{ peerId: "host", name: hostName, paused: false, online: true }'.
-         - Rename the sidebar title to 'Spieler: [Name]'.
-         - Update lobby displays ('updateLobbyDisplay()'), broadcast updated list ('broadcastLobby()'), and broadcast sync state ('broadcastSyncState()').
-       - When unchecked:
-         - Hide '#host-name-group'.
-         - Filter out the player with 'peerId === "host"' from the 'players' array.
-         - Restore the sidebar title to 'Lokal Test-Rig'.
-         - Trigger lobby updates and client broadcasts.
-    AVOID: Modifying WebRTC client joining flows. The host player is pure local data but must appear in the shared 'players' list.
+    In `index.html`, inside `<aside class="sidebar">` between the `#test-rig-panel` and `#history-panel`, add a new panel `<div class="panel" id="soundboard-panel">`.
+    Include a panel title 'Soundboard' and a grid layout containing 5 buttons:
+    - data-sound="roll" (Dice Roll / Rasseln)
+    - data-sound="win" (Win / Erfolg)
+    - data-sound="fail" (Fail / Fehlwurf)
+    - data-sound="tick" (Timer Tick / Ticken)
+    - data-sound="buzzer" (Timer Buzzer / Buzzer, span 2 columns)
+    Style each button using `class="btn-neon sound-btn"` with specific neon color overrides matching their meanings (e.g. win = neon-green, fail/buzzer = neon-magenta, roll = neon-cyan, tick = neon-yellow).
+    In `css/style.css`, add a CSS active-state selector for `#soundboard-panel .sound-btn:active` that scales the button down slightly (`transform: scale(0.96)`) and boosts its `box-shadow` with `currentColor` for tactile feedback.
+    AVOID: Hiding `#soundboard-panel` in `.app-container.sidebar-hidden` style overrides so the soundboard stays visible during live controller play.
   </action>
-  <verify>
-    Open the dashboard. Toggle 'Als Host mitspielen' on. Verify the host player name appears in the connected players list and the connected count increases. Toggle off, and verify it is removed.
-  </verify>
-  <done>Host player can join and leave the lobby, and client-side broadcasts update successfully.</done>
+  <verify>Open index.html in browser, verify the Soundboard panel displays between Test-Rig and Wurfliste, buttons look consistent with cyberpunk aesthetics, and shrink on click.</verify>
+  <done>Soundboard panel is correctly integrated and styled in the sidebar.</done>
 </task>
 
 <task type="auto">
-  <name>Host Runden-Steuerung, Input-Aktivierung & Pause integrieren</name>
+  <name>Wire Soundboard Click Listeners in js/app.js</name>
   <files>js/app.js</files>
   <action>
-    1. In js/app.js, modify the 'startNextTurn()' function. Check if 'activePlayer.peerId === "host"'.
-       - If it is the host's turn:
-         - Enable the sidebar input selectors ('#player-bet', '#player-stake', '#player-custom-stake', and the roll button '#roll-button').
-         - Set the '#roll-button' text to 'Jetzt Würfeln!'.
-         - Add a CSS class or visual blink effect to the sidebar panel header to alert the host player.
-       - If it is NOT the host's turn:
-         - Disable all of the above input selectors and button.
-         - Set the '#roll-button' text to 'Warte auf ' + activePlayer.name + '...'.
-    2. In the '#roll-button' event listener in js/app.js:
-       - Ensure the roll is only allowed if 'activePlayer.peerId === "host"' OR if no players are registered yet (developer test-rig fallback).
-    3. Implement '#host-pause-toggle' click listener in js/app.js:
-       - Find the host player object in the 'players' array.
-       - Set its 'paused' attribute to matches the checkbox state.
-       - Trigger lobby updates and broadcast to connected clients immediately.
-       - If the host pauses themselves while it is currently their turn, trigger 'nextTurn()' to skip to the next player.
-    AVOID: Leaving the roll button enabled when it is a remote client's turn, as the host could accidentally click it and override the client.
+    In `js/app.js` inside the `DOMContentLoaded` event listener, select all `#soundboard-panel .sound-btn` elements.
+    Bind a click event listener to each button. On click, extract the `data-sound` attribute and play the corresponding sound:
+    - "roll" -> `playRollSound()`
+    - "win" -> `playWinSound()`
+    - "fail" -> `playFailSound()`
+    - "tick" -> `playTimerTick()`
+    - "buzzer" -> `playTimerBuzzer()`
+    AVOID: Duplicate imports or manual initialization issues (use the existing imports at the top of the file).
   </action>
-  <verify>
-    Start a game with a host player and a simulated client player. When it is the client's turn, check that the host roll button is disabled and shows 'Warte auf...'. When it is the host's turn, check that the button turns green and is clickable.
-  </verify>
-  <done>Host turn integration is complete. Panel controls are enabled only on host turns, and host pausing is synced.</done>
+  <verify>Clicking each soundboard button triggers the corresponding sound effect at the volume level set in settings.</verify>
+  <done>Soundboard buttons are wired to play sound effects locally on click.</done>
 </task>
 
 </tasks>
 
 <verification>
 After all tasks, verify:
-- [ ] Toggle button registers Host as a player in the connected list
-- [ ] Host player details are synced to connected clients
-- [ ] Sidebar controls are disabled during a remote client's turn
-- [ ] Sidebar controls are enabled and highlight during the host's turn
-- [ ] Local pause checkbox skips host turns and synchronizes state
+- [ ] Soundboard buttons are fully responsive on click and trigger correct audio outputs.
+- [ ] Hiding the local Test-Rig hides the Test-Rig panel but keeps the Soundboard panel visible in the sidebar.
 </verification>
 
 <success_criteria>

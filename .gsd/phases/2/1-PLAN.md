@@ -4,96 +4,91 @@ plan: 1
 wave: 1
 depends_on: []
 files_modified:
-  - index.html
-  - css/style.css
+  - controller.html
+  - js/controller.js
   - js/app.js
 autonomous: true
 must_haves:
   truths:
-    - "Under 600px width, dashboard 3D dice are resized to 50px with 8px gaps and remain in a single row without wrapping"
-    - "Under 600px width, header title is scaled down to 2.2rem and container padding is reduced"
-    - "Under 1024px width, a bottom navigation tab bar is visible, allowing toggling between the Spiel (main dashboard), Historie (history list), and Test-Rig panels"
-    - "The host connection panel collapses automatically when game starts, and can be toggled manually"
+    - "Client controller settings UI includes a checkbox to enable/disable vibration"
+    - "Mobile controller vibrates in sync with the rattle sound during dice rolls"
+    - "Mobile controller vibrates with a double pulse on success and a single long pulse on failure"
+    - "Mobile controller vibrates with a triple pulse when the penalty timer expires"
+    - "Vibration preferences persist in localStorage and respect user settings"
   artifacts:
-    - "index.html contains mobile navigation tabs markup and toggle buttons"
-    - "css/style.css contains bottom nav styles and media query overrides for fluid 3D dice and spacing"
-    - "js/app.js implements tab toggle logic and auto-collapse state for connection panel"
+    - "js/controller.js implements triggerVibration helper and integrates haptic feedback"
 ---
 
-# Plan 2.1: Dashboard Mobile Layout & Responsive CSS
+# Plan 2.1: Client Haptic Feedback
 
 <objective>
-Adapt the Host Dashboard UI for viewports under 600px (smartphones) by shrinking 3D dice dimensions, scaling headers, and introducing bottom navigation tabs to switch between views instead of vertical stacking.
+Integrate haptic vibration feedback on mobile clients via the Web Haptic API (`navigator.vibrate`), providing tactile feedback for dice rolling, success/failure outcomes, and penalty timer timeouts.
+
+Purpose: Enhance player immersion and responsiveness on smartphones.
+Output: Vibration setting UI control and dynamic haptic patterns.
 </objective>
 
 <context>
 Load for context:
-- index.html
-- css/style.css
+- .gsd/SPEC.md
+- controller.html
+- js/controller.js
 - js/app.js
 </context>
 
 <tasks>
 
 <task type="auto">
-  <name>Responsive CSS & Kompakte 3D-Würfel implementieren</name>
-  <files>css/style.css</files>
+  <name>Add Vibration Setting Control in controller.html</name>
+  <files>controller.html</files>
   <action>
-    1. In css/style.css, add a media query '@media (max-width: 600px)' to optimize dashboard typography, spacing, and 3D dice layout.
-    2. Under this query, override:
-       - '.header h1': set 'font-size: 2.2rem', 'letter-spacing: 2px', 'margin-bottom: 5px'.
-       - '.header p': set 'font-size: 0.95rem'.
-       - '.dashboard': set 'padding: 15px 10px'.
-       - '.panel': set 'padding: 15px'.
-    3. Scale down the 3D-dice layout for mobile viewports to prevent wrapping:
-       - '.dice-table': set 'gap: 8px', 'margin: 20px 0'.
-       - '.dice-table .cube-container': set 'width: 50px', 'height: 50px', 'perspective: 300px'.
-       - '.dice-table .face': set 'width: 50px', 'height: 50px', 'font-size: 1.4rem', 'border-radius: 8px'.
-    4. Override the 3D translation depth of the face elements to 'translateZ(25px)' (which is exactly half of the 50px cube size):
-       - '.dice-table .front': 'rotateY(0deg) translateZ(25px)'
-       - '.dice-table .back': 'rotateY(180deg) translateZ(25px)'
-       - '.dice-table .right': 'rotateY(90deg) translateZ(25px)'
-       - '.dice-table .left': 'rotateY(-90deg) translateZ(25px)'
-       - '.dice-table .top': 'rotateX(90deg) translateZ(25px)'
-       - '.dice-table .bottom': 'rotateX(-90deg) translateZ(25px)'
-    AVOID: Using 'scale()' or zoom transforms on the dice table as it flattens the 3D translation perspective and causes rendering glitches in Safari.
+    In `controller.html`, inside the settings panel under the 'Audio Einstellungen' section, add a new checkbox element `#client-vibrate` with the label 'Vibration aktivieren'. Pre-check the checkbox by default.
+    AVOID: Breaking existing settings layout; style it consistently with other settings checkboxes (e.g. `#client-mute`).
   </action>
-  <verify>
-    Inspect the dashboard using Chrome Developer Tools responsive mode (e.g. iPhone SE width 375px). Verify the 3D dice are rendered smaller (50px) in a single horizontal line, and do not wrap or overlap.
-  </verify>
-  <done>All 3D dice scale down cleanly to 50px and headers adapt fluidly on mobile viewports.</done>
+  <verify>Open controller settings panel and confirm the 'Vibration aktivieren' checkbox renders properly next to other audio settings.</verify>
+  <done>Vibration checkbox is present in controller settings markup.</done>
 </task>
 
 <task type="auto">
-  <name>Mobile Navigation Tabs & Einklapp-Panel erstellen</name>
-  <files>index.html,css/style.css,js/app.js</files>
+  <name>Implement Haptic Engine and Events in js/controller.js</name>
+  <files>js/controller.js</files>
   <action>
-    1. In index.html, add bottom navigation markup '#mobile-nav-tabs' at the bottom of the body. It should contain three buttons: '#tab-btn-game' (Spiel), '#tab-btn-history' (Historie), and '#tab-btn-test' (Test-Rig).
-    2. Add a toggle button '#toggle-connection-panel-btn' at the top of the Host Connection Panel, and wrap the inner connection options (QR Code, Stake Set Select, Server Settings) in a collapsible container '#collapsible-connection-content'.
-    3. In css/style.css, hide '#mobile-nav-tabs' on viewports larger than 1024px. Below 1024px, position it fixed at the bottom with high z-index, translucent background, neon border, and display active state highlights.
-    4. Also under 1024px, implement grid-cell overlays so only the selected panel is active:
-       - Default state: '.dashboard' is shown, '.sidebar' is hidden.
-       - Toggling 'Historie' or 'Test-Rig' hides '.dashboard' and displays only the corresponding sub-elements of the sidebar (History list or Test Rig panel).
-    5. In js/app.js:
-       - Register click listeners for the bottom tab buttons. Switch CSS classes on '.app-container' (e.g., '.show-history', '.show-test-rig') to show/hide sections dynamically.
-       - Implement connection panel collapse toggle logic.
-       - Auto-collapse the connection panel content when the game starts ('gameState = playing') to maximize vertical space.
-    AVOID: Breaking desktop layout. All tab layouts and connection collapsible button overrides must only apply to mobile viewports (widths < 1024px).
+    Add a module variable `isVibrateEnabled = true`.
+    On load, retrieve `quintasch_client_vibrate` from localStorage and set `isVibrateEnabled` accordingly (default: true).
+    Query the `#client-vibrate` element and bind a change event listener to toggle `isVibrateEnabled` and save to localStorage.
+    Add a helper function `triggerVibration(pattern)` that checks if `isVibrateEnabled` is true and if `'vibrate' in navigator`, and invokes `navigator.vibrate(pattern)`.
+    Define `isMyTurn = false` and set to `true` on `yourTurn` message and `false` on `waitTurn` message.
+    Integrate haptic patterns:
+    - Inside `rollStart` rattle interval: trigger `triggerVibration(50)` at each tick to match the 150ms rattle sound.
+    - Inside `rollResult` handler, if `isMyTurn` is true: if `data.success` is true, trigger success double pulse `triggerVibration([150, 100, 150])`; if false, trigger failure single pulse `triggerVibration(300)`.
+    - In `conn.on('data', ...)` listen for `data.action === 'timerExpired'`: trigger triple warning pulse `triggerVibration([200, 100, 200, 100, 200])`.
+    Update the reset settings button click listener to clear `quintasch_client_vibrate`, check the checkbox, and set `isVibrateEnabled = true`.
+    AVOID: Invoking vibration if the device does not support it (check `'vibrate' in navigator`) to prevent errors.
   </action>
-  <verify>
-    Switch Chrome DevTools to mobile mode. Tap the 'Historie' tab and confirm the dice table disappears and only the roll history list is shown. Tap 'Spiel' to return to the dice table. Confirm the Host Connection Panel collapses on game start.
-  </verify>
-  <done>Responsive bottom nav tabs and collapsible connection panels are fully implemented and functional.</done>
+  <verify>Adjusting the vibration checkbox updates `isVibrateEnabled` and persists the state. Roll start and results trigger haptic vibration commands in the JS execution flow.</verify>
+  <done>Client controller supports vibration settings, saves preferences, and executes specific haptic feedback cycles.</done>
+</task>
+
+<task type="auto">
+  <name>Broadcast Penalty Timer Expiration from js/app.js</name>
+  <files>js/app.js</files>
+  <action>
+    In `js/app.js` inside the timer countdown interval where `timerTimeLeft <= 0` is reached, broadcast a `{ action: 'timerExpired' }` payload to all connected clients.
+    Ensure this broadcast runs side-by-side with `playTimerBuzzer()`.
+    AVOID: Sending messages to disconnected peers by validating `conn.open` before sending.
+  </action>
+  <verify>Verify that when the timer expires, the host iterates through connected clients and sends the `timerExpired` signal.</verify>
+  <done>Dashboard signals penalty timeouts over WebRTC to connected controllers.</done>
 </task>
 
 </tasks>
 
 <verification>
 After all tasks, verify:
-- [ ] 3D dice are resized to 50px without wrapping on viewports under 600px width
-- [ ] Header typography scales down on mobile viewports
-- [ ] Mobile bottom nav is visible under 1024px and toggles views cleanly
-- [ ] Connection panel collapses on game start to conserve vertical screen space
+- [ ] Toggling vibration settings updates the local preference state in localStorage.
+- [ ] During the dice roll animation, the smartphone vibrates with short pulses matching the rattle sound.
+- [ ] A double pulse vibrates on success, a single long pulse vibrates on failure.
+- [ ] When the penalty timer runs out on the dashboard, the phone receives `timerExpired` and vibrates with a triple alarm pulse.
 </verification>
 
 <success_criteria>

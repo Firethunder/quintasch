@@ -1,5 +1,5 @@
 // Client PeerJS-Variablen
-import { playRollSound } from './audio.js';
+import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
 
 let peer = null;
 let conn = null;
@@ -13,9 +13,15 @@ let isAnimating = false;
 let rattleInterval = null;
 
 // Audio-Checkbox DOM-Element & mobile-specials
-let clientSoundToggle = null;
+let clientVolumeInput = null;
+let clientVolumeDisplay = null;
+let clientMuteInput = null;
+let clientVibrateInput = null;
 let mobileDiceTable = null;
 let gameplayFormWrapper = null;
+
+let isVibrateEnabled = true;
+let isMyTurn = false;
 
 // Rotationswinkel für die verschiedenen Augenzahlen, damit sie nach vorne zeigen.
 const faceAngles = {
@@ -80,6 +86,42 @@ let resetSettingsButton = null;
 // Raum-ID aus der URL auslesen (z.B. controller.html?room=xxxx)
 const roomId = new URLSearchParams(window.location.search).get('room');
 
+/**
+ * Triggert eine Vibration auf dem Client-Gerät, falls aktiviert und unterstützt.
+ * @param {number|number[]} pattern - Vibrationsmuster in ms.
+ */
+function triggerVibration(pattern) {
+    if (isVibrateEnabled && 'vibrate' in navigator) {
+        try {
+            navigator.vibrate(pattern);
+        } catch (e) {
+            console.warn('Vibration fehlgeschlagen:', e);
+        }
+    }
+}
+
+/**
+ * Spielt einen Sound basierend auf dem Typ-String ab und triggert optional Vibration.
+ */
+function playProceduralSound(soundType) {
+    if (soundType === 'roll') {
+        playRollSound();
+        triggerVibration(50);
+    } else if (soundType === 'win') {
+        playWinSound();
+        triggerVibration([100, 50, 100]);
+    } else if (soundType === 'fail') {
+        playFailSound();
+        triggerVibration(200);
+    } else if (soundType === 'tick') {
+        playTimerTick();
+        triggerVibration(10);
+    } else if (soundType === 'buzzer') {
+        playTimerBuzzer();
+        triggerVibration([150, 50, 150, 50, 150]);
+    }
+}
+
 // Initialisierung bei Seitenaufruf
 document.addEventListener('DOMContentLoaded', () => {
     // DOM-Elemente abrufen
@@ -90,7 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
     joinErrorMsg = document.getElementById('join-error-msg');
     lobbyStatusTitle = document.getElementById('lobby-status-title');
     lobbySpinner = document.getElementById('lobby-spinner');
-    clientSoundToggle = document.getElementById('client-sound-toggle');
+    clientVolumeInput = document.getElementById('client-volume');
+    clientVolumeDisplay = document.getElementById('client-volume-display');
+    clientMuteInput = document.getElementById('client-mute');
+    clientVibrateInput = document.getElementById('client-vibrate');
     mobileDiceTable = document.getElementById('mobile-dice-table');
     gameplayFormWrapper = document.getElementById('gameplay-form-wrapper');
     lobbyPlayersList = document.getElementById('lobby-players-list');
@@ -188,21 +233,79 @@ document.addEventListener('DOMContentLoaded', () => {
         if (peerSecureInput) peerSecureInput.checked = peerConfig.secure !== false;
     }
 
-    // Lese Sound-Einstellung
-    const savedSoundPref = localStorage.getItem('quintasch_client_sound');
-    if (clientSoundToggle) {
-        clientSoundToggle.checked = savedSoundPref !== 'false';
+    // Audio-Einstellungen initialisieren
+    if (clientVolumeInput && clientMuteInput) {
+        const currentVol = getVolume();
+        const currentMute = getMuted();
+        
+        clientVolumeInput.value = Math.round(currentVol * 100);
+        if (clientVolumeDisplay) {
+            clientVolumeDisplay.textContent = `${Math.round(currentVol * 100)}%`;
+        }
+        clientMuteInput.checked = currentMute;
+        
+        clientVolumeInput.addEventListener('input', () => {
+            const val = parseFloat(clientVolumeInput.value) / 100;
+            setVolume(val);
+            if (clientVolumeDisplay) {
+                clientVolumeDisplay.textContent = `${clientVolumeInput.value}%`;
+            }
+        });
+        
+        clientMuteInput.addEventListener('change', () => {
+            setMuted(clientMuteInput.checked);
+        });
+    }
+
+    // Vibration-Einstellungen initialisieren
+    const savedVibrate = localStorage.getItem('quintasch_client_vibrate');
+    isVibrateEnabled = savedVibrate !== 'false';
+    
+    // Haptik-Unterstützung prüfen
+    const vibrationWarning = document.getElementById('vibration-warning');
+    if (!('vibrate' in navigator)) {
+        isVibrateEnabled = false;
+        if (vibrationWarning) vibrationWarning.style.display = 'block';
+        if (clientVibrateInput) {
+            clientVibrateInput.checked = false;
+            clientVibrateInput.disabled = true;
+        }
+    } else if (clientVibrateInput) {
+        clientVibrateInput.checked = isVibrateEnabled;
+        clientVibrateInput.addEventListener('change', () => {
+            isVibrateEnabled = clientVibrateInput.checked;
+            localStorage.setItem('quintasch_client_vibrate', isVibrateEnabled.toString());
+        });
     }
 
     // Settings toggle
     if (toggleSettingsButton && settingsPanel) {
         toggleSettingsButton.addEventListener('click', () => {
-            if (settingsPanel.style.display === 'none') {
-                settingsPanel.style.display = 'block';
-                toggleSettingsButton.textContent = 'Server-Einstellungen ausblenden';
+            if (settingsPanel.style.display === 'none' || settingsPanel.style.display === '') {
+                settingsPanel.style.display = 'flex';
+                toggleSettingsButton.textContent = 'Einstellungen ausblenden';
             } else {
                 settingsPanel.style.display = 'none';
-                toggleSettingsButton.textContent = 'Server-Einstellungen anzeigen';
+                toggleSettingsButton.textContent = 'Einstellungen anzeigen';
+            }
+        });
+    }
+
+    // Header Settings gear button click
+    const headerSettingsBtn = document.getElementById('header-settings-btn');
+    if (headerSettingsBtn && settingsPanel) {
+        headerSettingsBtn.addEventListener('click', () => {
+            settingsPanel.style.display = 'flex';
+        });
+    }
+
+    // Close Settings button click
+    const closeSettingsButton = document.getElementById('close-settings-button');
+    if (closeSettingsButton && settingsPanel) {
+        closeSettingsButton.addEventListener('click', () => {
+            settingsPanel.style.display = 'none';
+            if (toggleSettingsButton) {
+                toggleSettingsButton.textContent = 'Einstellungen anzeigen';
             }
         });
     }
@@ -221,10 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 localStorage.removeItem('quintasch_peer_config');
             }
-
-            if (clientSoundToggle) {
-                localStorage.setItem('quintasch_client_sound', clientSoundToggle.checked ? 'true' : 'false');
-            }
             
             alert('Einstellungen gespeichert!');
             window.location.reload();
@@ -235,12 +334,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resetSettingsButton) {
         resetSettingsButton.addEventListener('click', () => {
             localStorage.removeItem('quintasch_peer_config');
-            localStorage.removeItem('quintasch_client_sound');
+            localStorage.removeItem('quintasch_client_volume');
+            localStorage.removeItem('quintasch_client_muted');
+            localStorage.removeItem('quintasch_client_vibrate');
             if (peerHostInput) peerHostInput.value = '';
             if (peerPortInput) peerPortInput.value = '';
             if (peerPathInput) peerPathInput.value = '';
             if (peerSecureInput) peerSecureInput.checked = true;
-            if (clientSoundToggle) clientSoundToggle.checked = true;
+            setVolume(0.5);
+            setMuted(false);
+            isVibrateEnabled = true;
+            if (clientVolumeInput) clientVolumeInput.value = 50;
+            if (clientVolumeDisplay) clientVolumeDisplay.textContent = '50%';
+            if (clientMuteInput) clientMuteInput.checked = false;
+            if (clientVibrateInput) clientVibrateInput.checked = true;
             alert('Einstellungen zurückgesetzt auf Standard!');
             window.location.reload();
         });
@@ -378,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Lokalen Rassel-Sound auf dem Handy abspielen
             playRollSound();
+            triggerVibration(100);
             
             // Deaktivieren und Text ändern
             gameplayRollButton.disabled = true;
@@ -542,6 +650,7 @@ function handleNewConnection(newConn) {
 
         // Runden-Steuerungsbefehle empfangen
         if (data.action === 'yourTurn') {
+            isMyTurn = true;
             // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
             if (lobbyContainer) lobbyContainer.style.display = 'none';
             if (gameplayContainer) gameplayContainer.style.display = 'block';
@@ -562,6 +671,7 @@ function handleNewConnection(newConn) {
         }
 
         if (data.action === 'waitTurn') {
+            isMyTurn = false;
             // Inaktiver Spieler: Halte Gameplay-Formular sichtbar für Eingaben
             if (lobbyContainer) lobbyContainer.style.display = 'none';
             if (gameplayContainer) gameplayContainer.style.display = 'block';
@@ -600,18 +710,19 @@ function handleNewConnection(newConn) {
             // Bestehenden Rassel-Interval bereinigen (Defense-in-depth)
             if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
 
-            // Spiele lokalen Rassel-Sound ab, falls aktiviert
-            if (clientSoundToggle && clientSoundToggle.checked) {
-                let shakeCount = 0;
-                rattleInterval = setInterval(() => {
+            // Spiele lokalen Rassel-Sound und Vibration ab
+            let shakeCount = 0;
+            rattleInterval = setInterval(() => {
+                if (!getMuted()) {
                     playRollSound();
-                    shakeCount++;
-                    if (shakeCount >= 8) {
-                        clearInterval(rattleInterval);
-                        rattleInterval = null;
-                    }
-                }, 150);
-            }
+                }
+                triggerVibration(50);
+                shakeCount++;
+                if (shakeCount >= 8) {
+                    clearInterval(rattleInterval);
+                    rattleInterval = null;
+                }
+            }, 150);
 
             // Warte einen Frame, damit der Browser die Würfel erst sichtbar rendert (display:none → flex),
             // bevor die CSS Transition gestartet wird — sonst wird die Transition übersprungen.
@@ -648,6 +759,15 @@ function handleNewConnection(newConn) {
             // Animations-Flag und Rassel-Interval zurücksetzen
             isAnimating = false;
             if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
+
+            // Erfolg oder Fehlversuch Vibration triggern
+            if (isMyTurn) {
+                if (data.success) {
+                    triggerVibration([150, 100, 150]);
+                } else {
+                    triggerVibration(300);
+                }
+            }
 
             // Verberge Würfeltisch auf dem rollenden Gerät (falls aktiv gewesen) und zeige Form wieder an
             if (mobileDiceTable) mobileDiceTable.style.display = 'none';
@@ -700,6 +820,16 @@ function handleNewConnection(newConn) {
 
                 rollResultOverlay.style.display = 'flex';
             }
+        }
+
+        // Timer abgelaufen Signal empfangen
+        if (data.action === 'timerExpired') {
+            triggerVibration([200, 100, 200, 100, 200]);
+        }
+
+        // Soundboard-Sync empfangen
+        if (data.action === 'syncPlaySound') {
+            playProceduralSound(data.sound);
         }
     });
 

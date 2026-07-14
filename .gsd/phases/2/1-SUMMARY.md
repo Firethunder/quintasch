@@ -1,30 +1,32 @@
 ---
 phase: 2
 plan: 1
-completed_at: 2026-06-16T22:52:00+02:00
-duration_minutes: 6
+completed_at: 2026-06-17T21:18:00+02:00
+duration_minutes: 15
 ---
 
-# Summary: Dashboard Mobile Layout & Responsive CSS
+# Summary: Client-seitiges Vibrations-Feedback (Web Haptic API)
 
 ## Results
-- 2 tasks completed
+- 3 tasks completed
 - All verifications passed
 
 ## Tasks Completed
 | Task | Description | Commit | Status |
 |------|-------------|--------|--------|
-| 1 | Responsive CSS & Kompakte 3D-Würfel implementieren | `e0b5d97` | ✅ |
-| 2 | Mobile Navigation Tabs & Einklapp-Panel erstellen | `852e7d1` | ✅ |
+| 1 | Add Vibration Setting Control in controller.html | `1190fd2` | ✅ |
+| 2 | Implement Haptic Engine and Events in js/controller.js | `0b935ec` | ✅ |
+| 3 | Broadcast Penalty Timer Expiration from js/app.js | `5109f0e` | ✅ |
 
 ## Deviations Applied
 None — executed as planned.
 
 ## Files Changed
-- `index.html` - Embedded mobile bottom navigation tab bar `#mobile-nav-tabs` and wrapped connection panel content into `#collapsible-connection-content` with a collapse trigger button.
-- `css/style.css` - Defined media queries under `600px` for header layout/paddings and 50px 3D dice resizing with translation depths. Defined bottom nav tab styling and tab overlay visibility rules under `1024px`.
-- `js/app.js` - Wired click listeners for bottom navigation switching, connection einklappen/ausklappen toggler, and automated auto-collapse on game start inside `startGame()`.
+- [controller.html](file:///D:/Coding/gemini/quintasch/controller.html) - Added `#client-vibrate` checkbox inside the settings panel UI.
+- [js/controller.js](file:///D:/Coding/gemini/quintasch/js/controller.js) - Added `isVibrateEnabled` preference and checkbox binding, implemented `triggerVibration(pattern)` helper, tracked `isMyTurn` state, added vibration triggers in `rollStart` rattle interval (50ms pulses), `rollResult` outcomes (double pulse for success, long single pulse for failure), and `timerExpired` message (triple warning pulse).
+- [js/app.js](file:///D:/Coding/gemini/quintasch/js/app.js) - Broadcasts the `{ action: 'timerExpired' }` event over WebRTC to all connected client devices when the Host Dashboard countdown reaches zero.
 
 ## Verification
-- Syntax check validation: ✅ Passed (Syntax verified using `node --check js/app.js`)
-- Layout logic and media query integrity: ✅ Passed (All classes and styles properly align under target widths)
+- Local syntax and compilation checks (`node --check`) pass: ✅ Passed
+- Vibration checkbox toggle successfully loads, sets, and resets `quintasch_client_vibrate` preference in localStorage: ✅ Passed
+- Rattle intervals, outcomes, and penalty timeout signals run vibration commands in correct code flows: ✅ Passed

@@ -1,5 +1,5 @@
 import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, BET_PROBABILITIES } from './game.js';
-import { playRollSound, playWinSound, playFailSound, playTimerTick } from './audio.js';
+import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
 
 // Rotationswinkel für die verschiedenen Augenzahlen, damit sie nach vorne zeigen.
 const faceAngles = {
@@ -121,6 +121,9 @@ const peerPathInput = document.getElementById('peer-path');
 const peerSecureInput = document.getElementById('peer-secure');
 const saveSettingsButton = document.getElementById('save-settings-button');
 const resetSettingsButton = document.getElementById('reset-settings-button');
+const audioVolumeInput = document.getElementById('audio-volume');
+const audioVolumeDisplay = document.getElementById('audio-volume-display');
+const audioMuteInput = document.getElementById('audio-mute');
 
 // Initialisierung bei Seitenaufruf
 document.addEventListener('DOMContentLoaded', () => {
@@ -216,6 +219,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Audio-Einstellungen initialisieren
+    if (audioVolumeInput && audioMuteInput) {
+        const currentVol = getVolume();
+        const currentMute = getMuted();
+        
+        audioVolumeInput.value = Math.round(currentVol * 100);
+        if (audioVolumeDisplay) {
+            audioVolumeDisplay.textContent = `${Math.round(currentVol * 100)}%`;
+        }
+        audioMuteInput.checked = currentMute;
+        
+        audioVolumeInput.addEventListener('input', () => {
+            const val = parseFloat(audioVolumeInput.value) / 100;
+            setVolume(val);
+            if (audioVolumeDisplay) {
+                audioVolumeDisplay.textContent = `${audioVolumeInput.value}%`;
+            }
+        });
+        
+        audioMuteInput.addEventListener('change', () => {
+            setMuted(audioMuteInput.checked);
+        });
+    }
+
+    // Soundboard Klick-Listeners registrieren
+    const soundboardButtons = document.querySelectorAll('#soundboard-panel .sound-btn');
+    soundboardButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const soundType = btn.getAttribute('data-sound');
+            
+            // Lokal abspielen
+            playProceduralSound(soundType);
+
+            // Synchronisieren
+            if (gameMode === 'sync') {
+                if (syncConn && syncConn.open) {
+                    syncConn.send({ action: 'syncCommand', type: 'playSound', sound: soundType });
+                }
+            } else {
+                broadcastSound(soundType);
+            }
+        });
+    });
+
     // Settings save
     saveSettingsButton.addEventListener('click', () => {
         const host = peerHostInput.value.trim();
@@ -237,10 +284,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Settings reset
     resetSettingsButton.addEventListener('click', () => {
         localStorage.removeItem('quintasch_peer_config');
+        localStorage.removeItem('quintasch_volume');
+        localStorage.removeItem('quintasch_muted');
         peerHostInput.value = '';
         peerPortInput.value = '';
         peerPathInput.value = '';
         peerSecureInput.checked = true;
+        setVolume(0.5);
+        setMuted(false);
         alert('Einstellungen zurückgesetzt auf Standard! Seite wird neu geladen.');
         window.location.reload();
     });
@@ -848,6 +899,15 @@ function startTimer(seconds) {
         if (timerTimeLeft <= 0) {
             clearInterval(timerInterval);
             timerInterval = null;
+            playTimerBuzzer();
+
+            // Sende Signal an alle offenen Client-Verbindungen
+            connections.forEach(c => {
+                if (c.open) {
+                    c.send({ action: 'timerExpired' });
+                }
+            });
+
             timerText.textContent = 'ZEIT ABGELAUFEN!';
             timerText.style.color = 'var(--neon-magenta)';
             timerText.style.textShadow = 'var(--glow-magenta)';
@@ -1058,7 +1118,7 @@ function initHostPeer(forcedId = null) {
             }
 
             if (data && data.action === 'syncCommand') {
-                handleSyncCommand(data);
+                handleSyncCommand(data, conn);
                 return;
             }
 
@@ -1590,6 +1650,8 @@ function initSyncPeer(targetRoomId) {
                 startTimer(data.seconds);
             } else if (data.action === 'syncTimerReset') {
                 resetTimer();
+            } else if (data.action === 'syncPlaySound') {
+                playProceduralSound(data.sound);
             }
         });
 
@@ -1771,7 +1833,7 @@ function broadcastSyncState() {
 /**
  * Verarbeitet Befehle, die von sekundären Dashboards gesendet wurden (Host-seitig).
  */
-function handleSyncCommand(data) {
+function handleSyncCommand(data, conn = null) {
     if (gameMode === 'sync') return;
     
     console.log('Verarbeite Sync-Befehl auf Host:', data);
@@ -1786,7 +1848,38 @@ function handleSyncCommand(data) {
             stakeSetSelect.value = data.value;
             stakeSetSelect.dispatchEvent(new Event('change'));
         }
+    } else if (data.type === 'playSound') {
+        playProceduralSound(data.sound);
+        broadcastSound(data.sound, conn ? conn.peer : null);
     }
+}
+
+/**
+ * Spielt einen Sound basierend auf dem Typ-String ab.
+ */
+function playProceduralSound(soundType) {
+    if (soundType === 'roll') playRollSound();
+    else if (soundType === 'win') playWinSound();
+    else if (soundType === 'fail') playFailSound();
+    else if (soundType === 'tick') playTimerTick();
+    else if (soundType === 'buzzer') playTimerBuzzer();
+}
+
+/**
+ * Sendet ein Soundboard-Ereignis an alle registrierten Sync-Dashboards, optional ausgenommen ein bestimmter Peer.
+ */
+function broadcastSound(soundType, excludePeerId = null) {
+    if (gameMode === 'sync') return;
+    syncConnections.forEach(conn => {
+        if (conn.open && conn.peer !== excludePeerId) {
+            conn.send({ action: 'syncPlaySound', sound: soundType });
+        }
+    });
+    connections.forEach(conn => {
+        if (conn.open && conn.peer !== excludePeerId) {
+            conn.send({ action: 'syncPlaySound', sound: soundType });
+        }
+    });
 }
 
 function updateTestRigStakeOptions(activeSet) {

@@ -1,11 +1,11 @@
 ---
 phase: 4
 plan: 1
-completed_at: 2026-06-16T23:15:00Z
+completed_at: 2026-06-17T21:26:00+02:00
 duration_minutes: 10
 ---
 
-# Summary: WebRTC Sync & Multi-Client Broadcast
+# Summary: WebRTC Soundboard- & Audio-Sync
 
 ## Results
 - 2 tasks completed
@@ -14,17 +14,16 @@ duration_minutes: 10
 ## Tasks Completed
 | Task | Description | Commit | Status |
 |------|-------------|--------|--------|
-| 1 | Host-seitige Persistierung der Einsatz-Sets in localStorage | 8ae73e7 | ✅ |
-| 2 | Client-seitige Behebung der Einsatz-Synchronisierung für 'eigenes' Set | 93d7ff1 | ✅ |
+| 1 | Implement Host Broadcasting and Command Routing in js/app.js | `5f66b05` | ✅ |
+| 2 | Implement Sync Dashboard Action Handler and Controller Routing in js/app.js | `bb3f4da` | ✅ |
 
 ## Deviations Applied
-- [Rule 1 - Bug] Removed duplicate `appContainer` declaration in `js/app.js` inside the `DOMContentLoaded` event listener that caused a `SyntaxError` on load.
+None — executed as planned.
 
 ## Files Changed
-- [js/app.js](file:///D:/Coding/gemini/quintasch/js/app.js) - Added try-catch localStorage loading logic for `customStakeSets` on start, and save logic in edit/reset handlers.
-- [js/controller.js](file:///D:/Coding/gemini/quintasch/js/controller.js) - Refactored `updateStakeOptions` to check for and prioritize host-transmitted custom options over local options, restoring correct Webrtc sync for 'eigenes' set.
+- [js/app.js](file:///D:/Coding/gemini/quintasch/js/app.js) - Added `playProceduralSound` helper, updated `handleSyncCommand` to support `playSound` commands and pass connection to exclude sender on broadcast, added `broadcastSound` helper to send messages to all secondary dashboards (excluding sender), added `syncPlaySound` data listener on secondary dashboards, and updated soundboard button click handlers to route sound actions over WebRTC when in sync mode.
 
 ## Verification
-- Stake changes on the host persist after a dashboard page refresh: ✅ Passed
-- Client controllers receive and render host-edited stakes for the 'eigenes' set: ✅ Passed
-- Non-active players see waitTurn notifications with host player name when it's host's turn: ✅ Passed
+- Host playing soundboard plays sound locally and broadcasts `syncPlaySound` to all secondary dashboards.
+- Secondary dashboard clicking soundboard button plays sound locally and sends `playSound` command to Host. Host plays sound and broadcasts to all other dashboards (with sender peer exclusion).
+- Double-triggering is successfully prevented on the sender dashboard by passing the connection's peer ID to the broadcast function to exclude it.

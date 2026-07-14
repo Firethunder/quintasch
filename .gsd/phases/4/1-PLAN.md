@@ -5,66 +5,67 @@ wave: 1
 depends_on: []
 files_modified:
   - js/app.js
-  - js/controller.js
 autonomous: true
 must_haves:
   truths:
-    - "Host custom stake sets are persistently loaded from and saved to localStorage ('quintasch_custom_stakes')"
-    - "Client controller app correctly displays the host's custom edited stakes (including for the 'eigenes' set) instead of ignoring host options"
+    - "Host triggers play soundboard and secondary dashboards play the corresponding sound effect in sync"
+    - "Secondary dashboard clicks soundboard button and the play command synchronizes to Host and other dashboards"
   artifacts:
-    - "js/app.js contains localStorage load/save logic for customStakeSets"
-    - "js/controller.js contains fixed updateStakeOptions function utilizing host options first"
+    - "js/app.js implements broadcastSound helper to send syncPlaySound messages to all syncConnections"
+    - "js/app.js handleSyncCommand processes playSound command on Host"
+    - "js/app.js syncConn.on('data') processes syncPlaySound action on secondary dashboards"
 ---
 
-# Plan 4.1: WebRTC Sync & Multi-Client Broadcast
+# Plan 4.1: WebRTC Soundboard- & Audio-Sync
 
 <objective>
-Ensure custom stakes edits persist across host reloads and are correctly synchronized to connected client controllers (especially the 'eigenes' set).
+Synchronize manual soundboard events between the host dashboard and connected secondary (sync) dashboards. Clicking a soundboard button on any dashboard should play the sound locally and trigger it on all other connected dashboards.
+
+Purpose: Sync sound feedback across multiple dashboard screens.
+Output: Synchronized sound board play events over WebRTC.
 </objective>
 
 <context>
 Load for context:
+- .gsd/SPEC.md
 - js/app.js
-- js/controller.js
+- js/audio.js
 </context>
 
 <tasks>
 
 <task type="auto">
-  <name>Host-seitige Persistierung der Einsatz-Sets implementieren</name>
+  <name>Implement Host Broadcasting and Command Routing in js/app.js</name>
   <files>js/app.js</files>
   <action>
-    1. In js/app.js, near the top where `customStakeSets` is initialized (line 23), add a try-catch block to load `customStakeSets` from localStorage key 'quintasch_custom_stakes'.
-    2. In the stake editor save handler ('saveEditedStakesBtn' click listener) and reset handler ('resetEditedStakesBtn' click listener), save the updated `customStakeSets` to localStorage under the key 'quintasch_custom_stakes'.
-    AVOID: Breaking standard preset fallbacks if the localStorage key does not exist or has invalid JSON.
+    Create a helper function `playProceduralSound(soundType)` that maps string IDs ('roll', 'win', 'fail', 'tick', 'buzzer') to their respective imported play functions (`playRollSound()`, etc.).
+    Create a helper function `broadcastSound(soundType)` that loops over `syncConnections` and sends `{ action: 'syncPlaySound', sound: soundType }` to all open connections.
+    In `handleSyncCommand(data)`, add a handler for `data.type === 'playSound'`. When received by the Host, it should play the sound using `playProceduralSound(data.sound)` and then broadcast it to all other secondary dashboards using `broadcastSound(data.sound)`.
+    AVOID: Broadcasting if `gameMode === 'sync'` to prevent infinite feedback loops.
   </action>
-  <verify>
-    Modify a stake set in the lobby editor, reload the page, and open the lobby editor again. Verify the modified values are still present.
-  </verify>
-  <done>Custom stake sets persist on the host after reloading.</done>
+  <verify>Check code for loop safety; verify host side code structure.</verify>
+  <done>Host broadcast logic and syncCommand handling are implemented in js/app.js.</done>
 </task>
 
 <task type="auto">
-  <name>Client-seitige Behebung der Einsatz-Synchronisierung für 'eigenes' Set</name>
-  <files>js/controller.js</files>
+  <name>Implement Sync Dashboard Action Handler and Controller Routing in js/app.js</name>
+  <files>js/app.js</files>
   <action>
-    1. In js/controller.js, inside the `updateStakeOptions(set, options)` function (lines 906-945), modify the logic so that if the `options` array is passed and is not empty, it is used directly to populate the select element (even if `set === 'eigenes'`).
-    2. If the `options` array is empty or undefined, only then fallback to loading custom stakes from the client's local storage ('quintasch_custom_stakes') or using the 'Standard-Einsatz' default.
-    AVOID: Overriding the host's custom stakes with client-local values, as this breaks synchronization during gameplay.
+    In `js/app.js` inside the `initSyncPeer` message handler (`syncConn.on('data')`), handle `data.action === 'syncPlaySound'` by calling `playProceduralSound(data.sound)`.
+    Update the soundboard click listeners in `js/app.js`. If `gameMode === 'sync'`, send `{ action: 'syncCommand', type: 'playSound', sound: soundType }` via `syncConn`. If not in sync mode, call `playProceduralSound(soundType)` and `broadcastSound(soundType)`.
+    AVOID: Playing the sound locally on the secondary dashboard BEFORE sending the command to the host if that causes double-triggering when the host broadcasts it back. If host broadcasts it to all, the sender sync-dashboard will receive the broadcast. To avoid double-triggering, either filter the broadcast on the host (do not send back to sender peer) OR only play it when receiving the broadcast. Since PeerJS connections are point-to-point, the simplest and most robust way is: the secondary dashboard plays locally and sends to host, and host broadcasts to all *other* connections (filtering out the sender connection). Let's implement sender filtering in `broadcastSound(soundType, excludePeerId)`.
   </action>
-  <verify>
-    Connect a client controller to a host. Change the host's active set to 'eigenes' and edit a few values in the lobby editor. Confirm that the client controller's select dropdown immediately displays the custom edited stakes.
-  </verify>
-  <done>Client controller correctly synchronizes and displays host-edited custom stakes.</done>
+  <verify>Check click routing logic and exclusions to prevent double plays.</verify>
+  <done>Sync dashboards receive and play host-initiated sounds, and secondary clicks trigger sounds globally without doubling.</done>
 </task>
 
 </tasks>
 
 <verification>
 After all tasks, verify:
-- [ ] Stake changes on the host persist after a dashboard page refresh
-- [ ] Client controllers receive and render host-edited stakes for the 'eigenes' set
-- [ ] Non-active players see waitTurn notifications with host player name when it's host's turn
+- [ ] Host clicking soundboard plays sound locally and on sync dashboards.
+- [ ] Sync dashboard clicking soundboard plays sound locally, sends to host, and host plays sound and propagates to other sync dashboards.
+- [ ] No double-triggering or loops occur during propagation.
 </verification>
 
 <success_criteria>

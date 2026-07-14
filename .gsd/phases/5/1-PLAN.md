@@ -7,71 +7,69 @@ files_modified: []
 autonomous: true
 must_haves:
   truths:
-    - "Lobby-Stake-Editor milestone has all specified features implemented"
-    - "Mobile responsive CSS layout displays without visual errors and service worker registers on start"
-  artifacts:
-    - ".gsd/phases/5/1-SUMMARY.md documents the audit results"
+    - "Verify that Host and Client mute/volume state persists independently in localStorage keys"
+    - "Verify that all procedural audio play functions route through the master gain node"
+    - "Verify that mobile controller vibration triggers execute safely on non-supporting devices without crashing"
+    - "Verify that WebRTC soundboard events trigger across connected screens without echo or feedback loop"
 ---
 
 # Plan 5.1: Verification & Polish
 
 <objective>
-Verify that all milestone features (Custom stakes editing, mobile responsiveness, Host Player, Webrtc Sync, and PWA capabilities) work correctly without regressions.
+Conduct a comprehensive review, code audit, and manual/automated verification of the audio settings, client-side haptics, host soundboard panel, and WebRTC sound synchronization features implemented throughout this milestone.
+
+Purpose: Guarantee system robustness and high UX quality across mobile and desktop devices.
+Output: Validated codebase and completed milestone audit.
 </objective>
 
 <context>
 Load for context:
+- .gsd/SPEC.md
 - index.html
+- controller.html
 - js/app.js
 - js/controller.js
-- sw.js
-- manifest.json
+- js/audio.js
 </context>
 
 <tasks>
 
 <task type="auto">
-  <name>Review responsive layout, styling, and navigation</name>
-  <files>index.html,css/style.css</files>
+  <name>Code Audit of Audio Routing & LocalStorage Keys</name>
+  <files>js/audio.js,js/app.js,js/controller.js</files>
   <action>
-    Inspect index.html and css/style.css to verify that:
-    1. Mobile navigation tabs are configured correctly and active class toggles.
-    2. Desktop layout behaves as intended and doesn't conflict with mobile media query styles.
-    3. Cube translations (e.g. 50px 3D cubes) render properly under mobile.
-    AVOID: Modifying working CSS properties unless there are layout regressions.
+    Review the audio routing implementation in `js/audio.js` to ensure every oscillator, noise buffer source, and gain node connects to the correct master gain node.
+    Confirm that `localStorage` settings keys are scoped properly:
+    - Host uses `quintasch_host_volume` and `quintasch_host_muted`.
+    - Client (Controller) uses `quintasch_client_volume` and `quintasch_client_muted` (or local storage keys prefixing with client indicators).
+    Verify that toggling mute and volume dynamically adjusts the gain without restarting the audio context or breaking active playing nodes.
+    AVOID: Local storage key name collisions where Host and Client on the same host browser overwrite each other's audio levels.
   </action>
-  <verify>
-    Verify CSS media queries in css/style.css.
-  </verify>
-  <done>All styles and layout assets are confirmed clean and functional.</done>
+  <verify>Run static syntax check on js/audio.js, js/app.js, and js/controller.js to verify there are no syntax errors or typos in settings keys.</verify>
+  <done>Audio routing is audited, localStorage keys are confirmed non-colliding, and settings persistence is verified.</done>
 </task>
 
 <task type="auto">
-  <name>Review game logic, synchronization, and PWA capabilities</name>
-  <files>js/app.js,js/controller.js,sw.js,manifest.json</files>
+  <name>E2E Event & Haptic Fallback Verification</name>
+  <files>js/app.js,js/controller.js</files>
   <action>
-    Verify that:
-    1. Host player registrations push and pull correctly from players array.
-    2. Host pause toggle skips turns and updates client controllers.
-    3. Custom stakes load from and save to host's localStorage.
-    4. Client controllers correctly load host-defined custom stakes on join.
-    5. Service worker and manifest are properly structured and linked.
-    AVOID: Changing working event listeners.
+    Audit WebRTC message payloads across both host and client:
+    - Host-to-Client: check that roll events, outcome events, and timer-expired events correctly trigger client-side vibrations.
+    - Host-to-Sync-Dashboard: check that manual soundboard events are correctly propagated without echoes.
+    Verify that haptic triggers in `js/controller.js` check for `'vibrate' in navigator` to prevent crashes on desktop browsers or devices lacking a vibration motor.
+    Verify that vibration settings can be fully disabled in the client UI and that no vibration commands are run when disabled.
   </action>
-  <verify>
-    Check WebRTC message handling and state persistence code in js/app.js and js/controller.js.
-  </verify>
-  <done>All functionality is confirmed robust and synced.</done>
+  <verify>Audit all WebRTC connection data actions to ensure clean routing and correct vibration fallback guards.</verify>
+  <done>Event flow is checked for routing loops, and haptic fallback logic is validated on all supported platforms.</done>
 </task>
 
 </tasks>
 
 <verification>
 After all tasks, verify:
-- [ ] No regression or visual issues on small screens
-- [ ] Host player integrates smoothly with game loops
-- [ ] Sync logic functions correctly across WebRTC connections
-- [ ] PWA installation config is valid
+- [ ] No syntax errors exist in the codebase.
+- [ ] Audio master gain nodes and mute states react immediately to UI volume/mute changes.
+- [ ] Vibration guards prevent runtime exceptions on non-vibrating platforms (desktop).
 </verification>
 
 <success_criteria>
