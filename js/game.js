@@ -2,7 +2,7 @@ export const BET_RANKS = {
     'none': 0,
     'pasch': 1,
     'doppelpasch': 2,
-    'trasch': 3,
+    'drasch': 3,
     'fullhouse': 4,
     'strasse': 5,
     'quadrasch': 6,
@@ -13,7 +13,7 @@ export const BET_LABELS = {
     'none': 'Kein Einsatz',
     'pasch': 'Pasch',
     'doppelpasch': 'Doppelpasch',
-    'trasch': 'Trasch',
+    'drasch': 'Drasch',
     'fullhouse': 'Full House',
     'strasse': 'Straße',
     'quadrasch': 'Quadrasch',
@@ -24,7 +24,7 @@ export const BET_PROBABILITIES = {
     'none': '100%',
     'pasch': '~90.7%',
     'doppelpasch': '~23.1%',
-    'trasch': '~15.4%',
+    'drasch': '~15.4%',
     'fullhouse': '~3.9%',
     'strasse': '~3.1%',
     'quadrasch': '~1.9%',
@@ -35,7 +35,7 @@ export const BET_RULES = {
     'none': 'Zuschauer / Kein Risiko.',
     'pasch': 'Das aktuelle Getränk muss innerhalb eines 30-Sekunden-Timers getrunken werden.',
     'doppelpasch': 'Doppelschlag - Verteile 2 kräftige Schlucke/Strafen an Mitspieler.',
-    'trasch': 'Das Getränk wird auf Ex (in einem Zug) geleert.',
+    'drasch': 'Das Getränk wird auf Ex (in einem Zug) geleert.',
     'fullhouse': 'Split-Strafe - Verteile einen Shot und ein halbes Getränk an zwei Mitspieler.',
     'strasse': 'Wasserfall - Alle trinken. Du startest und beendest den Wasserfall.',
     'quadrasch': 'Eskalation - Trinke 3 Shots hintereinander.',
@@ -84,7 +84,7 @@ export function evaluateHand(diceArray) {
         return 4;
     }
 
-    // Trasch: 3 of a kind
+    // Drasch: 3 of a kind
     if (freq[0] === 3) {
         return 3;
     }
@@ -105,7 +105,7 @@ export function evaluateHand(diceArray) {
 /**
  * Checks if the rolled hand matches or exceeds the chosen bet.
  * @param {Array<number>} diceArray - Array of 5 numbers (1-6)
- * @param {string} bet - The bet key (e.g. 'trasch')
+ * @param {string} bet - The bet key (e.g. 'drasch')
  * @returns {boolean} True if the roll matches or exceeds the bet requirements
  */
 export function checkResult(diceArray, bet) {
