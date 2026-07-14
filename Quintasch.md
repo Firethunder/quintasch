@@ -12,7 +12,7 @@
 * **Einsätze, Wahrscheinlichkeiten & Strafen:**
   * **Pasch** (~90%): Das aktuelle Getränk muss innerhalb eines 30-Sekunden-Timers getrunken werden.
   * **Doppelpasch** (~23%): "Doppelschlag" - Der Spieler darf 2 kräftige Schlucke/Strafen an Mitspieler verteilen (aufteilen erlaubt).
-  * **Trasch** (~15%): Das Getränk wird auf Ex (in einem Zug) geleert.
+  * **Drasch** (~15%): Das Getränk wird auf Ex (in einem Zug) geleert.
   * **Full House** (~3,8%): "Split-Strafe" - Der Spieler darf einen Shot und ein halbes Getränk an zwei Mitspieler verteilen.
   * **Straße** (~3,1%): "Wasserfall" - Alle trinken. Der Würfler startet und beendet den Wasserfall.
   * **Quadrasch** (~1,9%): Eskalation (z.B. der Spieler trinkt 3 Shots hintereinander).
