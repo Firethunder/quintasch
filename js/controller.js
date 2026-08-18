@@ -1,29 +1,50 @@
-// Client PeerJS-Variablen
+/**
+ * Quintasch V2 - Mobile Game Controller
+ * Pure PocketBase Realtime (SSE) architecture with offline resilience,
+ * interactive penalty distribution, synchronized 3D dice, and haptics.
+ */
+
+import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES } from './game.js';
 import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
+import { getPocketBaseUrl, setPocketBaseUrl, getOrCreatePlayerToken, getSavedPlayerName, setSavedPlayerName } from './config.js';
+import {
+    getRoomByCode,
+    subscribeToRoom,
+    joinPlayer,
+    getPlayers,
+    subscribeToPlayers,
+    updatePlayer,
+    recordRoll,
+    distributePenalties,
+    getRollsHistory,
+    subscribeToRolls,
+    onConnectionChange,
+    checkServerHealth
+} from './pocketbase-service.js';
 
-let peer = null;
-let conn = null;
-let isDisconnecting = false;
-let savedPlayerName = '';
-let reconnectAttempts = 0;
-const maxReconnectAttempts = 5;
-let reconnectTimer = null;
-let isReconnecting = false;
-let isAnimating = false;
-let rattleInterval = null;
-
-// Audio-Checkbox DOM-Element & mobile-specials
-let clientVolumeInput = null;
-let clientVolumeDisplay = null;
-let clientMuteInput = null;
-let clientVibrateInput = null;
-let mobileDiceTable = null;
-let gameplayFormWrapper = null;
-
-let isVibrateEnabled = true;
+// State Variablen
+let myPlayerToken = getOrCreatePlayerToken();
+let myPlayerRecord = null;
+let currentRoomRecord = null;
+let currentPlayers = [];
 let isMyTurn = false;
+let isRolling = false;
+let isAnimating = false;
+let isVibrateEnabled = true;
 
-// Rotationswinkel für die verschiedenen Augenzahlen, damit sie nach vorne zeigen.
+// Timer State
+let timerInterval = null;
+let timerTimeLeft = 0;
+let timerTotalSeconds = 0;
+
+// Strafenverteilungs-State
+let penaltyState = {
+    totalToDistribute: 0,
+    remaining: 0,
+    allocations: {} // { [playerToken]: amount }
+};
+
+// 3D Würfel Rotation
 const faceAngles = {
     1: { x: 0, y: 0 },
     6: { x: 0, y: -180 },
@@ -32,8 +53,6 @@ const faceAngles = {
     2: { x: -90, y: 0 },
     5: { x: 90, y: 0 }
 };
-
-// Akkumulierte Rotationen für jeden der 5 Würfel, um kontinuierlich vorwärts zu drehen.
 const currentRotations = [
     { x: 0, y: 0, z: 0 },
     { x: 0, y: 0, z: 0 },
@@ -42,1062 +61,826 @@ const currentRotations = [
     { x: 0, y: 0, z: 0 }
 ];
 
-// DOM-Elemente (wiederkehrend deklariert)
+// DOM Elemente
 let joinContainer = null;
 let lobbyContainer = null;
-let joinButton = null;
-let clientPlayerNameInput = null;
-let joinErrorMsg = null;
-let lobbyStatusTitle = null;
-let lobbySpinner = null;
-let lobbyPlayersList = null;
 let gameplayContainer = null;
-let gameplayBetSelect = null;
+let clientRoomCodeInput = null;
+let clientPlayerNameInput = null;
+let joinButton = null;
+let joinErrorMsg = null;
+let lobbyRoomCodeDisplay = null;
+let lobbyPlayersListWait = null;
+let gameplayRoundBadge = null;
+let gameplayModeBadge = null;
 let gameplayStatusTitle = null;
-let gameplayRollButton = null;
-let lobbyWaitText = null;
+let gameplayFormWrapper = null;
+let clientPauseToggle = null;
+let gameplayBetSelect = null;
 let gameplayStakeSelect = null;
 let gameplayCustomStakeInput = null;
 let gameplayCustomTimerGroup = null;
 let gameplayCustomTimerInput = null;
-let clientPauseToggle = null;
+let gameplayRollButton = null;
+let mobileDiceTable = null;
+let lobbyPlayersList = null;
 let clientHistoryList = null;
-let clientCustomStakesList = null;
-let currentActiveStakeSet = 'klassisch';
-let currentActiveStakeOptions = [];
+let controllerTimerContainer = null;
+let controllerTimerText = null;
+let controllerTimerProgress = null;
 
-// Wurf-Ergebnis Overlay-Elemente
+// Penalty Modal Elements
+let penaltyModal = null;
+let penaltyModalTitle = null;
+let penaltyModalDesc = null;
+let penaltyRemainingCount = null;
+let penaltyTargetsList = null;
+let penaltyConfirmBtn = null;
+
+// Incoming Alert Overlay
+let incomingPenaltyAlert = null;
+let incomingPenaltyText = null;
+let incomingPenaltyAckBtn = null;
+
+// Roll Result Overlay
 let rollResultOverlay = null;
 let resultOverlayTitle = null;
-let resultOverlayText = null;
 let resultOverlayDice = null;
+let resultOverlayText = null;
 let resultOverlayCloseBtn = null;
 
-// Settings DOM-Elemente
+// Settings Elements
 let settingsPanel = null;
 let toggleSettingsButton = null;
-let peerHostInput = null;
-let peerPortInput = null;
-let peerPathInput = null;
-let peerSecureInput = null;
+let headerSettingsBtn = null;
+let pbServerUrlInput = null;
+let clientVolumeInput = null;
+let clientVolumeDisplay = null;
+let clientMuteInput = null;
+let clientVibrateInput = null;
 let saveSettingsButton = null;
 let resetSettingsButton = null;
-
-// Raum-ID aus der URL auslesen (z.B. controller.html?room=xxxx)
-const roomId = new URLSearchParams(window.location.search).get('room');
+let closeSettingsButton = null;
+let connectionBadge = null;
+let connDot = null;
+let connStatusText = null;
 
 /**
- * Triggert eine Vibration auf dem Client-Gerät, falls aktiviert und unterstützt.
- * @param {number|number[]} pattern - Vibrationsmuster in ms.
+ * Triggert Haptik/Vibration auf dem Mobilgerät.
  */
 function triggerVibration(pattern) {
     if (isVibrateEnabled && 'vibrate' in navigator) {
         try {
             navigator.vibrate(pattern);
-        } catch (e) {
-            console.warn('Vibration fehlgeschlagen:', e);
-        }
+        } catch (e) {}
     }
 }
 
 /**
- * Spielt einen Sound basierend auf dem Typ-String ab und triggert optional Vibration.
+ * Spielt Sounds mit Haptik ab.
  */
-function playProceduralSound(soundType) {
-    if (soundType === 'roll') {
+function playProceduralSound(type) {
+    if (type === 'roll') {
         playRollSound();
-        triggerVibration(50);
-    } else if (soundType === 'win') {
+        triggerVibration(40);
+    } else if (type === 'win') {
         playWinSound();
         triggerVibration([100, 50, 100]);
-    } else if (soundType === 'fail') {
+    } else if (type === 'fail') {
         playFailSound();
         triggerVibration(200);
-    } else if (soundType === 'tick') {
+    } else if (type === 'tick') {
         playTimerTick();
         triggerVibration(10);
-    } else if (soundType === 'buzzer') {
+    } else if (type === 'buzzer') {
         playTimerBuzzer();
         triggerVibration([150, 50, 150, 50, 150]);
     }
 }
 
-// Initialisierung bei Seitenaufruf
+// Initialisierung bei DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM-Elemente abrufen
+    initDomElements();
+    initSettingsAndAudio();
+    initConnectionStatus();
+
+    // Raum-Code aus URL auslesen (?room=xxxx)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomFromUrl = (urlParams.get('room') || urlParams.get('r') || '').trim().toUpperCase();
+    if (roomFromUrl && clientRoomCodeInput) {
+        clientRoomCodeInput.value = roomFromUrl;
+    }
+
+    // Gespeicherten Spielernamen vorausfüllen
+    const savedName = getSavedPlayerName();
+    if (savedName && clientPlayerNameInput) {
+        clientPlayerNameInput.value = savedName;
+    }
+
+    // Event Listener für Beitreten
+    if (joinButton) {
+        joinButton.addEventListener('click', handleJoinRoom);
+    }
+
+    // Auto-Join / Auto-Reconnect wenn Raum und Name vorhanden
+    if (roomFromUrl && savedName) {
+        handleJoinRoom();
+    }
+});
+
+function initDomElements() {
     joinContainer = document.getElementById('join-container');
     lobbyContainer = document.getElementById('lobby-container');
-    joinButton = document.getElementById('join-button');
-    clientPlayerNameInput = document.getElementById('client-player-name');
-    joinErrorMsg = document.getElementById('join-error-msg');
-    lobbyStatusTitle = document.getElementById('lobby-status-title');
-    lobbySpinner = document.getElementById('lobby-spinner');
-    clientVolumeInput = document.getElementById('client-volume');
-    clientVolumeDisplay = document.getElementById('client-volume-display');
-    clientMuteInput = document.getElementById('client-mute');
-    clientVibrateInput = document.getElementById('client-vibrate');
-    mobileDiceTable = document.getElementById('mobile-dice-table');
-    gameplayFormWrapper = document.getElementById('gameplay-form-wrapper');
-    lobbyPlayersList = document.getElementById('lobby-players-list');
     gameplayContainer = document.getElementById('gameplay-container');
-    gameplayBetSelect = document.getElementById('gameplay-bet');
+    clientRoomCodeInput = document.getElementById('client-room-code');
+    clientPlayerNameInput = document.getElementById('client-player-name');
+    joinButton = document.getElementById('join-button');
+    joinErrorMsg = document.getElementById('join-error-msg');
+    lobbyRoomCodeDisplay = document.getElementById('lobby-room-code-display');
+    lobbyPlayersListWait = document.getElementById('lobby-players-list-wait');
+    gameplayRoundBadge = document.getElementById('gameplay-round-badge');
+    gameplayModeBadge = document.getElementById('gameplay-mode-badge');
     gameplayStatusTitle = document.getElementById('gameplay-status-title');
-    gameplayRollButton = document.getElementById('gameplay-roll-button');
-    lobbyWaitText = document.getElementById('lobby-wait-text');
+    gameplayFormWrapper = document.getElementById('gameplay-form-wrapper');
+    clientPauseToggle = document.getElementById('client-pause-toggle');
+    gameplayBetSelect = document.getElementById('gameplay-bet');
     gameplayStakeSelect = document.getElementById('gameplay-stake');
     gameplayCustomStakeInput = document.getElementById('gameplay-custom-stake');
     gameplayCustomTimerGroup = document.getElementById('gameplay-custom-timer-group');
     gameplayCustomTimerInput = document.getElementById('gameplay-custom-timer');
-    clientPauseToggle = document.getElementById('client-pause-toggle');
+    gameplayRollButton = document.getElementById('gameplay-roll-button');
+    mobileDiceTable = document.getElementById('mobile-dice-table');
+    lobbyPlayersList = document.getElementById('lobby-players-list');
     clientHistoryList = document.getElementById('client-history-list');
-    
-    // Eigene Einsätze initialisieren
-    clientCustomStakesList = document.getElementById('client-custom-stakes-list');
-    if (clientCustomStakesList) {
-        let storedCustom = localStorage.getItem('quintasch_custom_stakes');
-        if (!storedCustom) {
-            storedCustom = "1 Liegestütze machen\nEinen Witz erzählen\nLied summen (Erraten)\n10 Kniebeugen machen";
-            localStorage.setItem('quintasch_custom_stakes', storedCustom);
-        }
-        clientCustomStakesList.value = storedCustom;
-        
-        clientCustomStakesList.addEventListener('input', () => {
-            localStorage.setItem('quintasch_custom_stakes', clientCustomStakesList.value);
-            if (currentActiveStakeSet === 'eigenes') {
-                updateStakeOptions(currentActiveStakeSet, currentActiveStakeOptions);
-            }
-        });
-    }
+    controllerTimerContainer = document.getElementById('controller-timer-container');
+    controllerTimerText = document.getElementById('controller-timer-text');
+    controllerTimerProgress = document.getElementById('controller-timer-progress');
 
-    // Wurf-Ergebnis Overlay-Elemente abrufen
+    // Penalty Modal
+    penaltyModal = document.getElementById('penalty-modal');
+    penaltyModalTitle = document.getElementById('penalty-modal-title');
+    penaltyModalDesc = document.getElementById('penalty-modal-desc');
+    penaltyRemainingCount = document.getElementById('penalty-remaining-count');
+    penaltyTargetsList = document.getElementById('penalty-targets-list');
+    penaltyConfirmBtn = document.getElementById('penalty-confirm-btn');
+
+    // Incoming Alert Overlay
+    incomingPenaltyAlert = document.getElementById('incoming-penalty-alert');
+    incomingPenaltyText = document.getElementById('incoming-penalty-text');
+    incomingPenaltyAckBtn = document.getElementById('incoming-penalty-ack-btn');
+
+    // Roll Result Overlay
     rollResultOverlay = document.getElementById('roll-result-overlay');
     resultOverlayTitle = document.getElementById('result-overlay-title');
-    resultOverlayText = document.getElementById('result-overlay-text');
     resultOverlayDice = document.getElementById('result-overlay-dice');
+    resultOverlayText = document.getElementById('result-overlay-text');
     resultOverlayCloseBtn = document.getElementById('result-overlay-close-btn');
 
-    // Settings DOM-Elemente abrufen
+    // Settings
     settingsPanel = document.getElementById('settings-panel');
     toggleSettingsButton = document.getElementById('toggle-settings-button');
-    peerHostInput = document.getElementById('peer-host');
-    peerPortInput = document.getElementById('peer-port');
-    peerPathInput = document.getElementById('peer-path');
-    peerSecureInput = document.getElementById('peer-secure');
+    headerSettingsBtn = document.getElementById('header-settings-btn');
+    pbServerUrlInput = document.getElementById('pb-server-url');
+    clientVolumeInput = document.getElementById('client-volume');
+    clientVolumeDisplay = document.getElementById('client-volume-display');
+    clientMuteInput = document.getElementById('client-mute');
+    clientVibrateInput = document.getElementById('client-vibrate');
     saveSettingsButton = document.getElementById('save-settings-button');
     resetSettingsButton = document.getElementById('reset-settings-button');
+    closeSettingsButton = document.getElementById('close-settings-button');
+    connectionBadge = document.getElementById('connection-badge');
+    connDot = document.getElementById('conn-dot');
+    connStatusText = document.getElementById('conn-status-text');
 
-    // Falls keine Raum-ID vorhanden ist, breche ab
-    if (!roomId) {
-        showError('Ungültige oder fehlende Raum-ID! Bitte scanne den QR-Code auf dem Dashboard erneut.');
-        if (joinButton) joinButton.disabled = true;
-        if (clientPlayerNameInput) clientPlayerNameInput.disabled = true;
+    // Button Events
+    if (gameplayRollButton) {
+        gameplayRollButton.addEventListener('click', handleRollClick);
     }
-
-    // Parse URL-Parameter für Custom Peer Server-Konfiguration falls vorhanden
-    const urlParams = new URLSearchParams(window.location.search);
-    const hostParam = urlParams.get('host');
-    const portParam = urlParams.get('port');
-    const pathParam = urlParams.get('path');
-    const secureParam = urlParams.get('secure');
-
-    if (hostParam) {
-        const urlPeerConfig = {
-            host: hostParam,
-            port: portParam || '',
-            path: pathParam || '/',
-            secure: secureParam === 'true'
-        };
-        try {
-            localStorage.setItem('quintasch_peer_config', JSON.stringify(urlPeerConfig));
-        } catch (e) {
-            console.error('Fehler beim Speichern der Peer-Config aus URL:', e);
-        }
-    }
-
-    // Lese Custom Config
-    let peerConfig = null;
-    try {
-        const stored = localStorage.getItem('quintasch_peer_config');
-        if (stored) {
-            peerConfig = JSON.parse(stored);
-        }
-    } catch (e) {
-        console.error('Fehler beim Laden der Peer-Server-Einstellungen:', e);
-    }
-
-    // Prefill UI inputs
-    if (peerConfig) {
-        if (peerHostInput) peerHostInput.value = peerConfig.host || '';
-        if (peerPortInput) peerPortInput.value = peerConfig.port || '';
-        if (peerPathInput) peerPathInput.value = peerConfig.path || '';
-        if (peerSecureInput) peerSecureInput.checked = peerConfig.secure !== false;
-    }
-
-    // Audio-Einstellungen initialisieren
-    if (clientVolumeInput && clientMuteInput) {
-        const currentVol = getVolume();
-        const currentMute = getMuted();
-        
-        clientVolumeInput.value = Math.round(currentVol * 100);
-        if (clientVolumeDisplay) {
-            clientVolumeDisplay.textContent = `${Math.round(currentVol * 100)}%`;
-        }
-        clientMuteInput.checked = currentMute;
-        
-        clientVolumeInput.addEventListener('input', () => {
-            const val = parseFloat(clientVolumeInput.value) / 100;
-            setVolume(val);
-            if (clientVolumeDisplay) {
-                clientVolumeDisplay.textContent = `${clientVolumeInput.value}%`;
-            }
-        });
-        
-        clientMuteInput.addEventListener('change', () => {
-            setMuted(clientMuteInput.checked);
-        });
-    }
-
-    // Vibration-Einstellungen initialisieren
-    const savedVibrate = localStorage.getItem('quintasch_client_vibrate');
-    isVibrateEnabled = savedVibrate !== 'false';
-    
-    // Haptik-Unterstützung prüfen
-    const vibrationWarning = document.getElementById('vibration-warning');
-    if (!('vibrate' in navigator)) {
-        isVibrateEnabled = false;
-        if (vibrationWarning) vibrationWarning.style.display = 'block';
-        if (clientVibrateInput) {
-            clientVibrateInput.checked = false;
-            clientVibrateInput.disabled = true;
-        }
-    } else if (clientVibrateInput) {
-        clientVibrateInput.checked = isVibrateEnabled;
-        clientVibrateInput.addEventListener('change', () => {
-            isVibrateEnabled = clientVibrateInput.checked;
-            localStorage.setItem('quintasch_client_vibrate', isVibrateEnabled.toString());
-        });
-    }
-
-    // Settings toggle
-    if (toggleSettingsButton && settingsPanel) {
-        toggleSettingsButton.addEventListener('click', () => {
-            if (settingsPanel.style.display === 'none' || settingsPanel.style.display === '') {
-                settingsPanel.style.display = 'flex';
-                toggleSettingsButton.textContent = 'Einstellungen ausblenden';
-            } else {
-                settingsPanel.style.display = 'none';
-                toggleSettingsButton.textContent = 'Einstellungen anzeigen';
-            }
-        });
-    }
-
-    // Header Settings gear button click
-    const headerSettingsBtn = document.getElementById('header-settings-btn');
-    if (headerSettingsBtn && settingsPanel) {
-        headerSettingsBtn.addEventListener('click', () => {
-            settingsPanel.style.display = 'flex';
-        });
-    }
-
-    // Close Settings button click
-    const closeSettingsButton = document.getElementById('close-settings-button');
-    if (closeSettingsButton && settingsPanel) {
-        closeSettingsButton.addEventListener('click', () => {
-            settingsPanel.style.display = 'none';
-            if (toggleSettingsButton) {
-                toggleSettingsButton.textContent = 'Einstellungen anzeigen';
-            }
-        });
-    }
-
-    // Settings save
-    if (saveSettingsButton) {
-        saveSettingsButton.addEventListener('click', () => {
-            const host = peerHostInput.value.trim();
-            const port = peerPortInput.value.trim();
-            const path = peerPathInput.value.trim();
-            const secure = peerSecureInput.checked;
-
-            if (host) {
-                const config = { host, port, path, secure };
-                localStorage.setItem('quintasch_peer_config', JSON.stringify(config));
-            } else {
-                localStorage.removeItem('quintasch_peer_config');
-            }
-            
-            alert('Einstellungen gespeichert!');
-            window.location.reload();
-        });
-    }
-
-    // Settings reset
-    if (resetSettingsButton) {
-        resetSettingsButton.addEventListener('click', () => {
-            localStorage.removeItem('quintasch_peer_config');
-            localStorage.removeItem('quintasch_client_volume');
-            localStorage.removeItem('quintasch_client_muted');
-            localStorage.removeItem('quintasch_client_vibrate');
-            if (peerHostInput) peerHostInput.value = '';
-            if (peerPortInput) peerPortInput.value = '';
-            if (peerPathInput) peerPathInput.value = '';
-            if (peerSecureInput) peerSecureInput.checked = true;
-            setVolume(0.5);
-            setMuted(false);
-            isVibrateEnabled = true;
-            if (clientVolumeInput) clientVolumeInput.value = 50;
-            if (clientVolumeDisplay) clientVolumeDisplay.textContent = '50%';
-            if (clientMuteInput) clientMuteInput.checked = false;
-            if (clientVibrateInput) clientVibrateInput.checked = true;
-            alert('Einstellungen zurückgesetzt auf Standard!');
-            window.location.reload();
-        });
-    }
-
-    // Lese Pause-Einstellung
-    const savedPaused = localStorage.getItem('quintasch_client_paused');
     if (clientPauseToggle) {
-        clientPauseToggle.checked = savedPaused === 'true';
+        clientPauseToggle.addEventListener('change', handlePauseToggle);
     }
-
-    if (clientPauseToggle) {
-        clientPauseToggle.addEventListener('change', () => {
-            const isPaused = clientPauseToggle.checked;
-            localStorage.setItem('quintasch_client_paused', isPaused ? 'true' : 'false');
-            if (conn && conn.open) {
-                conn.send({ action: 'togglePause', paused: isPaused });
-            }
+    if (resultOverlayCloseBtn) {
+        resultOverlayCloseBtn.addEventListener('click', () => {
+            if (rollResultOverlay) rollResultOverlay.style.display = 'none';
         });
     }
-
-    // Lese Wetteinsatz- und Einsatz-Vorauswahl
-    const savedBet = localStorage.getItem('quintasch_default_bet');
-    const savedStake = localStorage.getItem('quintasch_default_stake') || 'custom';
-    const savedCustomStake = localStorage.getItem('quintasch_default_custom_stake');
-    const savedCustomTimer = localStorage.getItem('quintasch_default_custom_timer');
-
-    if (savedBet && gameplayBetSelect) {
-        gameplayBetSelect.value = savedBet;
-    }
-    if (savedStake && gameplayStakeSelect) {
-        gameplayStakeSelect.value = savedStake;
-        if (savedStake === 'custom') {
-            if (gameplayCustomStakeInput) {
-                gameplayCustomStakeInput.style.display = 'block';
-                if (savedCustomStake) gameplayCustomStakeInput.value = savedCustomStake;
-            }
-            if (gameplayCustomTimerGroup) {
-                gameplayCustomTimerGroup.style.display = 'block';
-                if (gameplayCustomTimerInput && savedCustomTimer) {
-                    gameplayCustomTimerInput.value = savedCustomTimer;
-                }
-            }
-        }
-    }
-
-    if (gameplayBetSelect) {
-        gameplayBetSelect.addEventListener('change', () => {
-            localStorage.setItem('quintasch_default_bet', gameplayBetSelect.value);
+    if (incomingPenaltyAckBtn) {
+        incomingPenaltyAckBtn.addEventListener('click', () => {
+            if (incomingPenaltyAlert) incomingPenaltyAlert.style.display = 'none';
         });
     }
-    if (gameplayCustomStakeInput) {
-        gameplayCustomStakeInput.addEventListener('input', () => {
-            localStorage.setItem('quintasch_default_custom_stake', gameplayCustomStakeInput.value);
-        });
-    }
-    if (gameplayCustomTimerInput) {
-        gameplayCustomTimerInput.addEventListener('input', () => {
-            localStorage.setItem('quintasch_default_custom_timer', gameplayCustomTimerInput.value);
-        });
+    if (penaltyConfirmBtn) {
+        penaltyConfirmBtn.addEventListener('click', handleConfirmPenaltyDistribution);
     }
 
-    // Stake selection toggle for custom input
+    // Stake Auswahl Toggle
     if (gameplayStakeSelect && gameplayCustomStakeInput) {
         gameplayStakeSelect.addEventListener('change', () => {
-            localStorage.setItem('quintasch_default_stake', gameplayStakeSelect.value);
             if (gameplayStakeSelect.value === 'custom') {
                 gameplayCustomStakeInput.style.display = 'block';
-                gameplayCustomStakeInput.focus();
-                if (gameplayCustomTimerGroup) {
-                    gameplayCustomTimerGroup.style.display = 'block';
-                }
+                if (gameplayCustomTimerGroup) gameplayCustomTimerGroup.style.display = 'block';
             } else {
                 gameplayCustomStakeInput.style.display = 'none';
                 if (gameplayCustomTimerGroup) {
                     gameplayCustomTimerGroup.style.display = 'none';
-                    if (gameplayCustomTimerInput) {
-                        gameplayCustomTimerInput.value = '';
-                        localStorage.removeItem('quintasch_default_custom_timer');
-                    }
-                }
-                localStorage.removeItem('quintasch_default_custom_stake');
-            }
-        });
-    }
-
-    // Close result overlay
-    if (resultOverlayCloseBtn && rollResultOverlay) {
-        resultOverlayCloseBtn.addEventListener('click', () => {
-            rollResultOverlay.style.display = 'none';
-        });
-    }
-
-    // Event-Listener für Beitrittsbutton
-    if (joinButton) {
-        joinButton.addEventListener('click', () => {
-            const playerName = clientPlayerNameInput.value.trim();
-            if (!playerName) {
-                showError('Bitte gib einen Spielernamen ein!');
-                return;
-            }
-            joinRoom(playerName);
-        });
-    }
-
-    // Event-Listener für den Gameplay-Roll-Button
-    if (gameplayRollButton) {
-        gameplayRollButton.addEventListener('click', () => {
-            if (!conn || !conn.open) return;
-            
-            const chosenBet = gameplayBetSelect.value;
-            
-            // Lies den gewählten Einsatz aus
-            let chosenStake = 'Standard-Strafe';
-            if (gameplayStakeSelect) {
-                const stakeType = gameplayStakeSelect.value;
-                if (stakeType === 'custom' && gameplayCustomStakeInput) {
-                    const customVal = gameplayCustomStakeInput.value.trim();
-                    chosenStake = customVal || 'Standard-Strafe';
-                } else if (stakeType === 'standard') {
-                    chosenStake = 'Standard-Strafe';
-                } else {
-                    chosenStake = stakeType;
+                    if (gameplayCustomTimerInput) gameplayCustomTimerInput.value = '';
                 }
             }
-
-            // Lies den optionalen Custom Timer aus
-            let customTimerVal = null;
-            if (gameplayCustomTimerInput && gameplayStakeSelect.value === 'custom') {
-                const timerVal = parseInt(gameplayCustomTimerInput.value.trim(), 10);
-                if (!isNaN(timerVal) && timerVal > 0) {
-                    customTimerVal = timerVal;
-                }
-            }
-            
-            // Lokalen Rassel-Sound auf dem Handy abspielen
-            playRollSound();
-            triggerVibration(100);
-            
-            // Deaktivieren und Text ändern
-            gameplayRollButton.disabled = true;
-            gameplayRollButton.textContent = 'Würfel rollen...';
-            gameplayRollButton.blur(); // Focus aufheben, um klebriges Design zu verhindern
-            
-            conn.send({
-                action: 'rollDice',
-                bet: chosenBet,
-                stake: chosenStake,
-                timer: customTimerVal
-            });
         });
     }
-});
+}
+
+function initSettingsAndAudio() {
+    if (pbServerUrlInput) {
+        pbServerUrlInput.value = getPocketBaseUrl();
+    }
+    if (clientVolumeInput) {
+        clientVolumeInput.value = Math.round(getVolume() * 100);
+        if (clientVolumeDisplay) clientVolumeDisplay.textContent = `${clientVolumeInput.value}%`;
+        clientVolumeInput.addEventListener('input', () => {
+            const vol = parseInt(clientVolumeInput.value, 10) / 100;
+            setVolume(vol);
+            if (clientVolumeDisplay) clientVolumeDisplay.textContent = `${clientVolumeInput.value}%`;
+        });
+    }
+    if (clientMuteInput) {
+        clientMuteInput.checked = getMuted();
+        clientMuteInput.addEventListener('change', () => {
+            setMuted(clientMuteInput.checked);
+        });
+    }
+    if (clientVibrateInput) {
+        clientVibrateInput.checked = isVibrateEnabled;
+        clientVibrateInput.addEventListener('change', () => {
+            isVibrateEnabled = clientVibrateInput.checked;
+        });
+    }
+
+    const openSettings = () => {
+        if (settingsPanel) settingsPanel.style.display = 'flex';
+    };
+    const closeSettings = () => {
+        if (settingsPanel) settingsPanel.style.display = 'none';
+    };
+
+    if (toggleSettingsButton) toggleSettingsButton.addEventListener('click', openSettings);
+    if (headerSettingsBtn) headerSettingsBtn.addEventListener('click', openSettings);
+    if (closeSettingsButton) closeSettingsButton.addEventListener('click', closeSettings);
+
+    if (saveSettingsButton) {
+        saveSettingsButton.addEventListener('click', () => {
+            if (pbServerUrlInput) {
+                setPocketBaseUrl(pbServerUrlInput.value);
+            }
+            closeSettings();
+            checkServerHealth();
+        });
+    }
+    if (resetSettingsButton) {
+        resetSettingsButton.addEventListener('click', () => {
+            setPocketBaseUrl('');
+            if (pbServerUrlInput) pbServerUrlInput.value = getPocketBaseUrl();
+            closeSettings();
+            checkServerHealth();
+        });
+    }
+}
+
+function initConnectionStatus() {
+    onConnectionChange((status) => {
+        if (!connectionBadge || !connDot || !connStatusText) return;
+        if (status.isConnected) {
+            connectionBadge.classList.remove('offline');
+            connDot.style.background = 'var(--neon-cyan)';
+            connStatusText.textContent = 'Online';
+        } else {
+            connectionBadge.classList.add('offline');
+            connDot.style.background = 'var(--neon-magenta)';
+            connStatusText.textContent = 'Verbindung wird wiederhergestellt...';
+        }
+    });
+
+    checkServerHealth();
+}
 
 /**
- * Verbindet den Client mit dem P2P-Raum des Hosts.
+ * Raum beitreten
  */
-/**
- * Verbindet den Client mit dem P2P-Raum des Hosts.
- */
-function joinRoom(playerName) {
-    isDisconnecting = false;
-    savedPlayerName = playerName;
-    reconnectAttempts = 0;
-    isReconnecting = false;
-    clearTimeout(reconnectTimer);
+async function handleJoinRoom() {
+    const roomCode = (clientRoomCodeInput ? clientRoomCodeInput.value : '').trim().toUpperCase();
+    const playerName = (clientPlayerNameInput ? clientPlayerNameInput.value : '').trim();
 
     if (joinErrorMsg) joinErrorMsg.style.display = 'none';
-    if (joinButton) {
-        joinButton.disabled = true;
-        joinButton.textContent = 'Verbinde...';
-    }
 
-    // Falls PeerJS nicht geladen werden konnte
-    if (typeof Peer === 'undefined') {
-        showError('Fehler: PeerJS-Bibliothek nicht geladen.');
-        resetJoinButton();
+    if (!roomCode || roomCode.length < 3) {
+        showJoinError('Bitte gib einen gültigen Raum-Code ein!');
+        return;
+    }
+    if (!playerName) {
+        showJoinError('Bitte gib deinen Spielernamen ein!');
         return;
     }
 
-    // Warteraum anzeigen
-    if (joinContainer) joinContainer.style.display = 'none';
-    if (lobbyContainer) lobbyContainer.style.display = 'block';
-    if (lobbySpinner) lobbySpinner.style.display = 'block';
-    if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Verbinde zum Signaling-Server...';
-
-    // Lese Custom Config
-    let peerConfig = null;
     try {
-        const stored = localStorage.getItem('quintasch_peer_config');
-        if (stored) {
-            peerConfig = JSON.parse(stored);
+        if (joinButton) {
+            joinButton.disabled = true;
+            joinButton.textContent = 'Verbinde...';
         }
-    } catch (e) {
-        console.error('Fehler beim Laden der Peer-Server-Einstellungen:', e);
+
+        // 1. Raum abrufen
+        const room = await getRoomByCode(roomCode);
+        if (!room) {
+            showJoinError(`Raum "${roomCode}" wurde nicht gefunden.`);
+            if (joinButton) {
+                joinButton.disabled = false;
+                joinButton.textContent = 'Beitreten';
+            }
+            return;
+        }
+
+        currentRoomRecord = room;
+        setSavedPlayerName(playerName);
+
+        // 2. Spieler registrieren / reaktivieren
+        const joinResult = await joinPlayer(roomCode, playerName, myPlayerToken);
+        myPlayerRecord = joinResult.player;
+        myPlayerToken = joinResult.token;
+
+        // 3. UI Umschalten & Realtime abonnieren
+        if (joinContainer) joinContainer.style.display = 'none';
+        if (lobbyRoomCodeDisplay) lobbyRoomCodeDisplay.textContent = roomCode;
+
+        // Realtime Subscriptions aufsetzen
+        await setupRealtimeSubscriptions(room.id, roomCode);
+
+        // Initialen State rendern
+        await refreshPlayersAndHistory(roomCode);
+        applyRoomState(room);
+
+    } catch (err) {
+        console.error('Fehler beim Beitreten:', err);
+        showJoinError('Fehler beim Beitreten des Raumes. Bitte prüfe den Server!');
+        if (joinButton) {
+            joinButton.disabled = false;
+            joinButton.textContent = 'Beitreten';
+        }
     }
-
-    // Neuen Peer instanziieren
-    if (peerConfig && peerConfig.host) {
-        const portVal = peerConfig.port ? parseInt(peerConfig.port) : undefined;
-        peer = new Peer(undefined, {
-            host: peerConfig.host,
-            port: isNaN(portVal) ? undefined : portVal,
-            path: peerConfig.path || '/',
-            secure: peerConfig.secure
-        });
-    } else {
-        peer = new Peer();
-    }
-
-    peer.on('open', (id) => {
-        if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Verbinde zum Dashboard...';
-        
-        // Verbindung zum Host-Peer aufbauen
-        const newConn = peer.connect(roomId);
-        handleNewConnection(newConn);
-    });
-
-    peer.on('error', (err) => {
-        console.error('PeerJS Client-Fehler:', err);
-        showError('Fehler beim Verbindungsaufbau zum Signaling-Server.');
-        disconnect();
-    });
 }
 
-/**
- * Behandelt eine neue Verbindung und registriert alle Event-Listener.
- */
-function handleNewConnection(newConn) {
-    conn = newConn;
-
-    conn.on('open', () => {
-        if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'Warte auf Bestätigung...';
-        // Handshake senden
-        conn.send({
-            action: 'join',
-            playerName: savedPlayerName,
-            paused: clientPauseToggle ? clientPauseToggle.checked : false
-        });
-    });
-
-    conn.on('data', (data) => {
-        if (!data) return;
-
-        // Handshake Bestätigung
-        if (data.action === 'joinConfirm') {
-            if (data.success) {
-                if (isReconnecting) {
-                    isReconnecting = false;
-                    reconnectAttempts = 0;
-                    clearTimeout(reconnectTimer);
-                }
-                if (lobbyStatusTitle) lobbyStatusTitle.textContent = 'In der Lobby';
-                if (lobbySpinner) lobbySpinner.style.display = 'none';
-                
-                if (data.stakeSet !== undefined) {
-                    currentActiveStakeSet = data.stakeSet;
-                    currentActiveStakeOptions = data.stakeOptions || [];
-                    updateStakeOptions(currentActiveStakeSet, currentActiveStakeOptions);
-                }
-
-                // Wechsel in Gameplay-Ansicht als Standard (Formular bearbeitbar)
-                if (lobbyContainer) lobbyContainer.style.display = 'none';
-                if (gameplayContainer) gameplayContainer.style.display = 'block';
-                if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
-                if (mobileDiceTable) mobileDiceTable.style.display = 'none';
-                if (gameplayStatusTitle) {
-                    gameplayStatusTitle.textContent = 'In der Lobby';
-                    gameplayStatusTitle.style.color = 'var(--neon-cyan)';
-                    gameplayStatusTitle.style.textShadow = 'var(--glow-cyan)';
-                }
-                if (gameplayRollButton) {
-                    gameplayRollButton.disabled = true;
-                    gameplayRollButton.textContent = 'Warten auf Spielstart...';
-                }
-            } else {
-                // Beitritt fehlgeschlagen (z.B. Name bereits vergeben)
-                isDisconnecting = true;
-                showError(data.reason || 'Beitritt abgelehnt.');
-                disconnect();
-            }
-        }
-
-        // Lobby-Update vom Host empfangen
-        if (data.action === 'updateLobby') {
-            renderLobbyPlayers(data.players);
-        }
-
-        // Historie-Update vom Host empfangen
-        if (data.action === 'historyUpdate') {
-            renderClientHistory(data.history);
-        }
-
-        // Stake-Set-Update vom Host empfangen
-        if (data.action === 'stakeSetUpdate') {
-            currentActiveStakeSet = data.stakeSet;
-            currentActiveStakeOptions = data.stakeOptions || [];
-            updateStakeOptions(currentActiveStakeSet, currentActiveStakeOptions);
-        }
-
-        // Runden-Steuerungsbefehle empfangen
-        if (data.action === 'yourTurn') {
-            isMyTurn = true;
-            // Aktiver Spieler: Zeige Wettauswahl und Würfelbutton
-            if (lobbyContainer) lobbyContainer.style.display = 'none';
-            if (gameplayContainer) gameplayContainer.style.display = 'block';
-            // Reset Würfel/Form-State (z.B. nach Reconnect während Animation)
-            if (mobileDiceTable) mobileDiceTable.style.display = 'none';
-            if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
-            isAnimating = false;
-            if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
-            if (gameplayStatusTitle) {
-                gameplayStatusTitle.textContent = 'Du bist dran!';
-                gameplayStatusTitle.style.color = 'var(--neon-green)';
-                gameplayStatusTitle.style.textShadow = 'var(--glow-green)';
-            }
-            if (gameplayRollButton) {
-                gameplayRollButton.disabled = false;
-                gameplayRollButton.textContent = 'WÜRFELN!';
-            }
-        }
-
-        if (data.action === 'waitTurn') {
-            isMyTurn = false;
-            // Inaktiver Spieler: Halte Gameplay-Formular sichtbar für Eingaben
-            if (lobbyContainer) lobbyContainer.style.display = 'none';
-            if (gameplayContainer) gameplayContainer.style.display = 'block';
-            if (mobileDiceTable) mobileDiceTable.style.display = 'none';
-            if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
-            isAnimating = false;
-            if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
-            if (gameplayStatusTitle) {
-                gameplayStatusTitle.textContent = `Warten auf ${data.activePlayerName}...`;
-                gameplayStatusTitle.style.color = 'var(--text-muted)';
-                gameplayStatusTitle.style.textShadow = 'none';
-            }
-            if (gameplayRollButton) {
-                gameplayRollButton.disabled = true;
-                gameplayRollButton.textContent = 'Warten...';
-            }
-        }
-
-        // Host signalisiert Start des Würfelns mit den Werten (nur für aktives Gerät)
-        if (data.action === 'rollStart') {
-            // Defensive Prüfung: Sind gültige Würfeldaten vorhanden?
-            if (!data.dice || data.dice.length < 5) return;
-
-            // Guard gegen doppeltes rollStart (verhindert Sound-Stacking)
-            if (isAnimating) return;
-            isAnimating = true;
-
-            // Blende Form aus, zeige 3D-Würfeltisch
-            if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'none';
-            if (mobileDiceTable) mobileDiceTable.style.display = 'flex';
-            if (gameplayRollButton) {
-                gameplayRollButton.disabled = true;
-                gameplayRollButton.textContent = 'Würfel rollen...';
-            }
-
-            // Bestehenden Rassel-Interval bereinigen (Defense-in-depth)
-            if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
-
-            // Spiele lokalen Rassel-Sound und Vibration ab
-            let shakeCount = 0;
-            rattleInterval = setInterval(() => {
-                if (!getMuted()) {
-                    playRollSound();
-                }
-                triggerVibration(50);
-                shakeCount++;
-                if (shakeCount >= 8) {
-                    clearInterval(rattleInterval);
-                    rattleInterval = null;
-                }
-            }, 150);
-
-            // Warte einen Frame, damit der Browser die Würfel erst sichtbar rendert (display:none → flex),
-            // bevor die CSS Transition gestartet wird — sonst wird die Transition übersprungen.
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    for (let i = 0; i < 5; i++) {
-                        const diceElement = document.getElementById(`mobile-dice-${i}`);
-                        if (!diceElement) continue;
-
-                        const val = data.dice[i];
-                        const target = faceAngles[val];
-
-                        // 3-4 volle Drehungen plus Winkelversatz zur letzten Position
-                        const extraXSpins = 3 + Math.floor(Math.random() * 2);
-                        const extraYSpins = 3 + Math.floor(Math.random() * 2);
-                        const extraZSpins = 2 + Math.floor(Math.random() * 2);
-
-                        const newX = currentRotations[i].x + (extraXSpins * 360) + (target.x - (currentRotations[i].x % 360));
-                        const newY = currentRotations[i].y + (extraYSpins * 360) + (target.y - (currentRotations[i].y % 360));
-                        const newZ = currentRotations[i].z + (extraZSpins * 360);
-
-                        currentRotations[i].x = newX;
-                        currentRotations[i].y = newY;
-                        currentRotations[i].z = newZ;
-
-                        diceElement.style.transform = `rotateX(${newX}deg) rotateY(${newY}deg) rotateZ(${newZ}deg)`;
-                    }
-                });
-            });
-        }
-
-        // Würfelergebnis von Host empfangen
-        if (data.action === 'rollResult') {
-            // Animations-Flag und Rassel-Interval zurücksetzen
-            isAnimating = false;
-            if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
-
-            // Erfolg oder Fehlversuch Vibration triggern
-            if (isMyTurn) {
-                if (data.success) {
-                    triggerVibration([150, 100, 150]);
-                } else {
-                    triggerVibration(300);
-                }
-            }
-
-            // Verberge Würfeltisch auf dem rollenden Gerät (falls aktiv gewesen) und zeige Form wieder an
-            if (mobileDiceTable) mobileDiceTable.style.display = 'none';
-            if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
-            if (gameplayRollButton) {
-                gameplayRollButton.disabled = false;
-                gameplayRollButton.textContent = 'WÜRFELN!';
-            }
-
-            if (rollResultOverlay) {
-                // Visualisiere Würfelaugen (Option B - stilisierte Neon-Boxen)
-                if (resultOverlayDice) {
-                    resultOverlayDice.innerHTML = '';
-                    data.dice.forEach((die, index) => {
-                        const dieEl = document.createElement('div');
-                        // Wechsle Farben ab (ungerade Indizes cyan, gerade magenta)
-                        dieEl.className = `mobile-die ${index % 2 === 1 ? 'even' : ''}`;
-                        dieEl.textContent = die;
-                        resultOverlayDice.appendChild(dieEl);
-                    });
-                }
-
-                // Setze Titel & Text
-                if (resultOverlayTitle) {
-                    resultOverlayTitle.textContent = data.success ? 'Getroffen!' : 'Das war nichts!';
-                    
-                    if (data.success) {
-                        resultOverlayTitle.style.color = 'var(--neon-green)';
-                        resultOverlayTitle.style.textShadow = 'var(--glow-green)';
-                        resultOverlayTitle.style.borderColor = 'var(--neon-green)';
-                    } else {
-                        resultOverlayTitle.style.color = 'var(--neon-magenta)';
-                        resultOverlayTitle.style.textShadow = 'var(--glow-magenta)';
-                        resultOverlayTitle.style.borderColor = 'var(--neon-magenta)';
-                    }
-                }
-
-                if (resultOverlayText) {
-                    const outcomeMsg = data.success 
-                        ? `<span style="color: var(--neon-green); font-weight: bold; text-shadow: var(--glow-green);">Erfolg!</span><br>Aktion: ${data.rule}`
-                        : `<span style="color: var(--neon-magenta); font-weight: bold; text-shadow: var(--glow-magenta);">Das war nichts!</span><br>Keine Auswirkung für ${data.playerName}. Glück gehabt!`;
-                        
-                    resultOverlayText.innerHTML = `
-                        <strong>Spieler:</strong> ${data.playerName}<br>
-                        <strong>Wette:</strong> ${data.betLabel} (Einsatz: ${data.stake})<br>
-                        <strong>Gewürfelt:</strong> ${data.rolledHandName}<br><br>
-                        ${outcomeMsg}
-                    `;
-                }
-
-                rollResultOverlay.style.display = 'flex';
-            }
-        }
-
-        // Timer abgelaufen Signal empfangen
-        if (data.action === 'timerExpired') {
-            triggerVibration([200, 100, 200, 100, 200]);
-        }
-
-        // Soundboard-Sync empfangen
-        if (data.action === 'syncPlaySound') {
-            playProceduralSound(data.sound);
-        }
-    });
-
-    // Abfangen von Verbindungsabbrüchen
-    const handleConnectionClose = () => {
-        if (!isDisconnecting) {
-            if (reconnectAttempts < maxReconnectAttempts) {
-                startReconnection();
-            } else {
-                showError('Verbindung zum Dashboard verloren.');
-                disconnect();
-            }
-        } else {
-            disconnect();
-        }
-    };
-
-    conn.on('close', handleConnectionClose);
-    conn.on('error', handleConnectionClose);
-}
-
-/**
- * Startet den automatischen Reconnection-Loop.
- */
-function startReconnection() {
-    if (isDisconnecting) return;
-
-    isReconnecting = true;
-    reconnectAttempts++;
-    console.log(`Versuche Wiederverbindung (${reconnectAttempts}/${maxReconnectAttempts})...`);
-
-    if (lobbyStatusTitle) lobbyStatusTitle.textContent = `Verbindung verloren. Reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`;
-    if (lobbySpinner) lobbySpinner.style.display = 'block';
-
-    // UI auf Warteraum/Lobby umschalten, damit der Benutzer den Reconnecting-Status sieht
-    if (joinContainer) joinContainer.style.display = 'none';
-    if (gameplayContainer) gameplayContainer.style.display = 'none';
-    if (lobbyContainer) lobbyContainer.style.display = 'block';
-
-    // Trenne bestehende Verbindungen leise
-    if (conn) {
-        conn.off('close');
-        conn.off('error');
-        conn.close();
-        conn = null;
-    }
-    if (peer) {
-        peer.destroy();
-        peer = null;
-    }
-
-    reconnectTimer = setTimeout(() => {
-        if (isDisconnecting) return;
-
-        // Lese Custom Config
-        let peerConfig = null;
-        try {
-            const stored = localStorage.getItem('quintasch_peer_config');
-            if (stored) {
-                peerConfig = JSON.parse(stored);
-            }
-        } catch (e) {
-            console.error('Fehler beim Laden der Peer-Server-Einstellungen:', e);
-        }
-
-        // Neuen Peer instanziieren
-        if (peerConfig && peerConfig.host) {
-            const portVal = peerConfig.port ? parseInt(peerConfig.port) : undefined;
-            peer = new Peer(undefined, {
-                host: peerConfig.host,
-                port: isNaN(portVal) ? undefined : portVal,
-                path: peerConfig.path || '/',
-                secure: peerConfig.secure
-            });
-        } else {
-            peer = new Peer();
-        }
-
-        peer.on('open', () => {
-            const newConn = peer.connect(roomId);
-            handleNewConnection(newConn);
-        });
-
-        peer.on('error', (err) => {
-            console.error('Reconnect peer error:', err);
-            if (reconnectAttempts < maxReconnectAttempts) {
-                startReconnection();
-            } else {
-                showError('Fehler beim Wiederverbindungsaufbau zum Signaling-Server.');
-                disconnect();
-            }
-        });
-    }, 2000);
-}
-
-/**
- * Trennt alle Peer-Verbindungen und setzt das UI zurück.
- */
-function disconnect() {
-    isReconnecting = false;
-    reconnectAttempts = 0;
-    clearTimeout(reconnectTimer);
-
-    if (conn) {
-        conn.close();
-        conn = null;
-    }
-    if (peer) {
-        peer.destroy();
-        peer = null;
-    }
-
-    // UI zurücksetzen
-    if (lobbyContainer) lobbyContainer.style.display = 'none';
-    if (gameplayContainer) gameplayContainer.style.display = 'none';
-    if (joinContainer) joinContainer.style.display = 'block';
-    resetJoinButton();
-}
-
-/**
- * Zeigt einen Fehler im Beitritts-Screen an.
- */
-function showError(message) {
+function showJoinError(msg) {
     if (joinErrorMsg) {
-        joinErrorMsg.textContent = message;
+        joinErrorMsg.textContent = msg;
         joinErrorMsg.style.display = 'block';
     }
 }
 
 /**
- * Setzt den Beitritts-Button zurück.
+ * Richtet die SSE Realtime Subscriptions für Raum, Spieler und Würfe ein.
  */
-function resetJoinButton() {
-    if (joinButton) {
-        joinButton.disabled = false;
-        joinButton.textContent = 'Beitreten';
-    }
-}
+async function setupRealtimeSubscriptions(roomId, roomCode) {
+    // 1. Raum Änderungen
+    await subscribeToRoom(roomId, (action, updatedRoom) => {
+        if (action === 'delete') {
+            alert('Der Raum wurde vom Host geschlossen.');
+            window.location.reload();
+            return;
+        }
+        currentRoomRecord = updatedRoom;
+        applyRoomState(updatedRoom);
+    });
 
-/**
- * Rendert die Spielerliste in der mobilen Ansicht.
- */
-function renderLobbyPlayers(players) {
-    if (!lobbyPlayersList) return;
-    lobbyPlayersList.innerHTML = '';
-    
-    if (players.length === 0) {
-        lobbyPlayersList.innerHTML = '<li style="color: var(--text-muted); text-align: center;">Keine Spieler in der Lobby</li>';
-        return;
-    }
+    // 2. Spieler Änderungen
+    await subscribeToPlayers(roomCode, async (action, updatedPlayer) => {
+        if (updatedPlayer.player_token === myPlayerToken) {
+            myPlayerRecord = updatedPlayer;
+            if (clientPauseToggle) {
+                clientPauseToggle.checked = !!updatedPlayer.is_paused;
+            }
+        }
+        await refreshPlayersList(roomCode);
+    });
 
-    players.forEach(name => {
-        const li = document.createElement('li');
-        li.className = 'lobby-player-badge';
-        li.textContent = name;
-        lobbyPlayersList.appendChild(li);
+    // 3. Würfe
+    await subscribeToRolls(roomCode, (action, newRoll) => {
+        if (action === 'create') {
+            prependHistoryItem(newRoll);
+        }
     });
 }
 
 /**
- * Rendert den Spielverlauf in der mobilen Ansicht.
+ * Wendet den aktuellen Raumzustand auf die Controller-UI an.
  */
-function renderClientHistory(history) {
-    if (!clientHistoryList) return;
-    clientHistoryList.innerHTML = '';
-    
-    if (!history || history.length === 0) {
-        clientHistoryList.innerHTML = '<li class="history-item" style="color: var(--text-muted); justify-content: center;">Keine Würfe vorhanden</li>';
+function applyRoomState(room) {
+    if (!room) return;
+
+    // Modus & Runden-Badges
+    if (gameplayRoundBadge) {
+        gameplayRoundBadge.textContent = `RUNDE ${room.current_round || 1}${room.total_rounds ? ` / ${room.total_rounds}` : ''}`;
+    }
+    if (gameplayModeBadge) {
+        const modeLabels = { endless: 'Party-Modus', survival: 'Survival-Modus', tournament: 'Turnier-Modus' };
+        gameplayModeBadge.textContent = modeLabels[room.game_mode] || room.game_mode;
+    }
+
+    if (room.status === 'lobby') {
+        if (lobbyContainer) lobbyContainer.style.display = 'block';
+        if (gameplayContainer) gameplayContainer.style.display = 'none';
         return;
     }
 
-    history.forEach(item => {
-        const li = document.createElement('li');
-        li.className = `history-item ${item.success ? 'win' : 'fail'}`;
-        
-        const escapedPlayer = escapeHtml(item.player);
-        const escapedHand = escapeHtml(item.hand);
-        const escapedBet = escapeHtml(item.bet);
-        const escapedStake = escapeHtml(item.stake || 'Standard-Einsatz');
-        const escapedDice = escapeHtml(item.dice);
-        const escapedTime = escapeHtml(item.time);
-        
-        li.innerHTML = `
-            <div style="width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px; gap: 8px;">
-                    <strong style="font-size: 1.05rem; color: var(--text-main); font-family: 'Rajdhani', sans-serif; word-break: break-word; min-width: 0;">${escapedPlayer}: ${escapedHand}</strong>
-                    <span class="history-time" style="font-size: 0.8rem; color: var(--text-muted); font-family: 'Orbitron', sans-serif; flex-shrink: 0; margin-left: auto;">${escapedTime}</span>
-                </div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; word-break: break-word;">
-                    Ziel: ${escapedBet} | Einsatz: ${escapedStake} <br>
-                    Wurf: [${escapedDice}]
-                </div>
+    // Status ist 'playing'
+    if (lobbyContainer) lobbyContainer.style.display = 'none';
+    if (gameplayContainer) gameplayContainer.style.display = 'block';
+
+    // Prüfen, wer an der Reihe ist
+    isMyTurn = (room.active_player_token === myPlayerToken);
+
+    if (isMyTurn) {
+        if (gameplayStatusTitle) {
+            gameplayStatusTitle.textContent = 'Du bist dran!';
+            gameplayStatusTitle.style.color = 'var(--neon-green)';
+            gameplayStatusTitle.style.textShadow = 'var(--glow-green)';
+        }
+        if (gameplayRollButton) {
+            gameplayRollButton.disabled = isRolling;
+            gameplayRollButton.style.display = 'block';
+        }
+        if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
+    } else {
+        const activePlayer = currentPlayers.find(p => p.player_token === room.active_player_token);
+        const activeName = activePlayer ? activePlayer.name : 'jemand anderes';
+
+        if (gameplayStatusTitle) {
+            gameplayStatusTitle.textContent = `${activeName} ist am Zug...`;
+            gameplayStatusTitle.style.color = 'var(--text-muted)';
+            gameplayStatusTitle.style.textShadow = 'none';
+        }
+        if (gameplayRollButton) {
+            gameplayRollButton.style.display = 'none';
+        }
+    }
+
+    // Letzte Aktion verarbeiten (3D Würfel Animation, Timer, Strafen-Alerts)
+    if (room.last_action) {
+        handleLastAction(room.last_action);
+    }
+}
+
+/**
+ * Behandelt empfangene Echtzeit-Aktionen (Wurf, Strafenverteilung, Timer).
+ */
+function handleLastAction(action) {
+    if (!action) return;
+
+    if (action.type === 'roll') {
+        // 3D Würfel Animation synchron ausführen
+        animateDiceRoll(action.dice, () => {
+            // Wenn der Wurf von mir kam und Strafen zu verteilen sind
+            if (action.playerToken === myPlayerToken && action.isHit) {
+                if (action.bet === 'doppelpasch') {
+                    openPenaltyModal('Doppelpasch getroffen!', 2, 'Schlucke');
+                } else if (action.bet === 'fullhouse') {
+                    openPenaltyModal('Full House getroffen!', 2, 'Split (1 Shot + 1/2 Drink)');
+                }
+            }
+
+            // Optionales Timer-Handling
+            if (action.timerSeconds > 0) {
+                startControllerTimer(action.timerSeconds);
+            }
+        });
+    } else if (action.type === 'penalty_distributed') {
+        // Prüfen, ob ich eine Strafe erhalten habe
+        if (action.targets && Array.isArray(action.targets)) {
+            const myPenalty = action.targets.find(t => t.player_token === myPlayerToken);
+            if (myPenalty) {
+                showIncomingPenaltyAlert(action.fromPlayerName, myPenalty.amount, myPenalty.type);
+            }
+        }
+    }
+}
+
+/**
+ * Zeigt den Alert an, wenn der Spieler eine Strafe von einem Mitspieler erhalten hat.
+ */
+function showIncomingPenaltyAlert(senderName, amount, type) {
+    if (!incomingPenaltyAlert || !incomingPenaltyText) return;
+
+    incomingPenaltyText.innerHTML = `<strong>${senderName}</strong> verdonnert dich zu:<br><span style="font-size: 1.5rem; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif;">${amount} ${type || 'Schlucke'}</span>`;
+    incomingPenaltyAlert.style.display = 'flex';
+
+    playProceduralSound('fail');
+    triggerVibration([200, 100, 200, 100, 400]);
+}
+
+/**
+ * Öffnet das Modal zur interaktiven Strafenverteilung auf Mitspieler.
+ */
+function openPenaltyModal(title, count, penaltyType) {
+    if (!penaltyModal || !penaltyTargetsList) return;
+
+    penaltyState.totalToDistribute = count;
+    penaltyState.remaining = count;
+    penaltyState.penaltyType = penaltyType;
+    penaltyState.allocations = {};
+
+    if (penaltyModalTitle) penaltyModalTitle.textContent = title;
+    if (penaltyRemainingCount) penaltyRemainingCount.textContent = count;
+
+    renderPenaltyTargetRows();
+    penaltyModal.style.display = 'flex';
+}
+
+function renderPenaltyTargetRows() {
+    if (!penaltyTargetsList) return;
+    penaltyTargetsList.innerHTML = '';
+
+    // Alle anderen aktiven Spieler im Raum auflisten
+    const eligibleTargets = currentPlayers.filter(p => p.player_token !== myPlayerToken && !p.is_paused);
+
+    if (eligibleTargets.length === 0) {
+        penaltyTargetsList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Keine weiteren aktiven Spieler im Raum.</div>';
+        return;
+    }
+
+    eligibleTargets.forEach(player => {
+        const allocated = penaltyState.allocations[player.player_token] || 0;
+
+        const row = document.createElement('div');
+        row.className = 'penalty-target-row';
+        row.innerHTML = `
+            <div class="penalty-target-name">${player.name}</div>
+            <div class="penalty-counter-controls">
+                <button type="button" class="penalty-counter-btn btn-minus">-</button>
+                <span class="penalty-count-val">${allocated}</span>
+                <button type="button" class="penalty-counter-btn btn-plus">+</button>
             </div>
         `;
-        clientHistoryList.appendChild(li);
+
+        const btnMinus = row.querySelector('.btn-minus');
+        const btnPlus = row.querySelector('.btn-plus');
+        const countVal = row.querySelector('.penalty-count-val');
+
+        btnMinus.addEventListener('click', () => {
+            if (allocated > 0) {
+                penaltyState.allocations[player.player_token] = allocated - 1;
+                penaltyState.remaining++;
+                countVal.textContent = penaltyState.allocations[player.player_token];
+                if (penaltyRemainingCount) penaltyRemainingCount.textContent = penaltyState.remaining;
+            }
+        });
+
+        btnPlus.addEventListener('click', () => {
+            if (penaltyState.remaining > 0) {
+                penaltyState.allocations[player.player_token] = (penaltyState.allocations[player.player_token] || 0) + 1;
+                penaltyState.remaining--;
+                countVal.textContent = penaltyState.allocations[player.player_token];
+                if (penaltyRemainingCount) penaltyRemainingCount.textContent = penaltyState.remaining;
+            }
+        });
+
+        penaltyTargetsList.appendChild(row);
     });
 }
 
-function escapeHtml(str) {
-    if (typeof str !== 'string') return '';
-    return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+/**
+ * Bestätigt die Strafenverteilung und bucht sie in PocketBase ein.
+ */
+async function handleConfirmPenaltyDistribution() {
+    const targets = [];
+    for (const [token, amount] of Object.entries(penaltyState.allocations)) {
+        if (amount > 0) {
+            const player = currentPlayers.find(p => p.player_token === token);
+            targets.push({
+                player_token: token,
+                name: player ? player.name : 'Spieler',
+                amount,
+                type: penaltyState.penaltyType || 'Schlucke'
+            });
+        }
+    }
+
+    if (penaltyModal) penaltyModal.style.display = 'none';
+
+    if (targets.length > 0 && currentRoomRecord) {
+        try {
+            await distributePenalties({
+                roomRecordId: currentRoomRecord.id,
+                roomCode: currentRoomRecord.code,
+                fromPlayerToken: myPlayerToken,
+                fromPlayerName: myPlayerRecord ? myPlayerRecord.name : 'Spieler',
+                targets
+            });
+        } catch (err) {
+            console.error('Fehler beim Zuweisen der Strafen:', err);
+        }
+    }
 }
 
-function updateStakeOptions(set, options) {
-    if (!gameplayStakeSelect) return;
-    gameplayStakeSelect.innerHTML = '';
+/**
+ * Würfel-Klick Handler
+ */
+async function handleRollClick() {
+    if (!isMyTurn || isRolling || !currentRoomRecord) return;
 
-    // Standard-Eigene-Aktion option zuerst hinzufügen (Default-Auswahl)
-    const customOpt = document.createElement('option');
-    customOpt.value = 'custom';
-    customOpt.textContent = 'Eigene Aktion...';
-    gameplayStakeSelect.appendChild(customOpt);
+    isRolling = true;
+    if (gameplayRollButton) gameplayRollButton.disabled = true;
 
-    let list = options && options.length > 0 ? options : [];
+    playProceduralSound('roll');
 
-    if (set === 'eigenes' && list.length === 0) {
-        // Fallback: Lade lokale Client-Eigene-Aktion aus localStorage
-        const customText = localStorage.getItem('quintasch_custom_stakes') || '';
-        const lines = customText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-        if (lines.length > 0) {
-            list = lines;
-        } else {
-            list = ['Standard-Einsatz'];
-        }
-    } else if (list.length === 0) {
-        list = ['Standard-Einsatz'];
+    // 1. 5 Zufallszahlen (1-6)
+    const dice = Array.from({ length: 5 }, () => Math.floor(Math.random() * 6) + 1);
+
+    // 2. Auswertung
+    const bet = gameplayBetSelect ? gameplayBetSelect.value : 'pasch';
+    const isHit = checkResult(dice, bet);
+    const resultRank = evaluateHand(dice);
+
+    // Einsatz & Timer ermitteln
+    let stakeText = '';
+    let timerSecs = 0;
+    if (gameplayStakeSelect && gameplayStakeSelect.value === 'custom') {
+        stakeText = (gameplayCustomStakeInput ? gameplayCustomStakeInput.value : '').trim() || 'Eigener Einsatz';
+        timerSecs = parseInt(gameplayCustomTimerInput ? gameplayCustomTimerInput.value : 0, 10) || 0;
+    } else if (gameplayStakeSelect) {
+        stakeText = gameplayStakeSelect.value;
     }
 
-    list.forEach(opt => {
-        if (!opt || opt.trim() === '') return;
-        const option = document.createElement('option');
-        if (opt.startsWith('Standard-Einsatz')) {
-            option.value = 'standard';
-        } else {
-            option.value = opt;
-        }
-        option.textContent = opt;
-        gameplayStakeSelect.appendChild(option);
+    try {
+        await recordRoll({
+            roomRecordId: currentRoomRecord.id,
+            roomCode: currentRoomRecord.code,
+            playerToken: myPlayerToken,
+            playerName: myPlayerRecord ? myPlayerRecord.name : 'Spieler',
+            bet,
+            dice,
+            resultRank,
+            isHit,
+            stakeText,
+            timerSeconds: timerSecs
+        });
+    } catch (err) {
+        console.error('Fehler beim Speichern des Wurfes:', err);
+    } finally {
+        isRolling = false;
+        if (gameplayRollButton) gameplayRollButton.disabled = false;
+    }
+}
+
+/**
+ * Pausieren / Aussetzen Schalter
+ */
+async function handlePauseToggle() {
+    if (!myPlayerRecord) return;
+    const isPaused = clientPauseToggle ? clientPauseToggle.checked : false;
+    try {
+        await updatePlayer(myPlayerRecord.id, { is_paused: isPaused });
+    } catch (err) {
+        console.error('Fehler beim Aktualisieren des Pausen-Status:', err);
+    }
+}
+
+/**
+ * Führt die visuelle 3D-Drehung der 5 Würfel auf dem Smartphone aus.
+ */
+function animateDiceRoll(targetValues, onComplete) {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    if (mobileDiceTable) mobileDiceTable.style.display = 'flex';
+
+    const diceElements = [
+        document.getElementById('mobile-dice-0'),
+        document.getElementById('mobile-dice-1'),
+        document.getElementById('mobile-dice-2'),
+        document.getElementById('mobile-dice-3'),
+        document.getElementById('mobile-dice-4')
+    ];
+
+    diceElements.forEach((cube, index) => {
+        if (!cube) return;
+        const targetVal = targetValues[index] || 1;
+        const baseAngle = faceAngles[targetVal] || { x: 0, y: 0 };
+
+        currentRotations[index].x += 720;
+        currentRotations[index].y += 720;
+
+        cube.style.transition = 'transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        cube.style.transform = `rotateX(${currentRotations[index].x + baseAngle.x}deg) rotateY(${currentRotations[index].y + baseAngle.y}deg)`;
     });
 
-    // Default-Einsatz wiederherstellen falls vorhanden, sonst 'custom'
-    const savedStake = localStorage.getItem('quintasch_default_stake') || 'custom';
-    const hasSavedStake = Array.from(gameplayStakeSelect.options).some(opt => opt.value === savedStake);
-    if (hasSavedStake) {
-        gameplayStakeSelect.value = savedStake;
-    } else {
-        gameplayStakeSelect.value = 'custom';
-        localStorage.setItem('quintasch_default_stake', 'custom');
-    }
+    setTimeout(() => {
+        isAnimating = false;
+        if (typeof onComplete === 'function') onComplete();
+    }, 1300);
+}
 
-    // Toggle Custom inputs visibility
-    if (gameplayCustomStakeInput) {
-        gameplayCustomStakeInput.style.display = gameplayStakeSelect.value === 'custom' ? 'block' : 'none';
-        if (gameplayStakeSelect.value !== 'custom') {
-            gameplayCustomStakeInput.value = '';
-            localStorage.removeItem('quintasch_default_custom_stake');
+/**
+ * Synchronisierter Countdown Timer auf dem Smartphone
+ */
+function startControllerTimer(seconds) {
+    clearInterval(timerInterval);
+    timerTotalSeconds = seconds;
+    timerTimeLeft = seconds;
+
+    if (controllerTimerContainer) controllerTimerContainer.style.display = 'block';
+    if (controllerTimerText) controllerTimerText.textContent = `${timerTimeLeft}s`;
+    if (controllerTimerProgress) controllerTimerProgress.style.width = '100%';
+
+    timerInterval = setInterval(() => {
+        timerTimeLeft--;
+        if (controllerTimerText) controllerTimerText.textContent = `${timerTimeLeft}s`;
+        if (controllerTimerProgress) {
+            const pct = Math.max(0, (timerTimeLeft / timerTotalSeconds) * 100);
+            controllerTimerProgress.style.width = `${pct}%`;
         }
-    }
-    if (gameplayCustomTimerGroup) {
-        gameplayCustomTimerGroup.style.display = gameplayStakeSelect.value === 'custom' ? 'block' : 'none';
-        if (gameplayStakeSelect.value !== 'custom' && gameplayCustomTimerInput) {
-            gameplayCustomTimerInput.value = '';
-            localStorage.removeItem('quintasch_default_custom_timer');
+
+        if (timerTimeLeft > 0 && timerTimeLeft <= 5) {
+            playProceduralSound('tick');
         }
-    }
+
+        if (timerTimeLeft <= 0) {
+            clearInterval(timerInterval);
+            playProceduralSound('buzzer');
+            setTimeout(() => {
+                if (controllerTimerContainer) controllerTimerContainer.style.display = 'none';
+            }, 3000);
+        }
+    }, 1000);
+}
+
+/**
+ * Spielerliste und Historie aktualisieren
+ */
+async function refreshPlayersAndHistory(roomCode) {
+    await refreshPlayersList(roomCode);
+    try {
+        const historyData = await getRollsHistory(roomCode, 20);
+        if (clientHistoryList && historyData.items) {
+            clientHistoryList.innerHTML = '';
+            historyData.items.forEach(roll => prependHistoryItem(roll));
+        }
+    } catch (e) {}
+}
+
+async function refreshPlayersList(roomCode) {
+    try {
+        currentPlayers = await getPlayers(roomCode);
+
+        // Lobby-Liste rendern
+        if (lobbyPlayersListWait) {
+            lobbyPlayersListWait.innerHTML = '';
+            currentPlayers.forEach(p => {
+                const li = document.createElement('li');
+                li.className = 'lobby-player-badge';
+                li.innerHTML = `<span>${p.name}</span><span class="player-stats-mini">${p.is_online ? 'BEREIT' : 'OFFLINE'}</span>`;
+                lobbyPlayersListWait.appendChild(li);
+            });
+        }
+
+        // Gameplay-Liste rendern
+        if (lobbyPlayersList) {
+            lobbyPlayersList.innerHTML = '';
+            currentPlayers.forEach(p => {
+                const isActive = currentRoomRecord && currentRoomRecord.active_player_token === p.player_token;
+                const li = document.createElement('li');
+                li.className = `lobby-player-badge ${isActive ? 'active-turn' : ''}`;
+                li.innerHTML = `
+                    <div>
+                        <strong>${p.name}</strong> ${p.is_paused ? '<small style="color: var(--neon-yellow);">(Pause)</small>' : ''}
+                    </div>
+                    <div class="player-stats-mini">
+                        Strafen: <strong style="color: var(--neon-magenta);">${p.score || 0}</strong> | Treffer: <strong style="color: var(--neon-green);">${p.hits_count || 0}/${p.rolls_count || 0}</strong>
+                    </div>
+                `;
+                lobbyPlayersList.appendChild(li);
+            });
+        }
+    } catch (e) {}
+}
+
+function prependHistoryItem(roll) {
+    if (!clientHistoryList) return;
+
+    const li = document.createElement('li');
+    li.className = 'history-item';
+    li.style.fontSize = '0.85rem';
+    li.style.padding = '8px 10px';
+
+    const hitBadge = roll.is_hit
+        ? '<span style="color: var(--neon-green); font-weight: bold;">[GETROFFEN]</span>'
+        : '<span style="color: var(--neon-magenta);">[VERFEHLT]</span>';
+
+    li.innerHTML = `
+        <div style="display: flex; justify-content: space-between;">
+            <strong>${roll.player_name}</strong>
+            ${hitBadge}
+        </div>
+        <div style="color: var(--text-muted); font-size: 0.78rem;">
+            Wette: ${BET_LABELS[roll.bet] || roll.bet} | Würfel: [${(roll.dice || []).join(', ')}]
+        </div>
+    `;
+
+    clientHistoryList.insertBefore(li, clientHistoryList.firstChild);
 }

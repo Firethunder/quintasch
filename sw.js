@@ -1,13 +1,18 @@
-const CACHE_NAME = 'quintasch-v3';
+const CACHE_NAME = 'quintasch-v4';
 const ASSETS = [
   './',
   './index.html',
   './controller.html',
   './css/style.css',
+  './fonts/fonts.css',
   './js/app.js',
   './js/controller.js',
   './js/game.js',
   './js/audio.js',
+  './js/config.js',
+  './js/pocketbase-service.js',
+  './js/lib/pocketbase.umd.js',
+  './js/lib/qrcode.min.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
@@ -48,11 +53,10 @@ self.addEventListener('activate', (event) => {
 
 // Fetch-Event - Network-First Strategie mit Cache-Fallback
 self.addEventListener('fetch', (event) => {
-  // Ignoriere PeerJS WebSocket-Signaling, CDN-Skripte oder externe API Aufrufe
+  // Ignoriere PocketBase Realtime SSE (/api/realtime) oder externe API Aufrufe beim Caching
   const url = event.request.url;
   if (
-    url.includes('peerjs') || 
-    url.includes('socket.io') || 
+    url.includes('/api/realtime') || 
     url.includes('chrome-extension') ||
     !url.startsWith(self.location.origin)
   ) {
