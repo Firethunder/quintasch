@@ -136,9 +136,7 @@
         }
       }
     ],
-    "indexes": [
-      "CREATE UNIQUE INDEX `idx_room_code` ON `rooms` (`code`)"
-    ],
+    "indexes": [],
     "listRule": "",
     "viewRule": "",
     "createRule": "",
@@ -298,10 +296,7 @@
         }
       }
     ],
-    "indexes": [
-      "CREATE INDEX `idx_player_room` ON `players` (`room_code`)",
-      "CREATE INDEX `idx_player_token` ON `players` (`player_token`)"
-    ],
+    "indexes": [],
     "listRule": "",
     "viewRule": "",
     "createRule": "",
@@ -448,9 +443,7 @@
         }
       }
     ],
-    "indexes": [
-      "CREATE INDEX `idx_roll_room` ON `rolls` (`room_code`)"
-    ],
+    "indexes": [],
     "listRule": "",
     "viewRule": "",
     "createRule": "",
@@ -501,9 +494,7 @@
         }
       }
     ],
-    "indexes": [
-      "CREATE UNIQUE INDEX `idx_system_rule_name` ON `system_rulesets` (`name`)"
-    ],
+    "indexes": [],
     "listRule": "",
     "viewRule": "",
     "createRule": null,
@@ -568,9 +559,7 @@
         }
       }
     ],
-    "indexes": [
-      "CREATE INDEX `idx_custom_ruleset_creator` ON `custom_rulesets` (`creator_token`)"
-    ],
+    "indexes": [],
     "listRule": "",
     "viewRule": "",
     "createRule": "@request.data.creator_token != ''",
@@ -621,9 +610,7 @@
         }
       }
     ],
-    "indexes": [
-      "CREATE UNIQUE INDEX `idx_stake_set_name` ON `stake_sets` (`name`)"
-    ],
+    "indexes": [],
     "listRule": "",
     "viewRule": "",
     "createRule": null,
