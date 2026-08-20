@@ -105,6 +105,12 @@ let gameplayCustomStakeInput = null;
 let gameplayCustomTimerGroup = null;
 let gameplayCustomTimerInput = null;
 let gameplayRollButton = null;
+let openRulesCheatsheetBtn = null;
+let rulesCheatsheetModal = null;
+let rulesCheatsheetTitle = null;
+let rulesCheatsheetList = null;
+let closeRulesCheatsheetBtn = null;
+let controllerRematchBtn = null;
 let mobileDiceTable = null;
 let lobbyPlayersList = null;
 let clientHistoryList = null;
@@ -362,6 +368,32 @@ function initDomElements() {
     controllerVictorySubtitle = document.getElementById('controller-victory-subtitle');
     controllerPodiumContainer = document.getElementById('controller-podium-container');
     controllerVictoryRanking = document.getElementById('controller-victory-ranking');
+    controllerRematchBtn = document.getElementById('controller-rematch-btn');
+
+    if (controllerRematchBtn) {
+        controllerRematchBtn.addEventListener('click', handleControllerRematch);
+    }
+
+    // Rules Cheat Sheet
+    openRulesCheatsheetBtn = document.getElementById('open-rules-cheatsheet-btn');
+    rulesCheatsheetModal = document.getElementById('rules-cheatsheet-modal');
+    rulesCheatsheetTitle = document.getElementById('rules-cheatsheet-title');
+    rulesCheatsheetList = document.getElementById('rules-cheatsheet-list');
+    closeRulesCheatsheetBtn = document.getElementById('close-rules-cheatsheet-btn');
+
+    if (openRulesCheatsheetBtn) {
+        openRulesCheatsheetBtn.addEventListener('click', handleOpenRulesCheatsheet);
+    }
+    if (closeRulesCheatsheetBtn && rulesCheatsheetModal) {
+        closeRulesCheatsheetBtn.addEventListener('click', () => {
+            rulesCheatsheetModal.style.display = 'none';
+        });
+    }
+    if (rulesCheatsheetModal) {
+        rulesCheatsheetModal.addEventListener('click', (e) => {
+            if (e.target === rulesCheatsheetModal) rulesCheatsheetModal.style.display = 'none';
+        });
+    }
 
     controllerGroupAlert = document.getElementById('controller-group-alert');
     controllerGroupIcon = document.getElementById('controller-group-icon');
@@ -840,10 +872,18 @@ function applyRoomState(room) {
     if (lobbyContainer) lobbyContainer.style.display = 'none';
     if (gameplayContainer) gameplayContainer.style.display = 'block';
 
+    const myRolls = (myPlayerRecord && myPlayerRecord.rolls_count) ? myPlayerRecord.rolls_count : 0;
+    const maxRounds = room.total_rounds || 5;
+    const quotaReached = (room.game_mode === 'tournament' && myRolls >= maxRounds);
+
+    if (room.game_mode === 'tournament' && gameplayRoundBadge) {
+        gameplayRoundBadge.textContent = `WURF ${Math.min(myRolls + 1, maxRounds)} / ${maxRounds}`;
+    }
+
     if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
     if (gameplayRollButton) {
         gameplayRollButton.style.display = 'block';
-        gameplayRollButton.disabled = isRolling || isAnimating || (myPlayerRecord && myPlayerRecord.is_paused);
+        gameplayRollButton.disabled = isRolling || isAnimating || (myPlayerRecord && myPlayerRecord.is_paused) || quotaReached;
     }
 
     if (gameplayStatusTitle) {
@@ -851,6 +891,10 @@ function applyRoomState(room) {
             gameplayStatusTitle.textContent = '⏸️ Du pausierst aktuell';
             gameplayStatusTitle.style.color = 'var(--neon-yellow)';
             gameplayStatusTitle.style.textShadow = '0 0 5px rgba(255, 230, 0, 0.3)';
+        } else if (quotaReached) {
+            gameplayStatusTitle.textContent = '✅ Alle Würfe erledigt (Warte auf Mitspieler)';
+            gameplayStatusTitle.style.color = 'var(--neon-cyan)';
+            gameplayStatusTitle.style.textShadow = 'var(--glow-cyan)';
         } else {
             gameplayStatusTitle.textContent = '🎲 Bereit zum Würfeln!';
             gameplayStatusTitle.style.color = 'var(--neon-green)';
@@ -907,6 +951,55 @@ function handleLastAction(action) {
         playProceduralSound('win');
         triggerVibration([100, 50, 100]);
     }
+}
+
+async function refreshPlayersList(roomCode) {
+    try {
+        currentPlayers = await getPlayers(roomCode);
+
+        // Lobby-Liste rendern
+        if (lobbyPlayersListWait) {
+            lobbyPlayersListWait.innerHTML = '';
+            currentPlayers.forEach(p => {
+                const li = document.createElement('li');
+                li.className = 'lobby-player-badge';
+                li.innerHTML = `<span>${p.name}</span><span class="player-stats-mini">${p.is_online ? 'BEREIT' : 'OFFLINE'}</span>`;
+                lobbyPlayersListWait.appendChild(li);
+            });
+        }
+
+        // Gameplay-Liste rendern
+        if (lobbyPlayersList) {
+            lobbyPlayersList.innerHTML = '';
+            currentPlayers.forEach(p => {
+                const isMe = p.player_token === myPlayerToken;
+                const li = document.createElement('li');
+                li.className = 'lobby-player-badge';
+                li.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <strong>${p.name}${isMe ? ' (Du)' : ''}</strong> ${p.is_paused ? '<small style="color: var(--neon-yellow);">(Pause)</small>' : ''}
+                        ${!isMe ? `<button type="button" class="btn-peer-pause" data-id="${p.id}" data-paused="${p.is_paused ? '1' : '0'}" style="background: rgba(255,255,255,0.06); border: 1px solid ${p.is_paused ? 'var(--neon-green)' : 'rgba(255,255,255,0.2)'}; color: ${p.is_paused ? 'var(--neon-green)' : 'var(--text-muted)'}; border-radius: 4px; font-size: 0.65rem; padding: 2px 6px; cursor: pointer;">${p.is_paused ? '▶️ Aktiv' : '⏸️ Inaktiv'}</button>` : ''}
+                    </div>
+                    <div class="player-stats-mini">
+                        Strafen: <strong style="color: var(--neon-magenta);">${p.score || 0}</strong> | Treffer: <strong style="color: var(--neon-green);">${p.hits_count || 0}/${p.rolls_count || 0}</strong>
+                    </div>
+                `;
+
+                const peerBtn = li.querySelector('.btn-peer-pause');
+                if (peerBtn) {
+                    peerBtn.addEventListener('click', async () => {
+                        const targetId = peerBtn.dataset.id;
+                        const currentlyPaused = peerBtn.dataset.paused === '1';
+                        try {
+                            await updatePlayer(targetId, { is_paused: !currentlyPaused });
+                        } catch (e) {}
+                    });
+                }
+
+                lobbyPlayersList.appendChild(li);
+            });
+        }
+    } catch (e) {}
 }
 
 function showControllerVictoryPodium(actionData) {
@@ -977,6 +1070,102 @@ function showControllerVictoryPodium(actionData) {
     controllerVictoryModal.style.display = 'flex';
     playProceduralSound('win');
     triggerVibration([150, 50, 150, 50, 300]);
+}
+
+/**
+ * Öffnet den Regel-Spickzettel mit allen 10 Sprüchen des aktiven Sets
+ */
+async function handleOpenRulesCheatsheet() {
+    if (!rulesCheatsheetModal || !rulesCheatsheetList) return;
+
+    const setKey = (currentRoomRecord && currentRoomRecord.active_stake_set) ? currentRoomRecord.active_stake_set : 'klassisch';
+    let stakes = STAKE_SETS[setKey.toLowerCase()];
+
+    if (!stakes) {
+        const found = controllerCachedRulesets.find(r => (r.id && r.id === setKey) || r.name.toLowerCase() === setKey.toLowerCase());
+        if (found && found.items && found.items.length > 0) {
+            stakes = found.items;
+        } else {
+            stakes = STAKE_SETS['klassisch'];
+        }
+    }
+
+    if (rulesCheatsheetTitle) {
+        rulesCheatsheetTitle.textContent = `📜 Set: ${setKey.toUpperCase()}`;
+    }
+
+    const betCategories = [
+        { label: 'Pasch', prob: '~90.7%' },
+        { label: 'Doppelpasch', prob: '~23.1%' },
+        { label: 'Drasch', prob: '~15.4%' },
+        { label: 'Full House', prob: '~3.9%' },
+        { label: 'Kleine Straße', prob: '~3.1%' },
+        { label: 'Große Straße', prob: '~3.1%' },
+        { label: 'Straße', prob: '~3.1%' },
+        { label: 'Quadrasch', prob: '~1.9%' },
+        { label: 'Quintasch', prob: '~0.08%' },
+        { label: 'Sonder-Regel / Joker', prob: 'Special' }
+    ];
+
+    rulesCheatsheetList.innerHTML = betCategories.map((cat, idx) => {
+        const text = stakes[idx] || stakes[idx % stakes.length] || '1 Schluck trinken';
+        return `
+            <div style="background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 6px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <div>
+                    <strong style="color: var(--neon-cyan); font-family: 'Orbitron', sans-serif;">${cat.label}</strong>
+                    <span style="font-size: 0.7rem; color: var(--text-muted); margin-left: 5px;">(${cat.prob})</span>
+                </div>
+                <span style="color: #fff; font-size: 0.85rem; text-align: right;">${text}</span>
+            </div>
+        `;
+    }).join('');
+
+    rulesCheatsheetModal.style.display = 'flex';
+}
+
+/**
+ * Startet eine Revanche für alle Mitspieler
+ */
+async function handleControllerRematch() {
+    if (!currentRoomRecord) return;
+    try {
+        if (controllerRematchBtn) {
+            controllerRematchBtn.disabled = true;
+            controllerRematchBtn.textContent = 'Starte Revanche...';
+        }
+
+        // Alle Spieler zurücksetzen
+        for (const p of currentPlayers) {
+            try {
+                await updatePlayer(p.id, {
+                    score: 0,
+                    penalties_distributed: 0,
+                    rolls_count: 0,
+                    hits_count: 0
+                });
+            } catch (e) {}
+        }
+
+        // Raum auf 'playing' setzen und Revanche-Action senden
+        await updateRoom(currentRoomRecord.id, {
+            status: 'playing',
+            current_round: 1,
+            last_action: {
+                type: 'rematch',
+                startedBy: myPlayerRecord ? myPlayerRecord.name : 'Spieler'
+            }
+        });
+
+        if (controllerVictoryModal) controllerVictoryModal.style.display = 'none';
+
+    } catch (err) {
+        console.error('Fehler beim Starten der Revanche:', err);
+    } finally {
+        if (controllerRematchBtn) {
+            controllerRematchBtn.disabled = false;
+            controllerRematchBtn.textContent = '🔥 Revanche / Neues Spiel starten';
+        }
+    }
 }
 
 function showControllerGroupAlert(groupAlert) {
@@ -1129,6 +1318,16 @@ async function handleConfirmPenaltyDistribution() {
 async function handleRollClick() {
     if (isRolling || !currentRoomRecord || (myPlayerRecord && myPlayerRecord.is_paused)) return;
 
+    // Turnier-Kontingent prüfen
+    if (currentRoomRecord.game_mode === 'tournament') {
+        const myRolls = (myPlayerRecord && myPlayerRecord.rolls_count) ? myPlayerRecord.rolls_count : 0;
+        const maxRounds = currentRoomRecord.total_rounds || 5;
+        if (myRolls >= maxRounds) {
+            alert(`Du hast dein Wurf-Kontingent (${maxRounds} Würfe) bereits erreicht!`);
+            return;
+        }
+    }
+
     isRolling = true;
     if (gameplayRollButton) gameplayRollButton.disabled = true;
 
@@ -1165,11 +1364,43 @@ async function handleRollClick() {
             stakeText,
             timerSeconds: timerSecs
         });
+
+        // Prüfen, ob Turniermodus beendet ist (alle aktiven Spieler haben ihre Würfe)
+        if (currentRoomRecord.game_mode === 'tournament') {
+            try {
+                const updatedPlayers = await getPlayers(currentRoomRecord.code);
+                const activePlaying = updatedPlayers.filter(p => !p.is_paused);
+                const maxRounds = currentRoomRecord.total_rounds || 5;
+                const allDone = activePlaying.length > 0 && activePlaying.every(p => (p.rolls_count || 0) >= maxRounds);
+
+                if (allDone) {
+                    const sorted = [...activePlaying].sort((a, b) => {
+                        const rateA = a.rolls_count ? (a.hits_count / a.rolls_count) : 0;
+                        const rateB = b.rolls_count ? (b.hits_count / b.rolls_count) : 0;
+                        if (rateB !== rateA) return rateB - rateA;
+                        return (b.score || 0) - (a.score || 0);
+                    });
+                    await updateRoom(currentRoomRecord.id, {
+                        status: 'finished',
+                        last_action: {
+                            type: 'game_finished',
+                            mode: 'tournament',
+                            winnerName: sorted[0]?.name || 'Sieger'
+                        }
+                    });
+                }
+            } catch (e) {}
+        }
     } catch (err) {
         console.error('Fehler beim Speichern des Wurfes:', err);
     } finally {
         isRolling = false;
-        if (gameplayRollButton) gameplayRollButton.disabled = isAnimating || (myPlayerRecord && myPlayerRecord.is_paused);
+        if (gameplayRollButton) {
+            const myRolls = (myPlayerRecord && myPlayerRecord.rolls_count) ? myPlayerRecord.rolls_count : 0;
+            const maxRounds = currentRoomRecord ? (currentRoomRecord.total_rounds || 5) : 5;
+            const quotaReached = (currentRoomRecord && currentRoomRecord.game_mode === 'tournament' && myRolls >= maxRounds);
+            gameplayRollButton.disabled = isAnimating || (myPlayerRecord && myPlayerRecord.is_paused) || quotaReached;
+        }
     }
 }
 
@@ -1267,42 +1498,6 @@ async function refreshPlayersAndHistory(roomCode) {
         if (clientHistoryList && historyData.items) {
             clientHistoryList.innerHTML = '';
             historyData.items.forEach(roll => prependHistoryItem(roll));
-        }
-    } catch (e) {}
-}
-
-async function refreshPlayersList(roomCode) {
-    try {
-        currentPlayers = await getPlayers(roomCode);
-
-        // Lobby-Liste rendern
-        if (lobbyPlayersListWait) {
-            lobbyPlayersListWait.innerHTML = '';
-            currentPlayers.forEach(p => {
-                const li = document.createElement('li');
-                li.className = 'lobby-player-badge';
-                li.innerHTML = `<span>${p.name}</span><span class="player-stats-mini">${p.is_online ? 'BEREIT' : 'OFFLINE'}</span>`;
-                lobbyPlayersListWait.appendChild(li);
-            });
-        }
-
-        // Gameplay-Liste rendern
-        if (lobbyPlayersList) {
-            lobbyPlayersList.innerHTML = '';
-            currentPlayers.forEach(p => {
-                const isActive = currentRoomRecord && currentRoomRecord.active_player_token === p.player_token;
-                const li = document.createElement('li');
-                li.className = `lobby-player-badge ${isActive ? 'active-turn' : ''}`;
-                li.innerHTML = `
-                    <div>
-                        <strong>${p.name}</strong> ${p.is_paused ? '<small style="color: var(--neon-yellow);">(Pause)</small>' : ''}
-                    </div>
-                    <div class="player-stats-mini">
-                        Strafen: <strong style="color: var(--neon-magenta);">${p.score || 0}</strong> | Treffer: <strong style="color: var(--neon-green);">${p.hits_count || 0}/${p.rolls_count || 0}</strong>
-                    </div>
-                `;
-                lobbyPlayersList.appendChild(li);
-            });
         }
     } catch (e) {}
 }

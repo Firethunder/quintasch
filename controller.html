@@ -364,11 +364,19 @@
                         <option value="1 Shot">1 Shot</option>
                         <option value="2 Shots">2 Shots</option>
                     </select>
-                    <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 3 Schlucke auf Ex" style="display: none; margin-top: 10px;" maxlength="30">
-                    <div id="gameplay-custom-timer-group" style="display: none; margin-top: 10px;">
-                        <label for="gameplay-custom-timer" style="font-size: 0.8rem;">Timer (optional in Sekunden)</label>
-                        <input type="number" id="gameplay-custom-timer" class="form-control" placeholder="z. B. 30" min="1" max="300" style="padding: 6px 12px; font-size: 0.95rem; width: 100%;">
-                    </div>
+
+                    <button type="button" id="open-rules-cheatsheet-btn" style="background: rgba(0, 240, 255, 0.08); border: 1px dashed var(--neon-cyan); border-radius: 6px; color: var(--neon-cyan); font-size: 0.8rem; padding: 6px 10px; width: 100%; margin-top: 10px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                        📜 Alle Sprüche & Regeln des Sets ansehen
+                    </button>
+                </div>
+
+                <div class="form-group" id="gameplay-custom-stake-group" style="text-align: left; margin-top: 10px;">
+                    <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 2 Schlucke an Tom" style="display: block;">
+                </div>
+
+                <div class="form-group" id="gameplay-custom-timer-group" style="text-align: left; margin-top: 10px; display: none;">
+                    <label for="gameplay-custom-timer" style="font-size: 0.8rem; color: var(--neon-yellow);">Countdown Timer (Sekunden, optional):</label>
+                    <input type="number" id="gameplay-custom-timer" class="form-control" placeholder="z. B. 15" min="0" max="180">
                 </div>
             </div>
 
@@ -517,8 +525,21 @@
                 <!-- Rangliste -->
             </div>
 
-            <div style="font-size: 0.85rem; color: var(--neon-cyan); margin-top: 5px; animation: pulse-ring 2s infinite;">
-                ⏳ Warte auf Revanche durch den Host...
+            <button id="controller-rematch-btn" class="btn-neon" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); width: 100%; margin-top: 10px;">
+                🔥 Revanche / Neues Spiel starten
+            </button>
+        </div>
+    </div>
+
+    <!-- MOBILE REGEL-SPICKZETTEL MODAL -->
+    <div id="rules-cheatsheet-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 11, 15, 0.95); z-index: 1350; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+        <div class="panel" style="width: 100%; max-width: 440px; text-align: left; border: 2px solid var(--neon-cyan); box-shadow: var(--glow-cyan); display: flex; flex-direction: column; gap: 12px; padding: 20px; max-height: 88vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="rules-cheatsheet-title" class="sidebar-title" style="font-size: 1.2rem; border: none; margin: 0; color: var(--neon-cyan);">📜 Regeln & Sprüche</h2>
+                <button type="button" id="close-rules-cheatsheet-btn" style="background: none; border: none; color: var(--neon-magenta); font-size: 1.3rem; cursor: pointer; font-weight: bold;">✕</button>
+            </div>
+            <div id="rules-cheatsheet-list" style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
+                <!-- Dynamische Sprüche des aktiven Sets -->
             </div>
         </div>
     </div>
