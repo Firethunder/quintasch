@@ -6,8 +6,10 @@
 
 import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, STAKE_SETS } from './game.js';
 import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
-import { getPocketBaseUrl, setPocketBaseUrl, getOrCreatePlayerToken, getSavedPlayerName, setSavedPlayerName } from './config.js';
+import { getPocketBaseUrl, setPocketBaseUrl, getOrCreatePlayerToken, getSavedPlayerName, setSavedPlayerName, generateRoomCode } from './config.js';
 import {
+    createRoom,
+    updateRoom,
     getRoomByCode,
     subscribeToRoom,
     joinPlayer,
@@ -65,8 +67,24 @@ const currentRotations = [
 
 // DOM Elemente
 let joinContainer = null;
+let tabJoinBtn = null;
+let tabCreateBtn = null;
+let joinTabContent = null;
+let createTabContent = null;
+let createPlayerNameInput = null;
+let mobileStakeSetSelect = null;
+let createGameButton = null;
+let mobileTargetScoreInput = null;
+let mobileTotalRoundsInput = null;
+let selectedMobileMode = 'endless';
+
 let lobbyContainer = null;
+let lobbyRoomCodeBadge = null;
+let lobbyCopyLinkBtn = null;
 let gameplayContainer = null;
+let gameplayRoomCodeBadge = null;
+let gameplayCopyLinkBtn = null;
+
 let clientRoomCodeInput = null;
 let clientPlayerNameInput = null;
 let joinButton = null;
@@ -216,8 +234,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initDomElements() {
     joinContainer = document.getElementById('join-container');
+    tabJoinBtn = document.getElementById('tab-join-btn');
+    tabCreateBtn = document.getElementById('tab-create-btn');
+    joinTabContent = document.getElementById('join-tab-content');
+    createTabContent = document.getElementById('create-tab-content');
+    createPlayerNameInput = document.getElementById('create-player-name');
+    mobileStakeSetSelect = document.getElementById('mobile-stake-set-select');
+    createGameButton = document.getElementById('create-game-button');
+    mobileTargetScoreInput = document.getElementById('mobile-target-score');
+    mobileTotalRoundsInput = document.getElementById('mobile-total-rounds');
+
     lobbyContainer = document.getElementById('lobby-container');
+    lobbyRoomCodeBadge = document.getElementById('lobby-room-code-badge');
+    lobbyCopyLinkBtn = document.getElementById('lobby-copy-link-btn');
     gameplayContainer = document.getElementById('gameplay-container');
+    gameplayRoomCodeBadge = document.getElementById('gameplay-room-code-badge');
+    gameplayCopyLinkBtn = document.getElementById('gameplay-copy-link-btn');
+
     clientRoomCodeInput = document.getElementById('client-room-code');
     clientPlayerNameInput = document.getElementById('client-player-name');
     joinButton = document.getElementById('join-button');
@@ -241,6 +274,62 @@ function initDomElements() {
     controllerTimerContainer = document.getElementById('controller-timer-container');
     controllerTimerText = document.getElementById('controller-timer-text');
     controllerTimerProgress = document.getElementById('controller-timer-progress');
+
+    // Tab Switching
+    if (tabJoinBtn && tabCreateBtn && joinTabContent && createTabContent) {
+        tabJoinBtn.addEventListener('click', () => {
+            tabJoinBtn.style.background = 'var(--neon-cyan)';
+            tabJoinBtn.style.color = '#0b0b0f';
+            tabCreateBtn.style.background = 'transparent';
+            tabCreateBtn.style.color = 'var(--text-muted)';
+            joinTabContent.style.display = 'block';
+            createTabContent.style.display = 'none';
+        });
+
+        tabCreateBtn.addEventListener('click', () => {
+            tabCreateBtn.style.background = 'var(--neon-cyan)';
+            tabCreateBtn.style.color = '#0b0b0f';
+            tabJoinBtn.style.background = 'transparent';
+            tabJoinBtn.style.color = 'var(--text-muted)';
+            joinTabContent.style.display = 'none';
+            createTabContent.style.display = 'block';
+            if (createPlayerNameInput && clientPlayerNameInput && clientPlayerNameInput.value) {
+                createPlayerNameInput.value = clientPlayerNameInput.value;
+            }
+        });
+    }
+
+    // Mobile Mode Selection Cards
+    const mobileModeCards = document.querySelectorAll('.mobile-mode-card');
+    const mobileSurvivalConfig = document.getElementById('mobile-survival-config');
+    const mobileTournamentConfig = document.getElementById('mobile-tournament-config');
+
+    mobileModeCards.forEach(card => {
+        card.addEventListener('click', () => {
+            mobileModeCards.forEach(c => {
+                c.classList.remove('selected');
+                c.style.background = 'rgba(15, 15, 22, 0.6)';
+                c.style.borderColor = 'rgba(0, 240, 255, 0.2)';
+            });
+            card.classList.add('selected');
+            card.style.background = 'rgba(0, 240, 255, 0.08)';
+            card.style.borderColor = 'var(--neon-cyan)';
+            selectedMobileMode = card.dataset.mode;
+
+            if (mobileSurvivalConfig) mobileSurvivalConfig.style.display = (selectedMobileMode === 'survival') ? 'block' : 'none';
+            if (mobileTournamentConfig) mobileTournamentConfig.style.display = (selectedMobileMode === 'tournament') ? 'block' : 'none';
+        });
+    });
+
+    if (createGameButton) {
+        createGameButton.addEventListener('click', handleCreateRoomOnMobile);
+    }
+    if (lobbyCopyLinkBtn) {
+        lobbyCopyLinkBtn.addEventListener('click', handleCopyRoomLink);
+    }
+    if (gameplayCopyLinkBtn) {
+        gameplayCopyLinkBtn.addEventListener('click', handleCopyRoomLink);
+    }
 
     // Penalty Modal
     penaltyModal = document.getElementById('penalty-modal');
@@ -441,6 +530,69 @@ function initConnectionStatus() {
 }
 
 /**
+ * Neues Spiel direkt auf dem Smartphone erstellen (Mobile-First)
+ */
+async function handleCreateRoomOnMobile() {
+    const playerName = (createPlayerNameInput ? createPlayerNameInput.value : '').trim();
+    if (!playerName) {
+        showJoinError('Bitte gib deinen Spielernamen ein!');
+        return;
+    }
+
+    const roomCode = generateRoomCode();
+    const targetScore = parseInt(mobileTargetScoreInput ? mobileTargetScoreInput.value : 10, 10) || 10;
+    const totalRounds = parseInt(mobileTotalRoundsInput ? mobileTotalRoundsInput.value : 5, 10) || 5;
+    const stakeSet = mobileStakeSetSelect ? mobileStakeSetSelect.value : 'klassisch';
+
+    if (joinErrorMsg) joinErrorMsg.style.display = 'none';
+
+    try {
+        if (createGameButton) {
+            createGameButton.disabled = true;
+            createGameButton.textContent = 'Erstelle Spiel...';
+        }
+
+        // 1. Raum in PocketBase erstellen und sofort auf 'playing' schalten
+        const room = await createRoom({
+            code: roomCode,
+            gameMode: selectedMobileMode,
+            targetScore,
+            totalRounds,
+            stakeSet
+        });
+
+        await updateRoom(room.id, { status: 'playing' });
+        room.status = 'playing';
+
+        currentRoomRecord = room;
+        setSavedPlayerName(playerName);
+
+        // 2. Spieler registrieren
+        const joinResult = await joinPlayer(roomCode, playerName, myPlayerToken);
+        myPlayerRecord = joinResult.player;
+        myPlayerToken = joinResult.token;
+
+        // 3. UI umschalten
+        if (joinContainer) joinContainer.style.display = 'none';
+        if (lobbyRoomCodeDisplay) lobbyRoomCodeDisplay.textContent = roomCode;
+        if (lobbyRoomCodeBadge) lobbyRoomCodeBadge.textContent = roomCode;
+        if (gameplayRoomCodeBadge) gameplayRoomCodeBadge.textContent = roomCode;
+
+        await setupRealtimeSubscriptions(room.id, roomCode);
+        await refreshPlayersAndHistory(roomCode);
+        applyRoomState(room);
+
+    } catch (err) {
+        console.error('Fehler beim Erstellen des mobilen Spiels:', err);
+        showJoinError('Fehler beim Erstellen des Spiels. Bitte prüfe die Serververbindung!');
+        if (createGameButton) {
+            createGameButton.disabled = false;
+            createGameButton.textContent = '🎮 Spiel erstellen & starten';
+        }
+    }
+}
+
+/**
  * Raum beitreten
  */
 async function handleJoinRoom() {
@@ -486,6 +638,8 @@ async function handleJoinRoom() {
         // 3. UI Umschalten & Realtime abonnieren
         if (joinContainer) joinContainer.style.display = 'none';
         if (lobbyRoomCodeDisplay) lobbyRoomCodeDisplay.textContent = roomCode;
+        if (lobbyRoomCodeBadge) lobbyRoomCodeBadge.textContent = roomCode;
+        if (gameplayRoomCodeBadge) gameplayRoomCodeBadge.textContent = roomCode;
 
         // Realtime Subscriptions aufsetzen
         await setupRealtimeSubscriptions(room.id, roomCode);
@@ -508,6 +662,29 @@ function showJoinError(msg) {
     if (joinErrorMsg) {
         joinErrorMsg.textContent = msg;
         joinErrorMsg.style.display = 'block';
+    }
+}
+
+/**
+ * Kopiert den Einladungslink für Mitspieler
+ */
+function handleCopyRoomLink() {
+    if (!currentRoomRecord || !currentRoomRecord.code) return;
+    const path = window.location.pathname;
+    const url = `${window.location.origin}${path}?room=${currentRoomRecord.code}`;
+
+    if (navigator.share) {
+        navigator.share({
+            title: 'Quintasch Spielrunde',
+            text: `Komm in meine Quintasch-Runde! Raum-Code: ${currentRoomRecord.code}`,
+            url: url
+        }).catch(() => {});
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            alert(`Einladungslink für Raum "${currentRoomRecord.code}" in Zwischenablage kopiert!`);
+        });
+    } else {
+        prompt('Kopiere diesen Link für deine Mitspieler:', url);
     }
 }
 

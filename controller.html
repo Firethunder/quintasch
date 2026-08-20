@@ -198,29 +198,95 @@
             <button id="header-settings-btn" style="position: absolute; right: 10px; top: 15px; background: none; border: none; color: var(--neon-cyan); font-size: 1.5rem; cursor: pointer; text-shadow: var(--glow-cyan); z-index: 10;">⚙️</button>
         </header>
 
-        <!-- BEITRITTS-BEREICH -->
+        <!-- BEITRITTS- & ERSTELLUNGS-BEREICH -->
         <main class="panel" id="join-container">
-            <h2 class="sidebar-title" style="font-size: 1.2rem; margin-bottom: 20px; border: none;">Spiel beitreten</h2>
-            
+            <!-- Tabs: Beitreten vs Neues Spiel -->
+            <div style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0, 240, 255, 0.05); padding: 4px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.2);">
+                <button type="button" id="tab-join-btn" style="flex: 1; padding: 8px; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; cursor: pointer; border: none; background: var(--neon-cyan); color: #0b0b0f; font-weight: bold; transition: all 0.2s;">
+                    🎮 Beitreten
+                </button>
+                <button type="button" id="tab-create-btn" style="flex: 1; padding: 8px; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; cursor: pointer; border: none; background: transparent; color: var(--text-muted); font-weight: bold; transition: all 0.2s;">
+                    ➕ Neues Spiel
+                </button>
+            </div>
+
             <div id="join-error-msg" class="status-error" style="font-size: 0.95rem; margin-bottom: 15px; display: none;"></div>
 
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label for="client-room-code">Raum-Code</label>
-                <input type="text" id="client-room-code" class="form-control" placeholder="z. B. QU7X" maxlength="8" style="text-transform: uppercase; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; text-align: center; letter-spacing: 2px;">
+            <!-- Tab 1: Beitreten -->
+            <div id="join-tab-content">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="client-room-code">Raum-Code</label>
+                    <input type="text" id="client-room-code" class="form-control" placeholder="z. B. QU7X" maxlength="8" style="text-transform: uppercase; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; text-align: center; letter-spacing: 2px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="client-player-name">Dein Nickname</label>
+                    <input type="text" id="client-player-name" class="form-control" placeholder="z. B. Max" maxlength="12">
+                </div>
+
+                <button class="btn-neon" id="join-button">Beitreten</button>
             </div>
 
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label for="client-player-name">Dein Nickname</label>
-                <input type="text" id="client-player-name" class="form-control" placeholder="z. B. Max" maxlength="12">
-            </div>
+            <!-- Tab 2: Neues Spiel erstellen -->
+            <div id="create-tab-content" style="display: none;">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="create-player-name">Dein Nickname</label>
+                    <input type="text" id="create-player-name" class="form-control" placeholder="z. B. Host-Max" maxlength="12">
+                </div>
 
-            <button class="btn-neon" id="join-button">Beitreten</button>
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); margin-bottom: 6px; display: block;">Spielmodus:</label>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="mobile-mode-card selected" data-mode="endless" style="background: rgba(0, 240, 255, 0.08); border: 1px solid var(--neon-cyan); border-radius: 6px; padding: 8px 12px; cursor: pointer;">
+                            <strong style="color: #fff; font-size: 0.9rem;">🎉 Party / Endlos</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Unbegrenztes freies Würfeln</div>
+                        </div>
+                        <div class="mobile-mode-card" data-mode="survival" style="background: rgba(15, 15, 22, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 6px; padding: 8px 12px; cursor: pointer;">
+                            <strong style="color: #fff; font-size: 0.9rem;">💀 Survival (Point-Race)</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Wer zuerst das Limit erreicht, verliert</div>
+                            <div id="mobile-survival-config" style="display: none; margin-top: 6px;">
+                                <label style="font-size: 0.75rem; color: var(--neon-yellow);">Max. Strafen:</label>
+                                <input type="number" id="mobile-target-score" class="form-control" value="10" min="1" max="50" style="padding: 4px 8px; font-size: 0.85rem; width: 70px; display: inline-block; margin-left: 5px;">
+                            </div>
+                        </div>
+                        <div class="mobile-mode-card" data-mode="tournament" style="background: rgba(15, 15, 22, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 6px; padding: 8px 12px; cursor: pointer;">
+                            <strong style="color: #fff; font-size: 0.9rem;">🏆 Turnier (Feste Runden)</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Jeder hat z. B. 5 eigene Würfe</div>
+                            <div id="mobile-tournament-config" style="display: none; margin-top: 6px;">
+                                <label style="font-size: 0.75rem; color: var(--neon-yellow);">Runden / Würfe:</label>
+                                <input type="number" id="mobile-total-rounds" class="form-control" value="5" min="1" max="25" style="padding: 4px 8px; font-size: 0.85rem; width: 70px; display: inline-block; margin-left: 5px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px; text-align: left;">
+                    <label for="mobile-stake-set-select" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan);">Einsatz-Set:</label>
+                    <select id="mobile-stake-set-select" class="form-control" style="font-size: 0.9rem; width: 100%;">
+                        <option value="klassisch">Klassisch (Trinkspiel)</option>
+                        <option value="alkoholfrei">Alkoholfrei (Sport/Action)</option>
+                        <option value="spanien">Spanien-Edition (¡Hola!)</option>
+                        <option value="mittelalter">Mittelalter-Edition (Seyd gegrüßt!)</option>
+                    </select>
+                </div>
+
+                <button class="btn-neon" id="create-game-button" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green);">🎮 Spiel erstellen & starten</button>
+            </div>
 
             <button id="toggle-settings-button" style="background: none; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline; font-size: 0.85rem; margin-top: 15px; width: 100%; text-align: center;">Server & Einstellungen</button>
         </main>
 
         <!-- LOBBY-WARTERAUM -->
         <main class="panel" id="lobby-container" style="display: none; text-align: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 6px 12px; margin-bottom: 12px;">
+                <span style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan);">
+                    Raum: <strong id="lobby-room-code-badge" style="color: var(--neon-yellow); letter-spacing: 1px;">----</strong>
+                </span>
+                <button id="lobby-copy-link-btn" type="button" style="background: rgba(0, 240, 255, 0.15); border: 1px solid var(--neon-cyan); border-radius: 4px; color: var(--neon-cyan); font-size: 0.75rem; padding: 3px 8px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                    📋 Link kopieren
+                </button>
+            </div>
+
             <h2 class="sidebar-title" id="lobby-status-title" style="font-size: 1.2rem; margin-bottom: 15px; border: none;">Raum <span id="lobby-room-code-display" style="color: var(--neon-cyan);">----</span></h2>
             
             <div class="loading-pulse" id="lobby-spinner"></div>
@@ -236,6 +302,15 @@
 
         <!-- GAMEPLAY-AKTIONSBEREICH -->
         <main class="panel" id="gameplay-container" style="display: none; text-align: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 6px 12px; margin-bottom: 12px;">
+                <span style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan);">
+                    Raum: <strong id="gameplay-room-code-badge" style="color: var(--neon-yellow); letter-spacing: 1px;">----</strong>
+                </span>
+                <button id="gameplay-copy-link-btn" type="button" style="background: rgba(0, 240, 255, 0.15); border: 1px solid var(--neon-cyan); border-radius: 4px; color: var(--neon-cyan); font-size: 0.75rem; padding: 3px 8px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                    📋 Link kopieren
+                </button>
+            </div>
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span id="gameplay-round-badge" style="font-size: 0.85rem; font-family: 'Orbitron', sans-serif; color: var(--neon-cyan);">RUNDE 1</span>
                 <span id="gameplay-mode-badge" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">PARTY-MODUS</span>
