@@ -915,27 +915,17 @@ function handleLastAction(action) {
     if (!action) return;
 
     if (action.type === 'roll') {
-        // 3D Würfel Animation synchron ausführen
-        animateDiceRoll(action.dice, () => {
-            // Wenn der Wurf von mir kam und Strafen zu verteilen sind
-            if (action.playerToken === myPlayerToken && action.isHit) {
-                if (action.bet === 'doppelpasch') {
-                    openPenaltyModal('Doppelpasch getroffen!', 2, 'Schlucke');
-                } else if (action.bet === 'fullhouse') {
-                    openPenaltyModal('Full House getroffen!', 2, 'Split (1 Shot + 1/2 Drink)');
+        // Wenn der Wurf von einem Mitspieler kam, animieren wir ihn synchron auf unserem Display
+        if (action.playerToken !== myPlayerToken) {
+            animateDiceRoll(action.dice, () => {
+                if (action.groupAlert) {
+                    showControllerGroupAlert(action.groupAlert);
                 }
-            }
-
-            // Gruppen-Alert (Wasserfall / Quintasch)
-            if (action.groupAlert) {
-                showControllerGroupAlert(action.groupAlert);
-            }
-
-            // Optionales Timer-Handling
-            if (action.timerSeconds > 0) {
-                startControllerTimer(action.timerSeconds);
-            }
-        });
+                if (action.timerSeconds > 0) {
+                    startControllerTimer(action.timerSeconds);
+                }
+            });
+        }
     } else if (action.type === 'penalty_distributed') {
         // Prüfen, ob ich eine Strafe erhalten habe
         if (action.targets && Array.isArray(action.targets)) {
@@ -1316,7 +1306,7 @@ async function handleConfirmPenaltyDistribution() {
  * Würfel-Klick Handler
  */
 async function handleRollClick() {
-    if (isRolling || !currentRoomRecord || (myPlayerRecord && myPlayerRecord.is_paused)) return;
+    if (isRolling || isAnimating || !currentRoomRecord || (myPlayerRecord && myPlayerRecord.is_paused)) return;
 
     // Turnier-Kontingent prüfen
     if (currentRoomRecord.game_mode === 'tournament') {
@@ -1332,6 +1322,7 @@ async function handleRollClick() {
     if (gameplayRollButton) gameplayRollButton.disabled = true;
 
     playProceduralSound('roll');
+    triggerVibration([80, 40, 80]);
 
     // 1. 5 Zufallszahlen (1-6)
     const dice = Array.from({ length: 5 }, () => Math.floor(Math.random() * 6) + 1);
@@ -1351,6 +1342,46 @@ async function handleRollClick() {
         stakeText = gameplayStakeSelect.value;
     }
 
+    // 3. Sofortige lokale 3D Animation starten (Zero-Latency)
+    animateDiceRoll(dice, () => {
+        if (isHit) {
+            if (bet === 'doppelpasch') {
+                openPenaltyModal('Doppelpasch getroffen!', 2, 'Schlucke');
+            } else if (bet === 'fullhouse') {
+                openPenaltyModal('Full House getroffen!', 2, 'Split (1 Shot + 1/2 Drink)');
+            }
+        }
+
+        // Lokaler Sound
+        if (isHit) {
+            playProceduralSound('win');
+        } else {
+            playProceduralSound('fail');
+        }
+
+        // Gruppen-Alert lokal triggern falls Straße / Quintasch
+        if (resultRank === BET_RANKS.strasse) {
+            showControllerGroupAlert({
+                type: 'wasserfall',
+                title: '🌊 WASSERFALL!',
+                description: 'Du hast eine Straße gewürfelt! Alle trinken!',
+                timerSeconds: 15
+            });
+        } else if (resultRank === BET_RANKS.quintasch) {
+            showControllerGroupAlert({
+                type: 'quintasch',
+                title: '👑 QUINTASCH!',
+                description: '5 Gleiche! ALLE AUF EX!',
+                timerSeconds: 10
+            });
+        }
+
+        if (timerSecs > 0) {
+            startControllerTimer(timerSecs);
+        }
+    });
+
+    // 4. Paralleler Netzwerk-Speichervorgang in PocketBase
     try {
         await recordRoll({
             roomRecordId: currentRoomRecord.id,
