@@ -65,17 +65,6 @@ Eine vollständige Schritt-für-Schritt-Anleitung für Caddy, SSL und static fil
 ### 2. Caddy Reverse-Proxy Konfiguration (`Caddyfile`)
 ```caddy
 api-quintasch.robedit.de {
-    # CORS Header für GitHub Pages & Custom Domain
-    @cors header Origin https://firethunder.github.io https://quintasch.robedit.de
-
-    handle_options {
-        header Access-Control-Allow-Origin "{header.Origin}"
-        header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
-        header Access-Control-Max-Age "3600"
-        respond 204
-    }
-
     reverse_proxy 127.0.0.1:8090 {
         # Ungepufferte Echtzeit-Übertragung für Server-Sent Events (SSE)
         flush_interval -1
