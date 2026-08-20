@@ -84,6 +84,9 @@ let lobbyCopyLinkBtn = null;
 let gameplayContainer = null;
 let gameplayRoomCodeBadge = null;
 let gameplayCopyLinkBtn = null;
+let incomingRollBanner = null;
+let incomingRollText = null;
+let incomingRollTimeout = null;
 
 let clientRoomCodeInput = null;
 let clientPlayerNameInput = null;
@@ -250,6 +253,8 @@ function initDomElements() {
     gameplayContainer = document.getElementById('gameplay-container');
     gameplayRoomCodeBadge = document.getElementById('gameplay-room-code-badge');
     gameplayCopyLinkBtn = document.getElementById('gameplay-copy-link-btn');
+    incomingRollBanner = document.getElementById('incoming-roll-banner');
+    incomingRollText = document.getElementById('incoming-roll-text');
 
     clientRoomCodeInput = document.getElementById('client-room-code');
     clientPlayerNameInput = document.getElementById('client-player-name');
@@ -718,8 +723,27 @@ async function setupRealtimeSubscriptions(roomId, roomCode) {
     await subscribeToRolls(roomCode, (action, newRoll) => {
         if (action === 'create') {
             prependHistoryItem(newRoll);
+            if (newRoll.player_token !== myPlayerToken) {
+                showIncomingRollToast(newRoll);
+            }
         }
     });
+}
+
+function showIncomingRollToast(roll) {
+    if (!incomingRollBanner || !incomingRollText) return;
+    const betName = BET_LABELS[roll.bet] || roll.bet;
+    const hitBadge = roll.is_hit ? '<span style="color: var(--neon-green); font-weight: bold;">🎉 Treffer!</span>' : '<span style="color: var(--neon-magenta); font-weight: bold;">💥 Verfehlt</span>';
+    const diceStr = roll.dice && Array.isArray(roll.dice) ? `[${roll.dice.join(', ')}]` : '';
+    const stakeStr = roll.stake_text ? ` • <em>${roll.stake_text}</em>` : '';
+
+    incomingRollText.innerHTML = `<strong>🎲 ${roll.player_name}:</strong> ${betName} ${diceStr} ➔ ${hitBadge}${stakeStr}`;
+    incomingRollBanner.style.display = 'block';
+
+    clearTimeout(incomingRollTimeout);
+    incomingRollTimeout = setTimeout(() => {
+        if (incomingRollBanner) incomingRollBanner.style.display = 'none';
+    }, 4500);
 }
 
 let lastStakeSetKey = null;
@@ -811,36 +835,26 @@ function applyRoomState(room) {
         return;
     }
 
-    // Status ist 'playing'
+    // Status ist 'playing' - Freies Würfeln für alle aktiven Spieler
     if (controllerVictoryModal) controllerVictoryModal.style.display = 'none';
     if (lobbyContainer) lobbyContainer.style.display = 'none';
     if (gameplayContainer) gameplayContainer.style.display = 'block';
 
-    // Prüfen, wer an der Reihe ist
-    isMyTurn = (room.active_player_token === myPlayerToken);
+    if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
+    if (gameplayRollButton) {
+        gameplayRollButton.style.display = 'block';
+        gameplayRollButton.disabled = isRolling || isAnimating || (myPlayerRecord && myPlayerRecord.is_paused);
+    }
 
-    if (isMyTurn) {
-        if (gameplayStatusTitle) {
-            gameplayStatusTitle.textContent = 'Du bist dran!';
+    if (gameplayStatusTitle) {
+        if (myPlayerRecord && myPlayerRecord.is_paused) {
+            gameplayStatusTitle.textContent = '⏸️ Du pausierst aktuell';
+            gameplayStatusTitle.style.color = 'var(--neon-yellow)';
+            gameplayStatusTitle.style.textShadow = '0 0 5px rgba(255, 230, 0, 0.3)';
+        } else {
+            gameplayStatusTitle.textContent = '🎲 Bereit zum Würfeln!';
             gameplayStatusTitle.style.color = 'var(--neon-green)';
             gameplayStatusTitle.style.textShadow = 'var(--glow-green)';
-        }
-        if (gameplayRollButton) {
-            gameplayRollButton.disabled = isRolling;
-            gameplayRollButton.style.display = 'block';
-        }
-        if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'block';
-    } else {
-        const activePlayer = currentPlayers.find(p => p.player_token === room.active_player_token);
-        const activeName = activePlayer ? activePlayer.name : 'jemand anderes';
-
-        if (gameplayStatusTitle) {
-            gameplayStatusTitle.textContent = `${activeName} ist am Zug...`;
-            gameplayStatusTitle.style.color = 'var(--text-muted)';
-            gameplayStatusTitle.style.textShadow = 'none';
-        }
-        if (gameplayRollButton) {
-            gameplayRollButton.style.display = 'none';
         }
     }
 
@@ -1113,7 +1127,7 @@ async function handleConfirmPenaltyDistribution() {
  * Würfel-Klick Handler
  */
 async function handleRollClick() {
-    if (!isMyTurn || isRolling || !currentRoomRecord) return;
+    if (isRolling || !currentRoomRecord || (myPlayerRecord && myPlayerRecord.is_paused)) return;
 
     isRolling = true;
     if (gameplayRollButton) gameplayRollButton.disabled = true;
@@ -1155,7 +1169,7 @@ async function handleRollClick() {
         console.error('Fehler beim Speichern des Wurfes:', err);
     } finally {
         isRolling = false;
-        if (gameplayRollButton) gameplayRollButton.disabled = false;
+        if (gameplayRollButton) gameplayRollButton.disabled = isAnimating || (myPlayerRecord && myPlayerRecord.is_paused);
     }
 }
 
@@ -1178,6 +1192,7 @@ async function handlePauseToggle() {
 function animateDiceRoll(targetValues, onComplete) {
     if (isAnimating) return;
     isAnimating = true;
+    if (gameplayRollButton) gameplayRollButton.disabled = true;
 
     if (mobileDiceTable) mobileDiceTable.style.display = 'flex';
 
@@ -1203,6 +1218,7 @@ function animateDiceRoll(targetValues, onComplete) {
 
     setTimeout(() => {
         isAnimating = false;
+        if (gameplayRollButton) gameplayRollButton.disabled = isRolling || (myPlayerRecord && myPlayerRecord.is_paused);
         if (typeof onComplete === 'function') onComplete();
     }, 1300);
 }
