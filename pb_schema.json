@@ -438,7 +438,7 @@
         "name": "result_rank",
         "onlyInt": true,
         "presentable": false,
-        "required": true,
+        "required": false,
         "system": false,
         "type": "number"
       },
@@ -447,7 +447,7 @@
         "id": "field_roll_is_hit",
         "name": "is_hit",
         "presentable": false,
-        "required": true,
+        "required": false,
         "system": false,
         "type": "bool"
       },
