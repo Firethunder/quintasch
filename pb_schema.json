@@ -562,9 +562,9 @@
     "indexes": [],
     "listRule": "",
     "viewRule": "",
-    "createRule": "@request.data.creator_token != ''",
-    "updateRule": "creator_token = @request.data.creator_token",
-    "deleteRule": "creator_token = @request.data.creator_token",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
     "options": {}
   },
   {
