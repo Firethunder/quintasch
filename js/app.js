@@ -6,7 +6,7 @@
 
 import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, BET_PROBABILITIES, BET_POINTS, STAKE_SETS } from './game.js';
 import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
-import { getPocketBaseUrl, setPocketBaseUrl, generateRoomCode, STORAGE_KEYS } from './config.js';
+import { getPocketBaseUrl, setPocketBaseUrl, generateRoomCode, getOrCreateCreatorToken, STORAGE_KEYS } from './config.js';
 import {
     createRoom,
     getRoomByCode,
@@ -19,7 +19,11 @@ import {
     subscribeToRolls,
     onConnectionChange,
     checkServerHealth,
-    rematchRoom
+    rematchRoom,
+    fetchSystemRulesets,
+    fetchCustomRulesets,
+    saveCustomRuleset,
+    deleteCustomRuleset
 } from './pocketbase-service.js';
 
 // Rotationswinkel für die 3D Würfel
@@ -121,8 +125,15 @@ let resetSettingsButton = null;
 let closeSettingsButton = null;
 
 let stakeEditorModal = null;
+let stakeEditorTitle = null;
+let editRulesetNameInput = null;
+let editRulesetPublicCheckbox = null;
 let saveEditedStakesBtn = null;
+let deleteEditedStakesBtn = null;
 let closeEditorModalBtn = null;
+let createRulesetBtn = null;
+let availableRulesets = [];
+let currentEditingRulesetId = null;
 
 let legalModal = null;
 let legalModalTitle = null;
@@ -139,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initConnectionStatus();
     initModeSelection();
     initSoundboard();
+    initRulesets();
 
     // Auto-Join via URL-Parameter checken (?room=CODE oder ?sync=CODE)
     const urlParams = new URLSearchParams(window.location.search);
@@ -201,8 +213,13 @@ function initDomElements() {
     closeSettingsButton = document.getElementById('close-settings-button');
 
     stakeEditorModal = document.getElementById('stake-editor-modal');
+    stakeEditorTitle = document.getElementById('stake-editor-title');
+    editRulesetNameInput = document.getElementById('edit-ruleset-name');
+    editRulesetPublicCheckbox = document.getElementById('edit-ruleset-public');
     saveEditedStakesBtn = document.getElementById('save-edited-stakes-btn');
+    deleteEditedStakesBtn = document.getElementById('delete-edited-stakes-btn');
     closeEditorModalBtn = document.getElementById('close-editor-modal-btn');
+    createRulesetBtn = document.getElementById('create-ruleset-btn');
 
     // Siegerehrung & Gruppen-Alert DOM
     victoryModal = document.getElementById('victory-modal');
@@ -306,15 +323,21 @@ function initDomElements() {
         });
     }
 
-    // Stake Editor
-    if (editStakesBtn && stakeEditorModal) {
-        editStakesBtn.addEventListener('click', openStakeEditor);
+    // Stake Editor Events
+    if (editStakesBtn) {
+        editStakesBtn.addEventListener('click', () => openStakeEditor(false));
+    }
+    if (createRulesetBtn) {
+        createRulesetBtn.addEventListener('click', () => openStakeEditor(true));
     }
     if (closeEditorModalBtn && stakeEditorModal) {
         closeEditorModalBtn.addEventListener('click', () => { stakeEditorModal.style.display = 'none'; });
     }
     if (saveEditedStakesBtn) {
         saveEditedStakesBtn.addEventListener('click', saveEditedStakes);
+    }
+    if (deleteEditedStakesBtn) {
+        deleteEditedStakesBtn.addEventListener('click', handleDeleteEditedStakes);
     }
 }
 
@@ -1075,29 +1098,192 @@ function handleOpenController() {
 }
 
 /**
- * Stake Set Editor
+ * ==========================================================================
+ * CUSTOM & SYSTEM RULESETS MANAGEMENT (Phase 3)
+ * ==========================================================================
  */
-function openStakeEditor() {
+async function initRulesets() {
+    try {
+        const creatorToken = getOrCreateCreatorToken();
+        const [sysSets, customSets] = await Promise.all([
+            fetchSystemRulesets(),
+            fetchCustomRulesets(creatorToken)
+        ]);
+
+        availableRulesets = [...sysSets, ...customSets];
+        renderRulesetSelectOptions();
+    } catch (e) {
+        console.warn('Fehler beim Laden der Regelsätze:', e);
+    }
+}
+
+function renderRulesetSelectOptions(selectedIdOrName = null) {
+    if (!stakeSetSelect) return;
+    const currentVal = selectedIdOrName || stakeSetSelect.value || 'klassisch';
+    stakeSetSelect.innerHTML = '';
+
+    const sysGroup = document.createElement('optgroup');
+    sysGroup.label = '🌟 Standard-Systemsets';
+
+    const myGroup = document.createElement('optgroup');
+    myGroup.label = '🛠️ Meine Custom-Sets';
+
+    const publicGroup = document.createElement('optgroup');
+    publicGroup.label = '🌐 Community-Sets';
+
+    const creatorToken = getOrCreateCreatorToken();
+
+    availableRulesets.forEach(rs => {
+        const opt = document.createElement('option');
+        opt.value = rs.id || rs.name.toLowerCase();
+        opt.textContent = rs.name;
+
+        if (rs.is_preset) {
+            sysGroup.appendChild(opt);
+        } else if (rs.creator_token === creatorToken) {
+            myGroup.appendChild(opt);
+        } else {
+            publicGroup.appendChild(opt);
+        }
+    });
+
+    if (sysGroup.children.length > 0) stakeSetSelect.appendChild(sysGroup);
+    if (myGroup.children.length > 0) stakeSetSelect.appendChild(myGroup);
+    if (publicGroup.children.length > 0) stakeSetSelect.appendChild(publicGroup);
+
+    // Auswahl wiederherstellen
+    const match = Array.from(stakeSetSelect.options).find(o => o.value === currentVal || o.value.toLowerCase() === currentVal.toLowerCase());
+    if (match) {
+        stakeSetSelect.value = match.value;
+    } else if (stakeSetSelect.options.length > 0) {
+        stakeSetSelect.selectedIndex = 0;
+    }
+}
+
+function openStakeEditor(isNew = false) {
     if (!stakeEditorModal) return;
-    const currentSet = STAKE_SETS[stakeSetSelect ? stakeSetSelect.value : 'klassisch'] || STAKE_SETS['klassisch'];
-    for (let i = 0; i < 10; i++) {
-        const input = document.getElementById(`edit-stake-${i}`);
-        if (input) input.value = currentSet[i] || '';
+    const creatorToken = getOrCreateCreatorToken();
+
+    if (isNew) {
+        currentEditingRulesetId = null;
+        if (stakeEditorTitle) stakeEditorTitle.textContent = '➕ Neuen Regelsatz anlegen';
+        if (editRulesetNameInput) editRulesetNameInput.value = '';
+        if (editRulesetPublicCheckbox) editRulesetPublicCheckbox.checked = false;
+        if (deleteEditedStakesBtn) deleteEditedStakesBtn.style.display = 'none';
+
+        const defaultSet = STAKE_SETS['klassisch'];
+        for (let i = 0; i < 10; i++) {
+            const input = document.getElementById(`edit-stake-${i}`);
+            if (input) input.value = defaultSet[i] || '';
+        }
+    } else {
+        const selectedVal = stakeSetSelect ? stakeSetSelect.value : 'klassisch';
+        const found = availableRulesets.find(r => (r.id && r.id === selectedVal) || r.name.toLowerCase() === selectedVal.toLowerCase()) || availableRulesets[0];
+
+        if (found) {
+            currentEditingRulesetId = found.is_preset ? null : found.id;
+            if (stakeEditorTitle) {
+                stakeEditorTitle.textContent = found.is_preset 
+                    ? `Vorlage anpassen: ${found.name}` 
+                    : `Regelsatz bearbeiten: ${found.name}`;
+            }
+            if (editRulesetNameInput) {
+                editRulesetNameInput.value = found.is_preset ? `${found.name} (Kopie)` : found.name;
+            }
+            if (editRulesetPublicCheckbox) {
+                editRulesetPublicCheckbox.checked = !!found.is_public;
+            }
+            if (deleteEditedStakesBtn) {
+                deleteEditedStakesBtn.style.display = (!found.is_preset && found.creator_token === creatorToken) ? 'block' : 'none';
+            }
+
+            const items = found.items || STAKE_SETS[found.name.toLowerCase()] || STAKE_SETS['klassisch'];
+            for (let i = 0; i < 10; i++) {
+                const input = document.getElementById(`edit-stake-${i}`);
+                if (input) input.value = items[i] || '';
+            }
+        }
     }
     stakeEditorModal.style.display = 'flex';
 }
 
-function saveEditedStakes() {
-    const custom = [];
+async function saveEditedStakes() {
+    const name = (editRulesetNameInput ? editRulesetNameInput.value : '').trim();
+    if (!name) {
+        alert('Bitte gib einen Namen für den Regelsatz ein.');
+        return;
+    }
+
+    const items = [];
     for (let i = 0; i < 10; i++) {
         const input = document.getElementById(`edit-stake-${i}`);
-        custom.push(input ? input.value : '');
+        items.push(input ? input.value.trim() : '');
     }
-    STAKE_SETS['eigenes'] = custom;
-    try {
-        localStorage.setItem(STORAGE_KEYS.CUSTOM_STAKES, JSON.stringify(custom));
-    } catch (e) {}
 
-    if (stakeSetSelect) stakeSetSelect.value = 'eigenes';
-    if (stakeEditorModal) stakeEditorModal.style.display = 'none';
+    const isPublic = editRulesetPublicCheckbox ? editRulesetPublicCheckbox.checked : false;
+    const creatorToken = getOrCreateCreatorToken();
+
+    try {
+        if (saveEditedStakesBtn) {
+            saveEditedStakesBtn.disabled = true;
+            saveEditedStakesBtn.textContent = 'Speichere...';
+        }
+
+        const savedRecord = await saveCustomRuleset({
+            id: currentEditingRulesetId,
+            name,
+            items,
+            isPublic,
+            creatorToken
+        });
+
+        // Rulesets neu laden und die Auswahl setzen
+        await initRulesets();
+
+        if (savedRecord && savedRecord.id) {
+            renderRulesetSelectOptions(savedRecord.id);
+        } else {
+            renderRulesetSelectOptions(name);
+        }
+
+        if (stakeEditorModal) stakeEditorModal.style.display = 'none';
+    } catch (e) {
+        console.error('Fehler beim Speichern des Regelsatzes:', e);
+        // Fallback lokales Speichern
+        STAKE_SETS['eigenes'] = items;
+        try {
+            localStorage.setItem(STORAGE_KEYS.CUSTOM_STAKES, JSON.stringify(items));
+        } catch (err) {}
+        alert('Regelsatz lokal gesichert (PocketBase Offline).');
+        if (stakeEditorModal) stakeEditorModal.style.display = 'none';
+    } finally {
+        if (saveEditedStakesBtn) {
+            saveEditedStakesBtn.disabled = false;
+            saveEditedStakesBtn.textContent = '💾 Speichern';
+        }
+    }
+}
+
+async function handleDeleteEditedStakes() {
+    if (!currentEditingRulesetId) return;
+    if (!confirm('Möchtest du diesen Regelsatz wirklich unwiderruflich löschen?')) return;
+
+    try {
+        if (deleteEditedStakesBtn) {
+            deleteEditedStakesBtn.disabled = true;
+            deleteEditedStakesBtn.textContent = 'Lösche...';
+        }
+        await deleteCustomRuleset(currentEditingRulesetId, getOrCreateCreatorToken());
+        await initRulesets();
+        renderRulesetSelectOptions('klassisch');
+        if (stakeEditorModal) stakeEditorModal.style.display = 'none';
+    } catch (e) {
+        console.error('Fehler beim Löschen des Regelsatzes:', e);
+        alert('Konnte Regelsatz nicht löschen.');
+    } finally {
+        if (deleteEditedStakesBtn) {
+            deleteEditedStakesBtn.disabled = false;
+            deleteEditedStakesBtn.textContent = '🗑️ Löschen';
+        }
+    }
 }

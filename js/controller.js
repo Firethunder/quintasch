@@ -19,7 +19,9 @@ import {
     getRollsHistory,
     subscribeToRolls,
     onConnectionChange,
-    checkServerHealth
+    checkServerHealth,
+    fetchSystemRulesets,
+    fetchCustomRulesets
 } from './pocketbase-service.js';
 
 // State Variablen
@@ -544,14 +546,37 @@ async function setupRealtimeSubscriptions(roomId, roomCode) {
 }
 
 let lastStakeSetKey = null;
-function updateStakeDropdown(activeStakeSetKey) {
+let controllerCachedRulesets = [];
+
+async function updateStakeDropdown(activeStakeSetKey) {
     if (!gameplayStakeSelect) return;
     const setKey = activeStakeSetKey || 'klassisch';
-    if (lastStakeSetKey === setKey) return;
+    if (lastStakeSetKey === setKey && gameplayStakeSelect.options.length > 1) return;
     lastStakeSetKey = setKey;
 
     const currentSelection = gameplayStakeSelect.value;
-    const stakes = STAKE_SETS[setKey] || STAKE_SETS['klassisch'];
+    let stakes = STAKE_SETS[setKey.toLowerCase()];
+
+    if (!stakes) {
+        // Suche in gecachten Custom-Rulesets
+        const found = controllerCachedRulesets.find(r => (r.id && r.id === setKey) || r.name.toLowerCase() === setKey.toLowerCase());
+        if (found && found.items && found.items.length > 0) {
+            stakes = found.items;
+        } else {
+            try {
+                const [sys, custom] = await Promise.all([fetchSystemRulesets(), fetchCustomRulesets()]);
+                controllerCachedRulesets = [...sys, ...custom];
+                const refreshed = controllerCachedRulesets.find(r => (r.id && r.id === setKey) || r.name.toLowerCase() === setKey.toLowerCase());
+                if (refreshed && refreshed.items) {
+                    stakes = refreshed.items;
+                }
+            } catch (e) {}
+        }
+    }
+
+    if (!stakes || stakes.length === 0) {
+        stakes = STAKE_SETS['klassisch'];
+    }
 
     gameplayStakeSelect.innerHTML = '<option value="custom">Eigene Aktion...</option>';
     stakes.forEach(stake => {
@@ -566,7 +591,7 @@ function updateStakeDropdown(activeStakeSetKey) {
     if (currentSelection === 'custom' || stakes.includes(currentSelection)) {
         gameplayStakeSelect.value = currentSelection;
     } else {
-        gameplayStakeSelect.value = 'custom';
+        gameplayStakeSelect.value = stakes[0] || 'custom';
     }
 }
 

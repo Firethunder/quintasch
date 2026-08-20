@@ -7,6 +7,7 @@ export const DEFAULT_POCKETBASE_URL = 'https://api-quintasch.robedit.de';
 export const STORAGE_KEYS = {
     PB_URL: 'quintasch_pb_url',
     PLAYER_TOKEN: 'quintasch_player_token',
+    CREATOR_TOKEN: 'quintasch_creator_token',
     PLAYER_NAME: 'quintasch_player_name',
     CUSTOM_STAKES: 'quintasch_custom_stakes',
     AUDIO_SETTINGS: 'quintasch_audio_settings',
@@ -56,6 +57,23 @@ export function getOrCreatePlayerToken() {
         return token;
     } catch (e) {
         return 'plyr_' + Math.random().toString(36).substring(2, 18);
+    }
+}
+
+/**
+ * Returns a persistent creator token (UUID) for custom ruleset ownership without accounts.
+ * @returns {string}
+ */
+export function getOrCreateCreatorToken() {
+    try {
+        let token = localStorage.getItem(STORAGE_KEYS.CREATOR_TOKEN);
+        if (!token) {
+            token = 'crt_' + crypto.randomUUID().replace(/-/g, '').substring(0, 16);
+            localStorage.setItem(STORAGE_KEYS.CREATOR_TOKEN, token);
+        }
+        return token;
+    } catch (e) {
+        return 'crt_' + Math.random().toString(36).substring(2, 18);
     }
 }
 

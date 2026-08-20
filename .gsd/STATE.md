@@ -1,13 +1,13 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase 1 & Phase 2 Complete — Ready for Phase 3
+> **Current Status**: Milestone Ready for Audit
 > **Active Milestone**: V2-Datenschutz-Architektur-und-Custom-Rulesets
 > **Active Phase**: 3
 
 ## Phase Progress
 - **Phase 1: Rechtliche Hinweise, DSGVO-Erklärung & Impressum**: ✅ Complete
 - **Phase 2: Zweigeteilte PocketBase-Architektur & Systemregeln-Schutz**: ✅ Complete
-- **Phase 3: Custom Rulesets & Pseudonyme Creator-Tokens**: 🔄 Ready for Planning / In Progress
+- **Phase 3: Custom Rulesets & Pseudonyme Creator-Tokens**: ✅ Complete
 
 ## Blockers
 - Keine
@@ -15,10 +15,13 @@
 ## Current Position
 - **Milestone**: V2-Datenschutz-Architektur-und-Custom-Rulesets
 - **Phase**: 3
-- **Status**: Preparing Phase 3
+- **Status**: Milestone Complete & Verified
 
 ## Last Session Summary
-Phase 1 (Datenschutz & Impressum in UI und Doku) und Phase 2 (Zweigeteilte PocketBase-Architektur mit Systemregeln-Schreibschutz und Ruleset-Service API) wurden erfolgreich implementiert, validiert und committet.
+Alle 3 Phasen des Milestones wurden erfolgreich implementiert und verifiziert:
+1. DSGVO-Erklärung, technische Server-Log-Aufklärung, Impressum und Footer in UI/Doku.
+2. Zweigeteilte PB-Architektur (Session- vs. Global-Bereich) mit Read-Only-Schreibschutz für Systemregeln.
+3. Tokenbasierte Custom-Ruleset-Verwaltung (CRUD ohne Accounts), UI-Editor und Echtzeit-Lobby-Sync.
 
 ## Next Steps
-1. Phase 3 Plan erstellen und ausführen: Etablierung des `creator_token` in `js/config.js`, UI-Editor für Custom Rulesets in Dashboard & Controller und dynamische Integration in die Lobby-Auswahl.
+1. Audit und Abschluss des aktuellen Milestones.
