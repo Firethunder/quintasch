@@ -4,7 +4,7 @@
  * interactive penalty distribution, synchronized 3D dice, and haptics.
  */
 
-import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES } from './game.js';
+import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, STAKE_SETS } from './game.js';
 import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
 import { getPocketBaseUrl, setPocketBaseUrl, getOrCreatePlayerToken, getSavedPlayerName, setSavedPlayerName } from './config.js';
 import {
@@ -108,6 +108,21 @@ let resultOverlayTitle = null;
 let resultOverlayDice = null;
 let resultOverlayText = null;
 let resultOverlayCloseBtn = null;
+
+// Victory & Group Alert Overlay Elements
+let controllerVictoryModal = null;
+let controllerVictoryTitle = null;
+let controllerVictorySubtitle = null;
+let controllerPodiumContainer = null;
+let controllerVictoryRanking = null;
+
+let controllerGroupAlert = null;
+let controllerGroupIcon = null;
+let controllerGroupTitle = null;
+let controllerGroupDesc = null;
+let controllerGroupTimer = null;
+let controllerGroupAckBtn = null;
+let controllerGroupInterval = null;
 
 // Settings Elements
 let settingsPanel = null;
@@ -235,6 +250,27 @@ function initDomElements() {
     resultOverlayDice = document.getElementById('result-overlay-dice');
     resultOverlayText = document.getElementById('result-overlay-text');
     resultOverlayCloseBtn = document.getElementById('result-overlay-close-btn');
+
+    // Victory & Group Alert Elements
+    controllerVictoryModal = document.getElementById('controller-victory-modal');
+    controllerVictoryTitle = document.getElementById('controller-victory-title');
+    controllerVictorySubtitle = document.getElementById('controller-victory-subtitle');
+    controllerPodiumContainer = document.getElementById('controller-podium-container');
+    controllerVictoryRanking = document.getElementById('controller-victory-ranking');
+
+    controllerGroupAlert = document.getElementById('controller-group-alert');
+    controllerGroupIcon = document.getElementById('controller-group-icon');
+    controllerGroupTitle = document.getElementById('controller-group-title');
+    controllerGroupDesc = document.getElementById('controller-group-desc');
+    controllerGroupTimer = document.getElementById('controller-group-timer');
+    controllerGroupAckBtn = document.getElementById('controller-group-ack-btn');
+
+    if (controllerGroupAckBtn) {
+        controllerGroupAckBtn.addEventListener('click', () => {
+            clearInterval(controllerGroupInterval);
+            if (controllerGroupAlert) controllerGroupAlert.style.display = 'none';
+        });
+    }
 
     // Settings
     settingsPanel = document.getElementById('settings-panel');
@@ -468,11 +504,43 @@ async function setupRealtimeSubscriptions(roomId, roomCode) {
     });
 }
 
+let lastStakeSetKey = null;
+function updateStakeDropdown(activeStakeSetKey) {
+    if (!gameplayStakeSelect) return;
+    const setKey = activeStakeSetKey || 'klassisch';
+    if (lastStakeSetKey === setKey) return;
+    lastStakeSetKey = setKey;
+
+    const currentSelection = gameplayStakeSelect.value;
+    const stakes = STAKE_SETS[setKey] || STAKE_SETS['klassisch'];
+
+    gameplayStakeSelect.innerHTML = '<option value="custom">Eigene Aktion...</option>';
+    stakes.forEach(stake => {
+        if (stake && stake.trim()) {
+            const opt = document.createElement('option');
+            opt.value = stake;
+            opt.textContent = stake;
+            gameplayStakeSelect.appendChild(opt);
+        }
+    });
+
+    if (currentSelection === 'custom' || stakes.includes(currentSelection)) {
+        gameplayStakeSelect.value = currentSelection;
+    } else {
+        gameplayStakeSelect.value = 'custom';
+    }
+}
+
 /**
  * Wendet den aktuellen Raumzustand auf die Controller-UI an.
  */
 function applyRoomState(room) {
     if (!room) return;
+
+    // Thematisches Einsatz-Set aktualisieren
+    if (room.active_stake_set) {
+        updateStakeDropdown(room.active_stake_set);
+    }
 
     // Modus & Runden-Badges
     if (gameplayRoundBadge) {
@@ -486,10 +554,24 @@ function applyRoomState(room) {
     if (room.status === 'lobby') {
         if (lobbyContainer) lobbyContainer.style.display = 'block';
         if (gameplayContainer) gameplayContainer.style.display = 'none';
+        if (controllerVictoryModal) controllerVictoryModal.style.display = 'none';
+        return;
+    }
+
+    if (room.status === 'finished') {
+        if (controllerVictoryModal) controllerVictoryModal.style.display = 'flex';
+        if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'none';
+        if (gameplayRollButton) gameplayRollButton.style.display = 'none';
+        if (gameplayStatusTitle) gameplayStatusTitle.textContent = 'Spiel beendet (Siegerehrung)';
+        
+        if (room.last_action) {
+            handleLastAction(room.last_action);
+        }
         return;
     }
 
     // Status ist 'playing'
+    if (controllerVictoryModal) controllerVictoryModal.style.display = 'none';
     if (lobbyContainer) lobbyContainer.style.display = 'none';
     if (gameplayContainer) gameplayContainer.style.display = 'block';
 
@@ -545,6 +627,11 @@ function handleLastAction(action) {
                 }
             }
 
+            // Gruppen-Alert (Wasserfall / Quintasch)
+            if (action.groupAlert) {
+                showControllerGroupAlert(action.groupAlert);
+            }
+
             // Optionales Timer-Handling
             if (action.timerSeconds > 0) {
                 startControllerTimer(action.timerSeconds);
@@ -558,7 +645,110 @@ function handleLastAction(action) {
                 showIncomingPenaltyAlert(action.fromPlayerName, myPenalty.amount, myPenalty.type);
             }
         }
+    } else if (action.type === 'game_finished') {
+        showControllerVictoryPodium(action);
+    } else if (action.type === 'rematch') {
+        if (controllerVictoryModal) controllerVictoryModal.style.display = 'none';
+        playProceduralSound('win');
+        triggerVibration([100, 50, 100]);
     }
+}
+
+function showControllerVictoryPodium(actionData) {
+    if (!controllerVictoryModal) return;
+
+    const isSurvival = actionData.mode === 'survival' || (currentRoomRecord && currentRoomRecord.game_mode === 'survival');
+    const sorted = [...currentPlayers].sort((a, b) => {
+        if (isSurvival) {
+            return (b.score || 0) - (a.score || 0);
+        }
+        const rateA = a.rolls_count ? (a.hits_count / a.rolls_count) : 0;
+        const rateB = b.rolls_count ? (b.hits_count / b.rolls_count) : 0;
+        if (rateB !== rateA) return rateB - rateA;
+        return (b.score || 0) - (a.score || 0);
+    });
+
+    if (controllerVictoryTitle) {
+        controllerVictoryTitle.textContent = isSurvival ? '⚡ PUNKTELIMIT ERREICHT!' : '🏆 TURNIER BEENDET!';
+    }
+    if (controllerVictorySubtitle) {
+        controllerVictorySubtitle.textContent = actionData.winnerName ? `${actionData.winnerName} ist der Champion!` : 'Spiel beendet';
+    }
+
+    if (controllerPodiumContainer) {
+        controllerPodiumContainer.innerHTML = '';
+        const p1 = sorted[0];
+        const p2 = sorted[1];
+        const p3 = sorted[2];
+
+        const makeCard = (player, place, medal, height, color) => {
+            if (!player) return '';
+            const isMe = player.player_token === myPlayerToken;
+            return `
+                <div style="flex: 1; min-width: 80px; max-width: 120px; display: flex; flex-direction: column; align-items: center;">
+                    <div style="font-size: 1.5rem; margin-bottom: 2px;">${medal}</div>
+                    <strong style="font-size: 0.85rem; color: ${isMe ? 'var(--neon-green)' : '#fff'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${player.name}${isMe ? ' (Du)' : ''}</strong>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">${player.score || 0} Pkt</div>
+                    <div style="width: 100%; height: ${height}px; background: rgba(255,255,255,0.05); border: 2px solid ${color}; border-radius: 6px 6px 0 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 1.2rem; color: ${color};">
+                        #${place}
+                    </div>
+                </div>
+            `;
+        };
+
+        let html = '';
+        if (p2) html += makeCard(p2, 2, '🥈', 75, 'var(--neon-cyan)');
+        if (p1) html += makeCard(p1, 1, '🥇', 105, 'var(--neon-yellow)');
+        if (p3) html += makeCard(p3, 3, '🥉', 55, 'var(--neon-magenta)');
+        controllerPodiumContainer.innerHTML = html;
+    }
+
+    if (controllerVictoryRanking) {
+        controllerVictoryRanking.innerHTML = `
+            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;">
+                ${sorted.map((p, idx) => {
+                    const isMe = p.player_token === myPlayerToken;
+                    return `
+                        <li style="display: flex; justify-content: space-between; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid ${isMe ? 'var(--neon-green)' : 'rgba(0,240,255,0.1)'};">
+                            <span><strong>#${idx + 1} ${p.name}</strong>${isMe ? ' (Du)' : ''}</span>
+                            <span style="color: var(--neon-magenta); font-weight: bold;">${p.score || 0} Pkt</span>
+                        </li>
+                    `;
+                }).join('')}
+            </ul>
+        `;
+    }
+
+    controllerVictoryModal.style.display = 'flex';
+    playProceduralSound('win');
+    triggerVibration([150, 50, 150, 50, 300]);
+}
+
+function showControllerGroupAlert(groupAlert) {
+    if (!controllerGroupAlert || !groupAlert) return;
+    clearInterval(controllerGroupInterval);
+
+    if (controllerGroupIcon) controllerGroupIcon.textContent = groupAlert.type === 'quintasch' ? '👑' : '🌊';
+    if (controllerGroupTitle) controllerGroupTitle.textContent = groupAlert.title;
+    if (controllerGroupDesc) controllerGroupDesc.textContent = groupAlert.description;
+
+    let secondsLeft = groupAlert.timerSeconds || 15;
+    if (controllerGroupTimer) controllerGroupTimer.textContent = `${secondsLeft}s`;
+
+    controllerGroupAlert.style.display = 'flex';
+    playProceduralSound('buzzer');
+    triggerVibration([300, 100, 300, 100, 500]);
+
+    controllerGroupInterval = setInterval(() => {
+        secondsLeft--;
+        if (controllerGroupTimer) controllerGroupTimer.textContent = `${secondsLeft}s`;
+        if (secondsLeft <= 0) {
+            clearInterval(controllerGroupInterval);
+            setTimeout(() => {
+                if (controllerGroupAlert) controllerGroupAlert.style.display = 'none';
+            }, 1000);
+        }
+    }, 1000);
 }
 
 /**

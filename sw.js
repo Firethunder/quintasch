@@ -1,10 +1,16 @@
-const CACHE_NAME = 'quintasch-v4';
+const CACHE_NAME = 'quintasch-v5';
 const ASSETS = [
   './',
   './index.html',
   './controller.html',
   './css/style.css',
   './fonts/fonts.css',
+  './fonts/orbitron-400.ttf',
+  './fonts/orbitron-700.ttf',
+  './fonts/orbitron-900.ttf',
+  './fonts/rajdhani-500.ttf',
+  './fonts/rajdhani-600.ttf',
+  './fonts/rajdhani-700.ttf',
   './js/app.js',
   './js/controller.js',
   './js/game.js',

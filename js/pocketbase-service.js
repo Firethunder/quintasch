@@ -4,6 +4,7 @@
  */
 
 import { getPocketBaseUrl, getOrCreatePlayerToken } from './config.js';
+import { BET_POINTS } from './game.js';
 
 let pbInstance = null;
 let currentUrl = null;
@@ -340,10 +341,10 @@ export async function recordRoll({
                     last_seen: new Date().toISOString()
                 };
 
-                // Wenn der Wurf Strafen enthält, die der Spieler selbst trinken muss (z. B. Pasch, Drasch, Quadrasch)
-                if (isHit && (bet === 'pasch' || bet === 'drasch' || bet === 'quadrasch')) {
-                    const selfPenalties = bet === 'quadrasch' ? 3 : 1;
-                    updateFields.score = (player.score || 0) + selfPenalties;
+                // Punkte bei Treffer gutschreiben (Punktewettlauf & Spiel-Scoring)
+                if (isHit) {
+                    const earnedPoints = BET_POINTS[bet] || 1;
+                    updateFields.score = (player.score || 0) + earnedPoints;
                 }
 
                 await pb.collection('players').update(player.id, updateFields);
@@ -354,6 +355,25 @@ export async function recordRoll({
 
         // 3. Raum `last_action` aktualisieren (löst SSE für 3D-Würfel & Alert bei allen Clients aus)
         if (roomRecordId) {
+            let groupAlert = null;
+            if (isHit && bet === 'strasse') {
+                groupAlert = {
+                    type: 'waterfall',
+                    title: '🌊 WASSERFALL!',
+                    description: `${playerName} hat Straße gewürfelt! Alle trinken!`,
+                    senderName: playerName,
+                    timerSeconds: 15
+                };
+            } else if (isHit && bet === 'quintasch') {
+                groupAlert = {
+                    type: 'quintasch',
+                    title: '👑 QUINTASCH!',
+                    description: `LEGENDÄR! ${playerName} hat Quintasch gewürfelt! Alle außer ${playerName} leeren ihr Getränk auf Ex!`,
+                    senderName: playerName,
+                    timerSeconds: 20
+                };
+            }
+
             const actionPayload = {
                 type: 'roll',
                 timestamp: Date.now(),
@@ -365,7 +385,8 @@ export async function recordRoll({
                 isHit: !!isHit,
                 stakeText,
                 timerSeconds: Number(timerSeconds) || 0,
-                penaltyTargets: penaltyTargets || []
+                penaltyTargets: penaltyTargets || [],
+                groupAlert
             };
 
             await pb.collection('rooms').update(roomRecordId, {
@@ -470,6 +491,47 @@ export async function subscribeToRolls(roomCode, callback) {
             callback(e.action, e.record);
         }
     });
+}
+
+/**
+ * Startet ein Revanche-Spiel im selben Raum (nullt Scores, behält Spieler und wechselt in Runde 1).
+ */
+export async function rematchRoom(roomId, roomCode, firstPlayerToken = '') {
+    const pb = await getPocketBase();
+    const cleanCode = roomCode.trim().toUpperCase();
+
+    try {
+        // 1. Alle Spieler des Raumes auf 0 zurücksetzen
+        const players = await pb.collection('players').getFullList({ filter: `room_code = "${cleanCode}"` });
+        for (const p of players) {
+            try {
+                await pb.collection('players').update(p.id, {
+                    score: 0,
+                    hits_count: 0,
+                    rolls_count: 0,
+                    penalties_distributed: 0,
+                    last_seen: new Date().toISOString()
+                });
+            } catch (e) {}
+        }
+
+        // 2. Raum zurücksetzen
+        const activeToken = firstPlayerToken || (players.length > 0 ? players[0].player_token : '');
+        const updatedRoom = await pb.collection('rooms').update(roomId, {
+            status: 'playing',
+            current_round: 1,
+            active_player_token: activeToken,
+            last_action: {
+                type: 'rematch',
+                timestamp: Date.now()
+            }
+        });
+
+        return updatedRoom;
+    } catch (err) {
+        console.error('Fehler beim Starten der Revanche:', err);
+        throw err;
+    }
 }
 
 /* ==========================================================================

@@ -4,7 +4,7 @@
  * Handles host game creation, 3D dice sync, live leaderboard, game modes, and DSGVO session purges.
  */
 
-import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, BET_PROBABILITIES } from './game.js';
+import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, BET_PROBABILITIES, BET_POINTS, STAKE_SETS } from './game.js';
 import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
 import { getPocketBaseUrl, setPocketBaseUrl, generateRoomCode, STORAGE_KEYS } from './config.js';
 import {
@@ -18,7 +18,8 @@ import {
     getRollsHistory,
     subscribeToRolls,
     onConnectionChange,
-    checkServerHealth
+    checkServerHealth,
+    rematchRoom
 } from './pocketbase-service.js';
 
 // Rotationswinkel für die 3D Würfel
@@ -39,13 +40,22 @@ const currentRotations = [
     { x: 0, y: 0, z: 0 }
 ];
 
-const STAKE_SETS = {
-    'klassisch': ['Standard-Einsatz', '1 Schluck (Pasch)', '2 Schlucke (Doppelpasch)', '3 Schlucke (Drasch)', 'Strong Zero kaufen (Full House)', '5 Schlucke (Straße)', '1 Shot (Quadrasch)', 'Rechnung zahlen (Quadrasch)', 'Geh heim! (Quintasch)', 'Nie wieder Toblerone! (Quintasch)'],
-    'alkoholfrei': ['Standard-Einsatz (5 Kniebeugen)', '5 Liegestütze (Pasch)', '10 Kniebeugen (Doppelpasch)', '15 Hampelmänner (Drasch)', '30s Planke (Full House)', '5 Burpees (Straße)', 'Am nächsten Sonntag in die Kirche (Quadrasch)', '1 Runde rennen (Quadrasch)', 'Geh heim! / Aufs Zimmer! (Quintasch)', 'Nie wieder Toblerone! (Quintasch)'],
-    'spanien': ['Standard-Einsatz (Cortado trinken)', '¡Figueres! rufen (Pasch)', 'Siesta machen (Doppelpasch)', 'Dein Getränk fällt in den Pool (Drasch)', 'Eine Flasche Sifón kaufen (Full House)', 'Springe in den Pool (Straße)', 'Reserviere einen Tisch im Restaurant (Quadrasch)', 'Rechnung zahlen (Quadrasch)', 'Geh heim oder auf dein Zimmer (Quintasch)', 'Nie wieder Tapas essen! (Quintasch)'],
-    'mittelalter': ['Standard-Einsatz (Humpen leeren)', 'Dem Marktvogt huldigen (Pasch)', 'Ganz laut auf die Gesundheit! rufen (Drasch)', 'Met für alle kaufen (Full House)', 'Einen Random volllabern (Quadrasch)', 'An den Pranger gestellt (Quadrasch)', 'Aus dem Königreich verbannt - Geh heim! (Quintasch)', 'Nie wieder Knoblauchbrot essen! (Quintasch)'],
-    'eigenes': Array(10).fill('')
-};
+// DOM-Elemente für Siegerehrung & Gruppen-Alerts
+let victoryModal = null;
+let victoryModalTitle = null;
+let victoryModalSubtitle = null;
+let victoryPodiumContainer = null;
+let victoryFullRanking = null;
+let rematchBtn = null;
+let closeVictoryBtn = null;
+
+let groupAlertModal = null;
+let groupAlertIcon = null;
+let groupAlertTitle = null;
+let groupAlertDesc = null;
+let groupAlertTimerBox = null;
+let groupAlertAckBtn = null;
+let groupAlertInterval = null;
 
 // Globaler Spielzustand
 let activeRoomRecord = null;
@@ -185,6 +195,31 @@ function initDomElements() {
     stakeEditorModal = document.getElementById('stake-editor-modal');
     saveEditedStakesBtn = document.getElementById('save-edited-stakes-btn');
     closeEditorModalBtn = document.getElementById('close-editor-modal-btn');
+
+    // Siegerehrung & Gruppen-Alert DOM
+    victoryModal = document.getElementById('victory-modal');
+    victoryModalTitle = document.getElementById('victory-modal-title');
+    victoryModalSubtitle = document.getElementById('victory-modal-subtitle');
+    victoryPodiumContainer = document.getElementById('victory-podium-container');
+    victoryFullRanking = document.getElementById('victory-full-ranking');
+    rematchBtn = document.getElementById('rematch-btn');
+    closeVictoryBtn = document.getElementById('close-victory-btn');
+
+    groupAlertModal = document.getElementById('group-alert-modal');
+    groupAlertIcon = document.getElementById('group-alert-icon');
+    groupAlertTitle = document.getElementById('group-alert-title');
+    groupAlertDesc = document.getElementById('group-alert-desc');
+    groupAlertTimerBox = document.getElementById('group-alert-timer-box');
+    groupAlertAckBtn = document.getElementById('group-alert-ack-btn');
+
+    if (rematchBtn) rematchBtn.addEventListener('click', handleRematch);
+    if (closeVictoryBtn) closeVictoryBtn.addEventListener('click', () => {
+        if (victoryModal) victoryModal.style.display = 'none';
+    });
+    if (groupAlertAckBtn) groupAlertAckBtn.addEventListener('click', () => {
+        clearInterval(groupAlertInterval);
+        if (groupAlertModal) groupAlertModal.style.display = 'none';
+    });
 
     // Event Listeners
     if (hostGameBtn) hostGameBtn.addEventListener('click', handleHostGame);
@@ -476,6 +511,19 @@ function applyRoomState(room) {
         if (skipPlayerButton) skipPlayerButton.style.display = 'none';
         if (nextTurnButton) nextTurnButton.style.display = 'none';
         if (activeTurnIndicator) activeTurnIndicator.textContent = 'Lobby (Warte auf Start)';
+        if (victoryModal) victoryModal.style.display = 'none';
+        return;
+    }
+
+    if (room.status === 'finished') {
+        if (activeTurnIndicator) activeTurnIndicator.textContent = 'Spiel beendet (Siegerehrung)';
+        if (startGameButton) startGameButton.style.display = 'none';
+        if (skipPlayerButton) skipPlayerButton.style.display = 'none';
+        if (nextTurnButton) nextTurnButton.style.display = 'none';
+
+        if (room.last_action) {
+            handleLastAction(room.last_action);
+        }
         return;
     }
 
@@ -520,6 +568,11 @@ function handleLastAction(action) {
                 resultAction.textContent = action.isHit ? `Aktion: ${action.stakeText || BET_RULES[action.bet]}` : 'Keine Strafe für den Würfler.';
             }
 
+            // Gruppen Alert (Wasserfall / Quintasch)
+            if (action.groupAlert) {
+                showGroupAlert(action.groupAlert);
+            }
+
             // Timer starten
             if (action.timerSeconds > 0) {
                 startDashboardTimer(action.timerSeconds);
@@ -536,6 +589,20 @@ function handleLastAction(action) {
                 if (penaltyBroadcastBanner) penaltyBroadcastBanner.style.display = 'none';
             }, 5000);
         }
+    } else if (action.type === 'game_finished') {
+        showVictoryPodium({
+            title: action.mode === 'survival' ? '⚡ PUNKTELIMIT ERREICHT!' : '🏆 TURNIER BEENDET!',
+            subtitle: `${action.winnerName || 'Sieger'} ist der Champion!`,
+            mode: action.mode || 'tournament'
+        });
+    } else if (action.type === 'rematch') {
+        if (victoryModal) victoryModal.style.display = 'none';
+        if (resultTitle) {
+            resultTitle.textContent = '🔥 Revanche gestartet!';
+            resultTitle.style.color = 'var(--neon-green)';
+        }
+        if (resultDescription) resultDescription.textContent = 'Runde 1 beginnt jetzt. Viel Erfolg!';
+        if (resultAction) resultAction.textContent = '';
     }
 }
 
@@ -587,7 +654,7 @@ async function handleNextTurn() {
 
     // Sieg-/Ende-Bedingungen prüfen
     if (activeRoomRecord.game_mode === 'tournament' && nextRound > (activeRoomRecord.total_rounds || 5)) {
-        showTournamentVictory();
+        await triggerTournamentVictory();
         return;
     }
 
@@ -601,23 +668,180 @@ async function handleNextTurn() {
     }
 }
 
-function showTournamentVictory() {
-    // Sortieren nach Trefferquote
+/**
+ * Siegerehrung & Podest (1., 2., 3. Platz)
+ */
+function showVictoryPodium({ title = '🏆 SIEGEREHRUNG', subtitle = 'Spiel beendet', mode = 'tournament', customPlayers = null }) {
+    const listToRank = customPlayers || [...players];
+    if (listToRank.length === 0) return;
+
+    // Sortierung: Survival = Punkte absteigend; Tournament = Trefferquote absteigend
+    const sorted = [...listToRank].sort((a, b) => {
+        if (mode === 'survival') {
+            return (b.score || 0) - (a.score || 0);
+        }
+        const rateA = a.rolls_count ? (a.hits_count / a.rolls_count) : 0;
+        const rateB = b.rolls_count ? (b.hits_count / b.rolls_count) : 0;
+        if (rateB !== rateA) return rateB - rateA;
+        return (b.score || 0) - (a.score || 0);
+    });
+
+    if (victoryModalTitle) victoryModalTitle.textContent = title;
+    if (victoryModalSubtitle) victoryModalSubtitle.textContent = subtitle;
+
+    // Podest (1. Platz Mitte/oben, 2. Platz links, 3. Platz rechts)
+    if (victoryPodiumContainer) {
+        victoryPodiumContainer.innerHTML = '';
+        
+        const p1 = sorted[0];
+        const p2 = sorted[1];
+        const p3 = sorted[2];
+
+        const makePodiumCard = (player, place, medal, height, color, glow) => {
+            if (!player) return '';
+            const rate = player.rolls_count ? Math.round((player.hits_count / player.rolls_count) * 100) : 0;
+            return `
+                <div style="flex: 1; min-width: 100px; max-width: 150px; display: flex; flex-direction: column; align-items: center;">
+                    <div style="font-size: 1.8rem; margin-bottom: 4px;">${medal}</div>
+                    <strong style="font-size: 1rem; color: #fff; text-shadow: 0 0 10px ${color}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;">${player.name}</strong>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px;">${rate}% Treffer | ${player.score || 0} Pkt</div>
+                    <div style="width: 100%; height: ${height}px; background: rgba(255,255,255,0.05); border: 2px solid ${color}; box-shadow: 0 0 15px ${glow}; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 1.4rem; color: ${color};">
+                        #${place}
+                    </div>
+                </div>
+            `;
+        };
+
+        let podiumHtml = '';
+        if (p2) podiumHtml += makePodiumCard(p2, 2, '🥈', 100, 'var(--neon-cyan)', 'rgba(0,240,255,0.4)');
+        if (p1) podiumHtml += makePodiumCard(p1, 1, '🥇', 140, 'var(--neon-yellow)', 'rgba(255,221,0,0.6)');
+        if (p3) podiumHtml += makePodiumCard(p3, 3, '🥉', 80, 'var(--neon-magenta)', 'rgba(255,0,127,0.4)');
+
+        victoryPodiumContainer.innerHTML = podiumHtml;
+    }
+
+    // Rangliste
+    if (victoryFullRanking) {
+        victoryFullRanking.innerHTML = `
+            <table class="leaderboard-table" style="margin-top: 0;">
+                <thead>
+                    <tr><th>Rang</th><th>Spieler</th><th>Trefferquote</th><th>Punkte</th></tr>
+                </thead>
+                <tbody>
+                    ${sorted.map((p, idx) => {
+                        const rate = p.rolls_count ? Math.round((p.hits_count / p.rolls_count) * 100) : 0;
+                        return `
+                            <tr>
+                                <td>#${idx + 1}</td>
+                                <td><strong>${p.name}</strong></td>
+                                <td style="color: var(--neon-green);">${rate}% (${p.hits_count}/${p.rolls_count})</td>
+                                <td style="color: var(--neon-magenta); font-weight: bold;">${p.score || 0}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    if (victoryModal) victoryModal.style.display = 'flex';
+    playWinSound();
+}
+
+async function triggerTournamentVictory() {
+    if (!activeRoomRecord) return;
     const sorted = [...players].sort((a, b) => {
         const rateA = a.rolls_count ? (a.hits_count / a.rolls_count) : 0;
         const rateB = b.rolls_count ? (b.hits_count / b.rolls_count) : 0;
-        return rateB - rateA;
+        if (rateB !== rateA) return rateB - rateA;
+        return (b.score || 0) - (a.score || 0);
     });
-
     const winner = sorted[0];
-    if (resultTitle) {
-        resultTitle.textContent = `🏆 TURNIER-SIEGER: ${winner ? winner.name : 'Niemand'}!`;
-        resultTitle.style.color = 'var(--neon-green)';
+
+    try {
+        await updateRoom(activeRoomRecord.id, {
+            status: 'finished',
+            last_action: {
+                type: 'game_finished',
+                mode: 'tournament',
+                winnerName: winner ? winner.name : 'Niemand',
+                timestamp: Date.now()
+            }
+        });
+    } catch (e) {}
+
+    showVictoryPodium({
+        title: `🏆 TURNIER-SIEGER: ${winner ? winner.name : 'Niemand'}!`,
+        subtitle: `Glückwunsch nach ${activeRoomRecord.total_rounds || 5} gespielten Runden!`,
+        mode: 'tournament'
+    });
+}
+
+async function triggerScoreRaceVictory(winner) {
+    if (!activeRoomRecord) return;
+    try {
+        await updateRoom(activeRoomRecord.id, {
+            status: 'finished',
+            last_action: {
+                type: 'game_finished',
+                mode: 'survival',
+                winnerName: winner.name,
+                timestamp: Date.now()
+            }
+        });
+    } catch (e) {}
+
+    showVictoryPodium({
+        title: `⚡ PUNKTELIMIT ERREICHT!`,
+        subtitle: `${winner.name} hat ${activeRoomRecord.target_score || 10} Punkte erreicht und GEWONNEN!`,
+        mode: 'survival'
+    });
+}
+
+function showGroupAlert(groupAlert) {
+    if (!groupAlertModal || !groupAlert) return;
+    clearInterval(groupAlertInterval);
+
+    if (groupAlertIcon) groupAlertIcon.textContent = groupAlert.type === 'quintasch' ? '👑' : '🌊';
+    if (groupAlertTitle) groupAlertTitle.textContent = groupAlert.title;
+    if (groupAlertDesc) groupAlertDesc.textContent = groupAlert.description;
+
+    let secondsLeft = groupAlert.timerSeconds || 15;
+    if (groupAlertTimerBox) groupAlertTimerBox.textContent = `${secondsLeft}s`;
+
+    groupAlertModal.style.display = 'flex';
+    playTimerBuzzer();
+
+    groupAlertInterval = setInterval(() => {
+        secondsLeft--;
+        if (groupAlertTimerBox) groupAlertTimerBox.textContent = `${secondsLeft}s`;
+        if (secondsLeft <= 0) {
+            clearInterval(groupAlertInterval);
+            setTimeout(() => {
+                if (groupAlertModal) groupAlertModal.style.display = 'none';
+            }, 1000);
+        }
+    }, 1000);
+}
+
+async function handleRematch() {
+    if (!activeRoomRecord) return;
+    try {
+        if (rematchBtn) {
+            rematchBtn.disabled = true;
+            rematchBtn.textContent = 'Starte Revanche...';
+        }
+        await rematchRoom(activeRoomRecord.id, activeRoomRecord.code, players[0]?.player_token);
+        if (victoryModal) victoryModal.style.display = 'none';
+    } catch (e) {
+        console.error('Fehler bei Revanche:', e);
+        alert('Konnte Revanche nicht starten.');
+    } finally {
+        if (rematchBtn) {
+            rematchBtn.disabled = false;
+            rematchBtn.textContent = '🔥 Revanche / Neues Spiel';
+        }
     }
-    if (resultDescription) {
-        resultDescription.textContent = `Herzlichen Glückwunsch! Treffer: ${winner ? winner.hits_count : 0} / ${winner ? winner.rolls_count : 0}`;
-    }
-    playWinSound();
 }
 
 /**
@@ -716,6 +940,15 @@ async function refreshPlayersList(roomCode) {
 
         // Leaderboard rendern
         renderLeaderboard();
+
+        // Survival / Point-Race Ziel-Prüfung
+        if (activeRoomRecord && activeRoomRecord.status === 'playing' && activeRoomRecord.game_mode === 'survival') {
+            const targetScore = activeRoomRecord.target_score || 10;
+            const winner = players.find(p => (p.score || 0) >= targetScore);
+            if (winner) {
+                await triggerScoreRaceVictory(winner);
+            }
+        }
     } catch (e) {}
 }
 
@@ -723,11 +956,17 @@ function renderLeaderboard() {
     if (!leaderboardBody) return;
     leaderboardBody.innerHTML = '';
 
-    // Sortierung nach Trefferquote
+    const isSurvival = activeRoomRecord && activeRoomRecord.game_mode === 'survival';
+
+    // Sortierung
     const sorted = [...players].sort((a, b) => {
+        if (isSurvival) {
+            return (b.score || 0) - (a.score || 0);
+        }
         const rateA = a.rolls_count ? (a.hits_count / a.rolls_count) : 0;
         const rateB = b.rolls_count ? (b.hits_count / b.rolls_count) : 0;
-        return rateB - rateA;
+        if (rateB !== rateA) return rateB - rateA;
+        return (b.score || 0) - (a.score || 0);
     });
 
     sorted.forEach((p, idx) => {
@@ -738,7 +977,7 @@ function renderLeaderboard() {
         tr.innerHTML = `
             <td><strong>${medal}${p.name}</strong> ${p.is_paused ? '<small style="color: var(--neon-yellow);">(Pause)</small>' : ''}</td>
             <td style="color: var(--neon-green);">${rate}% (${p.hits_count}/${p.rolls_count})</td>
-            <td style="color: var(--neon-magenta); font-weight: bold;">${p.score || 0}</td>
+            <td style="color: var(--neon-magenta); font-weight: bold;">${p.score || 0} ${isSurvival ? `/ ${activeRoomRecord.target_score || 10}` : ''}</td>
         `;
         leaderboardBody.appendChild(tr);
     });

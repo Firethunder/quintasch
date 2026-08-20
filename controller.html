@@ -412,6 +412,39 @@
         </div>
     </div>
 
+    <!-- MOBILE SIEGEREHRUNG / PODEST MODAL -->
+    <div id="controller-victory-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 11, 15, 0.95); z-index: 1300; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+        <div class="panel" style="width: 100%; max-width: 440px; text-align: center; border: 2px solid var(--neon-yellow); box-shadow: 0 0 25px rgba(255, 221, 0, 0.3); display: flex; flex-direction: column; gap: 15px; padding: 20px; max-height: 90vh; overflow-y: auto;">
+            <h2 id="controller-victory-title" class="sidebar-title" style="font-size: 1.5rem; border: none; margin-bottom: 0; color: var(--neon-yellow); text-shadow: 0 0 15px rgba(255, 221, 0, 0.6);">🏆 SIEGEREHRUNG</h2>
+            <p id="controller-victory-subtitle" style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">Spiel beendet</p>
+
+            <div id="controller-podium-container" style="display: flex; justify-content: center; align-items: flex-end; gap: 8px; margin: 10px 0; min-height: 130px;">
+                <!-- Podest-Karten -->
+            </div>
+
+            <div id="controller-victory-ranking" style="text-align: left; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px;">
+                <!-- Rangliste -->
+            </div>
+
+            <div style="font-size: 0.85rem; color: var(--neon-cyan); margin-top: 5px; animation: pulse-ring 2s infinite;">
+                ⏳ Warte auf Revanche durch den Host...
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE GRUPPEN-ALERT MODAL (Wasserfall / Quintasch) -->
+    <div id="controller-group-alert" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 127, 0.25); z-index: 1250; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+        <div class="panel" style="width: 100%; max-width: 420px; text-align: center; border: 2px solid var(--neon-magenta); box-shadow: var(--glow-magenta); background: rgba(15, 10, 20, 0.95); padding: 25px;">
+            <div id="controller-group-icon" style="font-size: 3rem; margin-bottom: 10px;">🌊</div>
+            <h2 id="controller-group-title" class="sidebar-title" style="font-size: 1.5rem; border: none; margin-bottom: 10px; color: var(--neon-magenta); text-shadow: var(--glow-magenta);">WASSERFALL!</h2>
+            <div id="controller-group-desc" style="font-size: 1.05rem; color: #fff; line-height: 1.5; margin-bottom: 15px;">
+                Alle trinken!
+            </div>
+            <div id="controller-group-timer" style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; color: var(--neon-yellow); margin-bottom: 15px;">15s</div>
+            <button class="btn-neon" id="controller-group-ack-btn" style="--neon-cyan: var(--neon-magenta); border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); width: 100%; padding: 12px 20px; font-size: 1rem;">Verstanden</button>
+        </div>
+    </div>
+
     <script type="module" src="js/controller.js"></script>
     <script>
         if ('serviceWorker' in navigator) {

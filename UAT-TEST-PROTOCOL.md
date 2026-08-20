@@ -102,3 +102,52 @@ Dieses Protokoll führt dich Schritt für Schritt durch die Abnahme (User Accept
    * Stelle einen Wetteinsatz ein, der eine Strafe auslöst, oder nutze den Timer-Buzzer im Dashboard.
    * Sobald der 30-Sekunden-Timer auf dem Host-Dashboard abläuft und den Buzzer-Sound triggert, wird das Signal an den Controller gesendet.
    * **Erwartetes Ergebnis:** Der verbundene Controller vibriert dreimal kurz hintereinander als Alarm (Dreifach-Warnpuls).
+
+---
+
+### Testfall 6: Punktewettlauf (Survival / First-to-X) & Siegerpodest
+**Ziel:** Punktevergabe nach Treffer-Schwierigkeit und automatisches Spielende mit Siegerehrung.
+
+1. **Raum im Survival-Modus starten:**
+   * Host wählt Modus **💀 Survival (Punktewettlauf)** mit Zielpunktzahl = `5`.
+   * Controller verbindet sich.
+2. **Punkte sammeln:**
+   * Controller wählt Wette **Drasch** (3 Pkt) und trifft -> Punktestand steigt auf 3.
+   * Controller wählt Wette **Doppelpasch** (2 Pkt) und trifft -> Punktestand erreicht 5.
+3. **Erwartetes Ergebnis:**
+   * Host und Controller öffnen zeitgleich das animierte **Siegerpodest-Modal** (🥇 1. Platz, 🥈 2. Platz, 🥉 3. Platz).
+   * Gewinner wird gefeiert und Sieges-Sound/Haptik wird abgespielt.
+
+---
+
+### Testfall 7: Gruppen-Alerts (Wasserfall & Quintasch)
+**Ziel:** Vollsynchrone Bildschirmnachrichten mit Countdown und speziellem Alarm bei Straßen- und Quintasch-Treffern.
+
+1. **Straße würfeln:**
+   * Controller sagt **Straße** an und trifft.
+   * **Erwartetes Ergebnis:** Host und Controller zeigen zeitgleich ein großes blau-magenta Overlay mit `🌊 WASSERFALL! Alle trinken!` und 15s Countdown an.
+2. **Quintasch würfeln:**
+   * Bei Quintasch-Treffer erscheint das goldene `👑 QUINTASCH!` Overlay mit Ex-Aufforderung für alle Mitspieler.
+
+---
+
+### Testfall 8: Revanche-Flow (Sofort-Neustart)
+**Ziel:** Raum mit denselben Spielern ohne Neuanmeldung für die nächste Partie zurücksetzen.
+
+1. **Revanche starten:**
+   * Im Siegerehrungs-Modal auf dem Host auf **🔥 Revanche / Neues Spiel** klicken.
+2. **Erwartetes Ergebnis:**
+   * Das Sieger-Modal schließt sich auf allen Geräten.
+   * Runden werden auf 1 und Punkte aller Spieler auf 0 zurückgesetzt.
+   * Das Spiel geht sofort mit Runde 1 weiter.
+
+---
+
+### Testfall 9: Thematische Einsatz-Sets Sync
+**Ziel:** Echtzeit-Aktualisierung der Controller-Einsätze bei Theme-Wechsel auf dem Host.
+
+1. **Theme wechseln:**
+   * Host wählt im Dropdown ein anderes Set (z. B. **Spanien** oder **Mittelalter**).
+2. **Controller prüfen:**
+   * Auf dem Smartphone das Dropdown "Dein Einsatz" öffnen.
+   * **Erwartetes Ergebnis:** Das Dropdown enthält nun sofort die thematischen Sprüche (z. B. "Cortado trinken", "¡Figueres! rufen" bzw. "Humpen leeren", "Dem Marktvogt huldigen").
