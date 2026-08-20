@@ -10,6 +10,7 @@ Quintasch ist ein dynamisches, modernes Multiplayer-Trinkspiel (PWA) für Smartp
 * **Keine Klardaten / Keine Accounts:** Keine Erfassung von E-Mail-Adressen, Passwörtern oder Telefonnummern. Spieler wählen lediglich einen freien Nickname.
 * **Pseudonyme Session-UUIDs:** Spieler werden im Raum über eine zufällige, lokale UUID im Browser (`localStorage`) identifiziert.
 * **Vollständige Datenlöschung (Right to be forgotten):** Der Host kann jederzeit über den Button *"Spielraum & Daten endgültig löschen"* die Session inklusive aller Spieler- und Wurfdaten restlos aus der Datenbank entfernen.
+* **Transparente Server-Log & Impressums-Dokumentation:** Detaillierte rechtliche Hinweise und Erläuterungen zu Server-Logs / IP-Adressen findest du in [`docs/privacy-and-legal.md`](docs/privacy-and-legal.md).
 
 ---
 

@@ -317,6 +317,13 @@
                 </ul>
             </div>
         </main>
+
+        <!-- CONTROLLER FOOTER -->
+        <footer style="margin-top: 25px; text-align: center; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 12px;">
+            <span>Quintasch V2</span>
+            <button id="controller-footer-privacy-btn" type="button" style="background: none; border: none; color: var(--neon-cyan); cursor: pointer; font-size: 0.75rem; text-decoration: underline; font-family: inherit;">🛡️ Datenschutz</button>
+            <button id="controller-footer-imprint-btn" type="button" style="background: none; border: none; color: var(--neon-cyan); cursor: pointer; font-size: 0.75rem; text-decoration: underline; font-family: inherit;">⚖️ Impressum</button>
+        </footer>
     </div>
 
     <!-- STRAFEN-VERTEILEN MODAL (Doppelpasch / Full House) -->
@@ -398,10 +405,14 @@
                 </small>
             </div>
             
-            <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">🛡️ Datenschutz (DSGVO)</h4>
+            <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">🛡️ Datenschutz (DSGVO) & Rechtliches</h4>
             <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px;">
                 Quintasch speichert keine personenbezogenen Daten (keine E-Mail, kein Login, kein Tracking). Die Spielidentifikation erfolgt über ein anonymes Token im LocalStorage dieses Geräts.
             </p>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <button class="btn-neon" id="controller-open-privacy-btn" type="button" style="font-size: 0.78rem; padding: 6px 10px; border-color: var(--neon-cyan); color: var(--neon-cyan); flex: 1; min-height: auto;">🛡️ Datenschutz</button>
+                <button class="btn-neon" id="controller-open-imprint-btn" type="button" style="font-size: 0.78rem; padding: 6px 10px; border-color: var(--neon-magenta); color: var(--neon-magenta); flex: 1; min-height: auto;">⚖️ Impressum</button>
+            </div>
             
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="btn-neon" id="save-settings-button" style="padding: 6px 12px; font-size: 0.85rem; flex: 1; min-height: auto;">Speichern</button>
@@ -442,6 +453,44 @@
             </div>
             <div id="controller-group-timer" style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; color: var(--neon-yellow); margin-bottom: 15px;">15s</div>
             <button class="btn-neon" id="controller-group-ack-btn" style="--neon-cyan: var(--neon-magenta); border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); width: 100%; padding: 12px 20px; font-size: 1rem;">Verstanden</button>
+        </div>
+    </div>
+
+    <!-- MOBILE RECHTLICHE HINWEISE / DATENSCHUTZ & IMPRESSUM MODAL -->
+    <div id="controller-legal-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 11, 15, 0.95); z-index: 1400; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+        <div class="panel" style="width: 100%; max-width: 440px; text-align: left; border: 2px solid var(--neon-cyan); box-shadow: var(--glow-cyan); display: flex; flex-direction: column; gap: 12px; padding: 20px; max-height: 88vh; overflow-y: auto;">
+            <h2 id="controller-legal-modal-title" class="sidebar-title" style="font-size: 1.3rem; border: none; margin-bottom: 0; color: var(--neon-cyan); text-shadow: var(--glow-cyan); text-align: center;">🛡️ Datenschutz & Rechtliches</h2>
+
+            <div style="font-size: 0.8rem; color: #ddd; line-height: 1.45; display: flex; flex-direction: column; gap: 10px;">
+                <div>
+                    <h4 style="color: var(--neon-yellow); margin: 0 0 3px 0; font-family: 'Orbitron', sans-serif; font-size: 0.85rem;">1. Server-Logs & IP-Verarbeitung</h4>
+                    <p style="margin: 0; color: var(--text-muted);">
+                        Verbindungsdaten (gekürzte IP-Adresse, Zugriffszeit, HTTP-Status) werden vom Webserver rein zur Auslieferung von SSE-Echtzeitdaten und zum DDoS-Schutz verarbeitet (Art. 6 Abs. 1 lit. f DSGVO).
+                    </p>
+                </div>
+                <div>
+                    <h4 style="color: var(--neon-green); margin: 0 0 3px 0; font-family: 'Orbitron', sans-serif; font-size: 0.85rem;">2. Privacy by Design</h4>
+                    <p style="margin: 0; color: var(--text-muted);">
+                        Keine Registrierung, kein Tracking, keine Werbe-Cookies. Dein Spieler-Token liegt verschlüsselt pseudonym im lokalen <code style="color: var(--neon-cyan);">localStorage</code> dieses Smartphones.
+                    </p>
+                </div>
+                <div>
+                    <h4 style="color: var(--neon-magenta); margin: 0 0 3px 0; font-family: 'Orbitron', sans-serif; font-size: 0.85rem;">3. Löschung</h4>
+                    <p style="margin: 0; color: var(--text-muted);">
+                        Mit dem Schließen oder Löschen des Raumes durch den Host werden alle Sitzungsdaten unwiderruflich aus der Datenbank gelöscht.
+                    </p>
+                </div>
+                <div style="border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 8px;">
+                    <h4 style="color: var(--neon-cyan); margin: 0 0 3px 0; font-family: 'Orbitron', sans-serif; font-size: 0.85rem;">4. Impressum & Kontakt (DDG)</h4>
+                    <p style="margin: 0; color: var(--text-muted);">
+                        <strong>Projekt:</strong> Quintasch – Open Source Cyberpunk Multiplayer PWA<br>
+                        <strong>Kontakt:</strong> Robert Edelmann (<a href="mailto:robert-edelmann@web.de" style="color: var(--neon-cyan);">robert-edelmann@web.de</a>)<br>
+                        <strong>Repository:</strong> <a href="https://github.com/Firethunder/quintasch" target="_blank" style="color: var(--neon-cyan);">github.com/Firethunder/quintasch</a>
+                    </p>
+                </div>
+            </div>
+
+            <button class="btn-neon" id="controller-close-legal-modal-btn" type="button" style="width: 100%; margin-top: 10px; border-color: var(--neon-cyan); color: var(--neon-cyan); min-height: auto; padding: 10px;">Schließen</button>
         </div>
     </div>
 

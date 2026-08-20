@@ -138,6 +138,15 @@ let resetSettingsButton = null;
 let closeSettingsButton = null;
 let connectionBadge = null;
 let connDot = null;
+
+// Legal Modal Elements
+let controllerLegalModal = null;
+let controllerLegalModalTitle = null;
+let controllerCloseLegalModalBtn = null;
+let controllerOpenPrivacyBtn = null;
+let controllerOpenImprintBtn = null;
+let controllerFooterPrivacyBtn = null;
+let controllerFooterImprintBtn = null;
 let connStatusText = null;
 
 /**
@@ -287,6 +296,36 @@ function initDomElements() {
     connectionBadge = document.getElementById('connection-badge');
     connDot = document.getElementById('conn-dot');
     connStatusText = document.getElementById('conn-status-text');
+
+    // Legal / Privacy & Imprint DOM
+    controllerLegalModal = document.getElementById('controller-legal-modal');
+    controllerLegalModalTitle = document.getElementById('controller-legal-modal-title');
+    controllerCloseLegalModalBtn = document.getElementById('controller-close-legal-modal-btn');
+    controllerOpenPrivacyBtn = document.getElementById('controller-open-privacy-btn');
+    controllerOpenImprintBtn = document.getElementById('controller-open-imprint-btn');
+    controllerFooterPrivacyBtn = document.getElementById('controller-footer-privacy-btn');
+    controllerFooterImprintBtn = document.getElementById('controller-footer-imprint-btn');
+
+    const showControllerLegal = (tab) => {
+        if (!controllerLegalModal) return;
+        if (controllerLegalModalTitle) {
+            controllerLegalModalTitle.textContent = tab === 'imprint' ? '⚖️ Impressum & Rechtliches' : '🛡️ Datenschutz & Rechtliches';
+        }
+        controllerLegalModal.style.display = 'flex';
+    };
+
+    if (controllerOpenPrivacyBtn) controllerOpenPrivacyBtn.addEventListener('click', () => showControllerLegal('privacy'));
+    if (controllerOpenImprintBtn) controllerOpenImprintBtn.addEventListener('click', () => showControllerLegal('imprint'));
+    if (controllerFooterPrivacyBtn) controllerFooterPrivacyBtn.addEventListener('click', () => showControllerLegal('privacy'));
+    if (controllerFooterImprintBtn) controllerFooterImprintBtn.addEventListener('click', () => showControllerLegal('imprint'));
+    if (controllerCloseLegalModalBtn) controllerCloseLegalModalBtn.addEventListener('click', () => {
+        if (controllerLegalModal) controllerLegalModal.style.display = 'none';
+    });
+    if (controllerLegalModal) {
+        controllerLegalModal.addEventListener('click', (e) => {
+            if (e.target === controllerLegalModal) controllerLegalModal.style.display = 'none';
+        });
+    }
 
     // Button Events
     if (gameplayRollButton) {

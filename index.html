@@ -301,6 +301,13 @@
         </aside>
     </div>
 
+    <!-- DASHBOARD FOOTER -->
+    <footer style="width: 100%; max-width: 1200px; margin: 30px auto 10px auto; text-align: center; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 15px;">
+        <span>Quintasch V2 &copy; 2026</span>
+        <button id="footer-privacy-btn" type="button" style="background: none; border: none; color: var(--neon-cyan); cursor: pointer; font-size: 0.8rem; text-decoration: underline; font-family: inherit;">🛡️ Datenschutzerklärung</button>
+        <button id="footer-imprint-btn" type="button" style="background: none; border: none; color: var(--neon-cyan); cursor: pointer; font-size: 0.8rem; text-decoration: underline; font-family: inherit;">⚖️ Impressum & Kontakt</button>
+    </footer>
+
     <!-- EINSTELLUNGEN MODAL -->
     <div class="modal-overlay" id="settings-panel" style="display: none;">
         <div class="modal-panel" style="max-height: 90vh; overflow-y: auto; text-align: left; width: 90%; max-width: 480px;">
@@ -325,10 +332,14 @@
                 <label for="audio-mute" style="margin-bottom: 0; font-size: 0.85rem;">Stummschalten (Mute)</label>
             </div>
             
-            <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">🛡️ Datenschutz (DSGVO)</h4>
+            <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">🛡️ Datenschutz (DSGVO) & Rechtliches</h4>
             <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px;">
-                Quintasch speichert keine personenbezogenen Klardaten. Spielräume und Wurfhistorien dienen rein dem Spielverlauf und können jederzeit über den Button "Spielraum & Daten endgültig löschen" vollständig aus der Datenbank entfernt werden.
+                Quintasch speichert keine personenbezogenen Klardaten. Spielräume und Wurfhistorien dienen rein dem Spielverlauf und können jederzeit über den Button "Spielraum & Daten endgültig löschen" vollständig entfernt werden.
             </p>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <button class="btn-neon" id="open-privacy-btn" type="button" style="font-size: 0.78rem; padding: 6px 10px; border-color: var(--neon-cyan); color: var(--neon-cyan); flex: 1;">🛡️ Datenschutz</button>
+                <button class="btn-neon" id="open-imprint-btn" type="button" style="font-size: 0.78rem; padding: 6px 10px; border-color: var(--neon-magenta); color: var(--neon-magenta); flex: 1;">⚖️ Impressum</button>
+            </div>
             
             <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="btn-neon" id="save-settings-button" style="padding: 6px 12px; font-size: 0.85rem; flex: 1;">Speichern</button>
@@ -399,6 +410,47 @@
             <p id="group-alert-desc" style="font-size: 1.1rem; color: var(--text-main); margin: 15px 0;">Alle trinken! Der Würfler startet und beendet den Wasserfall.</p>
             <div id="group-alert-timer-box" style="font-family: 'Orbitron', sans-serif; font-size: 2.4rem; color: var(--neon-yellow); margin: 10px 0;">15s</div>
             <button class="btn-neon" id="group-alert-ack-btn" style="width: 100%; margin-top: 15px; border-color: var(--neon-cyan); color: var(--neon-cyan);">Verstanden / Schließen</button>
+        </div>
+    </div>
+
+    <!-- RECHTLICHE HINWEISE / DATENSCHUTZ & IMPRESSUM MODAL -->
+    <div id="legal-modal" class="modal-overlay" style="display: none; z-index: 10000;">
+        <div class="panel modal-panel" style="max-width: 620px; max-height: 85vh; overflow-y: auto; text-align: left; border-color: var(--neon-cyan); box-shadow: var(--glow-cyan);">
+            <header class="header" style="margin-bottom: 15px; border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 10px;">
+                <h2 id="legal-modal-title" style="font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: var(--neon-cyan); margin: 0;">🛡️ Datenschutz & Rechtliches</h2>
+            </header>
+            
+            <div id="legal-modal-content" style="font-size: 0.85rem; color: #ddd; line-height: 1.5; display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <h4 style="color: var(--neon-yellow); margin: 0 0 4px 0; font-family: 'Orbitron', sans-serif;">1. Server-Logs & Technische IP-Verarbeitung</h4>
+                    <p style="margin: 0; color: var(--text-muted);">
+                        Beim Zugriff auf diesen Webserver (PocketBase / Caddy) fallen technisch bedingt Logdaten an (anonymisierte bzw. gekürzte IP-Adresse, Zugriffszeitpunkt, HTTP-Status). Diese Daten dienen ausschließlich der Bereitstellung stabiler SSE-Echtzeitverbindungen und dem Schutz vor DDoS-Angriffen (Art. 6 Abs. 1 lit. f DSGVO). Es werden keine Nutzungsprofile erstellt.
+                    </p>
+                </div>
+                <div>
+                    <h4 style="color: var(--neon-green); margin: 0 0 4px 0; font-family: 'Orbitron', sans-serif;">2. Privacy by Design & Keine Cookies</h4>
+                    <p style="margin: 0; color: var(--text-muted);">
+                        Quintasch verlangt keine Registrierung, keine Passwörter und keine Klardaten. Die Spielzuordnung erfolgt über pseudonyme Tokens (<code style="color: var(--neon-cyan);">player_token</code>, <code style="color: var(--neon-cyan);">creator_token</code>) im lokalen Browser-Speicher (<code style="color: var(--neon-cyan);">localStorage</code>). Alle Bibliotheken und Schriftarten sind lokal auf dem Server gebündelt (keine externen Google-Fonts / CDN-Leaks).
+                    </p>
+                </div>
+                <div>
+                    <h4 style="color: var(--neon-magenta); margin: 0 0 4px 0; font-family: 'Orbitron', sans-serif;">3. Recht auf Löschung (Right to be forgotten)</h4>
+                    <p style="margin: 0; color: var(--text-muted);">
+                        Spieldaten können vom Host jederzeit über die Schaltfläche <em>„Spielraum & Daten endgültig löschen“</em> restlos aus der Datenbank entfernt werden.
+                    </p>
+                </div>
+                <div style="border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 10px;">
+                    <h4 style="color: var(--neon-cyan); margin: 0 0 4px 0; font-family: 'Orbitron', sans-serif;">4. Impressum & Kontakt (nach DDG)</h4>
+                    <p style="margin: 0; color: var(--text-muted);">
+                        <strong>Projekt:</strong> Quintasch – Open Source Cyberpunk Multiplayer PWA<br>
+                        <strong>Bereitstellung:</strong> Rein privates, nicht-kommerzielles Open-Source-Projekt.<br>
+                        <strong>Kontakt:</strong> Robert Edelmann (<a href="mailto:robert-edelmann@web.de" style="color: var(--neon-cyan);">robert-edelmann@web.de</a>)<br>
+                        <strong>Repository:</strong> <a href="https://github.com/Firethunder/quintasch" target="_blank" style="color: var(--neon-cyan);">github.com/Firethunder/quintasch</a>
+                    </p>
+                </div>
+            </div>
+            
+            <button class="btn-neon" id="close-legal-modal-btn" type="button" style="width: 100%; margin-top: 20px; border-color: var(--neon-cyan); color: var(--neon-cyan);">Schließen</button>
         </div>
     </div>
 

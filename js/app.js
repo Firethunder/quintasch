@@ -124,6 +124,14 @@ let stakeEditorModal = null;
 let saveEditedStakesBtn = null;
 let closeEditorModalBtn = null;
 
+let legalModal = null;
+let legalModalTitle = null;
+let closeLegalModalBtn = null;
+let openPrivacyBtn = null;
+let openImprintBtn = null;
+let footerPrivacyBtn = null;
+let footerImprintBtn = null;
+
 // Initialisierung bei Seitenaufruf
 document.addEventListener('DOMContentLoaded', () => {
     initDomElements();
@@ -211,6 +219,36 @@ function initDomElements() {
     groupAlertDesc = document.getElementById('group-alert-desc');
     groupAlertTimerBox = document.getElementById('group-alert-timer-box');
     groupAlertAckBtn = document.getElementById('group-alert-ack-btn');
+
+    // Legal / Privacy & Imprint DOM
+    legalModal = document.getElementById('legal-modal');
+    legalModalTitle = document.getElementById('legal-modal-title');
+    closeLegalModalBtn = document.getElementById('close-legal-modal-btn');
+    openPrivacyBtn = document.getElementById('open-privacy-btn');
+    openImprintBtn = document.getElementById('open-imprint-btn');
+    footerPrivacyBtn = document.getElementById('footer-privacy-btn');
+    footerImprintBtn = document.getElementById('footer-imprint-btn');
+
+    const showLegal = (tab) => {
+        if (!legalModal) return;
+        if (legalModalTitle) {
+            legalModalTitle.textContent = tab === 'imprint' ? '⚖️ Impressum & Kontakt' : '🛡️ Datenschutz & Rechtliches';
+        }
+        legalModal.style.display = 'flex';
+    };
+
+    if (openPrivacyBtn) openPrivacyBtn.addEventListener('click', () => showLegal('privacy'));
+    if (openImprintBtn) openImprintBtn.addEventListener('click', () => showLegal('imprint'));
+    if (footerPrivacyBtn) footerPrivacyBtn.addEventListener('click', () => showLegal('privacy'));
+    if (footerImprintBtn) footerImprintBtn.addEventListener('click', () => showLegal('imprint'));
+    if (closeLegalModalBtn) closeLegalModalBtn.addEventListener('click', () => {
+        if (legalModal) legalModal.style.display = 'none';
+    });
+    if (legalModal) {
+        legalModal.addEventListener('click', (e) => {
+            if (e.target === legalModal) legalModal.style.display = 'none';
+        });
+    }
 
     if (rematchBtn) rematchBtn.addEventListener('click', handleRematch);
     if (closeVictoryBtn) closeVictoryBtn.addEventListener('click', () => {
