@@ -60,6 +60,8 @@ In deinem PocketBase Admin Dashboard (`https://api-quintasch.robedit.de/_/`):
 2. Lade die Datei [`pb_schema.json`](pb_schema.json) aus diesem Repository hoch oder füge den JSON-Inhalt ein.
 3. Klicke auf **Review and import**.
 
+Eine vollständige Schritt-für-Schritt-Anleitung für Caddy, SSL und static file hosting findest du in [`docs/deployment-guide.md`](docs/deployment-guide.md).
+
 ### 2. Caddy Reverse-Proxy Konfiguration (`Caddyfile`)
 ```caddy
 api-quintasch.robedit.de {
