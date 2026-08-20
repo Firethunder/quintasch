@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quintasch-v8';
+const CACHE_NAME = 'quintasch-v9';
 const ASSETS = [
   './',
   './index.html',

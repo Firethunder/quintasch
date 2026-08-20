@@ -88,7 +88,7 @@ export async function createRoom({ code, gameMode = 'endless', targetScore = 10,
 
     const data = {
         code: cleanCode,
-        status: 'lobby',
+        status: 'playing',
         game_mode: gameMode,
         target_score: Number(targetScore) || 10,
         total_rounds: Number(totalRounds) || 5,

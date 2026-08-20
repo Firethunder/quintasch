@@ -575,18 +575,6 @@ function applyRoomState(room) {
         roundIndicator.textContent = `RUNDE ${room.current_round || 1}${room.total_rounds ? ` / ${room.total_rounds}` : ''}`;
     }
 
-    if (room.status === 'lobby') {
-        if (startGameButton) {
-            startGameButton.style.display = 'block';
-            startGameButton.disabled = players.length === 0;
-        }
-        if (skipPlayerButton) skipPlayerButton.style.display = 'none';
-        if (nextTurnButton) nextTurnButton.style.display = 'none';
-        if (activeTurnIndicator) activeTurnIndicator.textContent = 'Lobby (Warte auf Start)';
-        if (victoryModal) victoryModal.style.display = 'none';
-        return;
-    }
-
     if (room.status === 'finished') {
         if (activeTurnIndicator) activeTurnIndicator.textContent = 'Spiel beendet (Siegerehrung)';
         if (startGameButton) startGameButton.style.display = 'none';
@@ -599,15 +587,12 @@ function applyRoomState(room) {
         return;
     }
 
-    // Status: playing
+    // Status: playing / direkt spielbereit
     if (startGameButton) startGameButton.style.display = 'none';
-    if (skipPlayerButton) skipPlayerButton.style.display = 'block';
-    if (nextTurnButton) nextTurnButton.style.display = 'inline-block';
-
-    const activePlayer = players.find(p => p.player_token === room.active_player_token);
-    if (activePlayer && activeTurnIndicator) {
-        activeTurnIndicator.textContent = `Am Zug: ${activePlayer.name}`;
-    }
+    if (skipPlayerButton) skipPlayerButton.style.display = 'none';
+    if (nextTurnButton) nextTurnButton.style.display = 'none';
+    if (activeTurnIndicator) activeTurnIndicator.textContent = '🎲 Freies Spiel aktiv (Jeder kann würfeln)';
+    if (victoryModal) victoryModal.style.display = 'none';
 
     // Letzte Aktion verarbeiten
     if (room.last_action) {

@@ -848,13 +848,6 @@ function applyRoomState(room) {
         gameplayModeBadge.textContent = modeLabels[room.game_mode] || room.game_mode;
     }
 
-    if (room.status === 'lobby') {
-        if (lobbyContainer) lobbyContainer.style.display = 'block';
-        if (gameplayContainer) gameplayContainer.style.display = 'none';
-        if (controllerVictoryModal) controllerVictoryModal.style.display = 'none';
-        return;
-    }
-
     if (room.status === 'finished') {
         if (controllerVictoryModal) controllerVictoryModal.style.display = 'flex';
         if (gameplayFormWrapper) gameplayFormWrapper.style.display = 'none';
@@ -867,7 +860,7 @@ function applyRoomState(room) {
         return;
     }
 
-    // Status ist 'playing' - Freies Würfeln für alle aktiven Spieler
+    // Direkt spielbereit - Freies Würfeln für alle aktiven Spieler
     if (controllerVictoryModal) controllerVictoryModal.style.display = 'none';
     if (lobbyContainer) lobbyContainer.style.display = 'none';
     if (gameplayContainer) gameplayContainer.style.display = 'block';
