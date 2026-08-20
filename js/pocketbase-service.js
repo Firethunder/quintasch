@@ -4,7 +4,7 @@
  */
 
 import { getPocketBaseUrl, getOrCreatePlayerToken } from './config.js';
-import { BET_POINTS } from './game.js';
+import { BET_POINTS, STAKE_SETS } from './game.js';
 
 let pbInstance = null;
 let currentUrl = null;
@@ -530,6 +530,131 @@ export async function rematchRoom(roomId, roomCode, firstPlayerToken = '') {
         return updatedRoom;
     } catch (err) {
         console.error('Fehler beim Starten der Revanche:', err);
+        throw err;
+    }
+}
+
+/* ==========================================================================
+   GLOBAL & CUSTOM RULESETS SERVICE (Two-Part DB Architecture)
+   ========================================================================== */
+
+/**
+ * Holt die standardisierten System-Regelsätze (Read-Only) von PocketBase.
+ * Fällt bei Offline-Zustand oder fehlender Collection auf statische STAKE_SETS zurück.
+ * @returns {Promise<Array<{name: string, is_preset: boolean, items: Array<string>}>>}
+ */
+export async function fetchSystemRulesets() {
+    try {
+        const pb = await getPocketBase();
+        // Zuerst system_rulesets abfragen, sonst Fallback auf stake_sets
+        let records = [];
+        try {
+            records = await pb.collection('system_rulesets').getFullList({ sort: 'name' });
+        } catch (e) {
+            try {
+                records = await pb.collection('stake_sets').getFullList({ filter: 'is_preset = true', sort: 'name' });
+            } catch (innerErr) {
+                // Keine Server-Collection vorhanden -> Lokale Presets nutzen
+            }
+        }
+
+        if (records && records.length > 0) {
+            return records.map(r => ({
+                id: r.id,
+                name: r.name,
+                is_preset: true,
+                items: r.items || []
+            }));
+        }
+    } catch (err) {
+        console.warn('PocketBase System-Regelsätze nicht erreichbar, nutze lokale Standard-Sets:', err);
+    }
+
+    // Lokaler Fallback
+    return Object.keys(STAKE_SETS).map(key => ({
+        id: `local_${key}`,
+        name: key.charAt(0).toUpperCase() + key.slice(1),
+        is_preset: true,
+        items: STAKE_SETS[key]
+    }));
+}
+
+/**
+ * Holt benutzerdefinierte Regelsätze (eigene Sets anhand des creator_token und öffentliche Sets).
+ * @param {string} creatorToken
+ * @returns {Promise<Array<{id: string, name: string, items: Array<string>, is_public: boolean, creator_token: string}>>}
+ */
+export async function fetchCustomRulesets(creatorToken = '') {
+    try {
+        const pb = await getPocketBase();
+        const cleanToken = (creatorToken || '').trim();
+        let filter = '';
+        if (cleanToken) {
+            filter = `creator_token = "${cleanToken}" || is_public = true`;
+        } else {
+            filter = `is_public = true`;
+        }
+
+        const records = await pb.collection('custom_rulesets').getFullList({
+            filter,
+            sort: '-created'
+        });
+
+        return records.map(r => ({
+            id: r.id,
+            name: r.name,
+            items: r.items || [],
+            is_public: !!r.is_public,
+            creator_token: r.creator_token
+        }));
+    } catch (err) {
+        console.warn('Konnte Custom-Regelsätze nicht von PocketBase laden:', err);
+        return [];
+    }
+}
+
+/**
+ * Erstellt oder aktualisiert einen benutzerdefinierten Regelsatz unter Zuordnung des creator_token.
+ * @param {{id?: string, name: string, items: Array<string>, isPublic?: boolean, creatorToken: string}} params
+ * @returns {Promise<any>}
+ */
+export async function saveCustomRuleset({ id, name, items, isPublic = false, creatorToken }) {
+    if (!creatorToken || !creatorToken.trim()) {
+        throw new Error('Ein gültiger creator_token ist erforderlich, um Regelsätze zu speichern.');
+    }
+    if (!name || !name.trim()) {
+        throw new Error('Der Name des Regelsatzes darf nicht leer sein.');
+    }
+
+    const pb = await getPocketBase();
+    const payload = {
+        creator_token: creatorToken.trim(),
+        name: name.trim(),
+        items: Array.isArray(items) ? items : [],
+        is_public: !!isPublic
+    };
+
+    if (id && !id.startsWith('local_')) {
+        return await pb.collection('custom_rulesets').update(id, payload);
+    } else {
+        return await pb.collection('custom_rulesets').create(payload);
+    }
+}
+
+/**
+ * Löscht einen benutzerdefinierten Regelsatz (nur möglich, wenn der creator_token übereinstimmt).
+ * @param {string} id 
+ * @param {string} creatorToken 
+ * @returns {Promise<boolean>}
+ */
+export async function deleteCustomRuleset(id, creatorToken) {
+    if (!id || id.startsWith('local_')) return false;
+    const pb = await getPocketBase();
+    try {
+        await pb.collection('custom_rulesets').delete(id);
+        return true;
+    } catch (err) {
+        console.error('Fehler beim Löschen des Regelsatzes:', err);
         throw err;
     }
 }

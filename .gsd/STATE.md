@@ -1,24 +1,24 @@
 # STATE.md — Project Memory
 
-> **Current Status**: Phase Planning & Execution
+> **Current Status**: Phase 1 & Phase 2 Complete — Ready for Phase 3
 > **Active Milestone**: V2-Datenschutz-Architektur-und-Custom-Rulesets
-> **Active Phase**: 1
+> **Active Phase**: 3
 
 ## Phase Progress
-- **Phase 1: Rechtliche Hinweise, DSGVO-Erklärung & Impressum**: 🔄 In Progress
-- **Phase 2: Zweigeteilte PocketBase-Architektur & Systemregeln-Schutz**: ⬜ Not Started
-- **Phase 3: Custom Rulesets & Pseudonyme Creator-Tokens**: ⬜ Not Started
+- **Phase 1: Rechtliche Hinweise, DSGVO-Erklärung & Impressum**: ✅ Complete
+- **Phase 2: Zweigeteilte PocketBase-Architektur & Systemregeln-Schutz**: ✅ Complete
+- **Phase 3: Custom Rulesets & Pseudonyme Creator-Tokens**: 🔄 Ready for Planning / In Progress
 
 ## Blockers
 - Keine
 
 ## Current Position
 - **Milestone**: V2-Datenschutz-Architektur-und-Custom-Rulesets
-- **Phase**: 1
-- **Status**: Starting Phase 1
+- **Phase**: 3
+- **Status**: Preparing Phase 3
 
 ## Last Session Summary
-V2 Gameplay (Siegerpodest, Punktewettlauf, Gruppen-Alerts, Revanche und Theme-Presets) wurde erfolgreich fertiggestellt und committed. Der neue Milestone für DSGVO-Rechtssicherheit, zweigeteilte PB-Architektur und tokenbasierte Custom Rulesets wurde initialisiert.
+Phase 1 (Datenschutz & Impressum in UI und Doku) und Phase 2 (Zweigeteilte PocketBase-Architektur mit Systemregeln-Schreibschutz und Ruleset-Service API) wurden erfolgreich implementiert, validiert und committet.
 
 ## Next Steps
-1. Phase 1 Plan erstellen und ausführen: Datenschutz- und Impressums-Dialoge in Dashboard (index.html) und Controller (controller.html) einbauen sowie Dokumentation aktualisieren.
+1. Phase 3 Plan erstellen und ausführen: Etablierung des `creator_token` in `js/config.js`, UI-Editor für Custom Rulesets in Dashboard & Controller und dynamische Integration in die Lobby-Auswahl.

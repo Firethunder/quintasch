@@ -46,7 +46,13 @@ Quintasch ist ein dynamisches, modernes Multiplayer-Trinkspiel (PWA) für Smartp
 
 ---
 
-## 🛠️ PocketBase Setup (VPS)
+## 🛠️ PocketBase Setup (VPS) & Zweigeteilte Datenbank-Architektur
+
+Quintasch nutzt eine zweigeteilte Datenbankstruktur in PocketBase:
+1. **Session-Bereich (privat & temporär):** Die Collections `rooms`, `players` und `rolls` halten die aktiven Spielrunden. Nach Spielende können diese jederzeit rückstandslos gelöscht werden.
+2. **Globaler Bereich (System- & Custom-Regelsätze):**
+   * `system_rulesets` (bzw. `stake_sets`): Enthält offizielle, standardisierte Regelsätze. Schreibrechte (`create`, `update`, `delete`) sind für normale Clients **vollständig gesperrt (Read-Only)**.
+   * `custom_rulesets`: Ermöglicht Spielern das Speichern eigener Regelsätze. Die Zuordnung erfolgt datenschutzfreundlich über ein pseudonymes `creator_token` im `localStorage` (ohne Benutzerkonto/Login).
 
 ### 1. Collections importieren
 In deinem PocketBase Admin Dashboard (`https://api-quintasch.robedit.de/_/`):

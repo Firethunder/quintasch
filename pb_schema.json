@@ -158,7 +158,7 @@
         "name": "room_code",
         "type": "text",
         "required": true,
-        "presentable": false,
+        "presentable": true,
         "unique": false,
         "options": {
           "min": 3,
@@ -172,11 +172,11 @@
         "name": "player_token",
         "type": "text",
         "required": true,
-        "presentable": true,
+        "presentable": false,
         "unique": false,
         "options": {
-          "min": null,
-          "max": null,
+          "min": 5,
+          "max": 64,
           "pattern": ""
         }
       },
@@ -190,13 +190,13 @@
         "unique": false,
         "options": {
           "min": 1,
-          "max": 20,
+          "max": 30,
           "pattern": ""
         }
       },
       {
         "system": false,
-        "id": "field_player_online",
+        "id": "field_player_is_online",
         "name": "is_online",
         "type": "bool",
         "required": false,
@@ -206,7 +206,7 @@
       },
       {
         "system": false,
-        "id": "field_player_paused",
+        "id": "field_player_is_paused",
         "name": "is_paused",
         "type": "bool",
         "required": false,
@@ -224,7 +224,7 @@
         "unique": false,
         "options": {
           "min": 0,
-          "max": null,
+          "max": 100,
           "noDecimal": true
         }
       },
@@ -238,13 +238,13 @@
         "unique": false,
         "options": {
           "min": 0,
-          "max": null,
+          "max": 1000,
           "noDecimal": true
         }
       },
       {
         "system": false,
-        "id": "field_player_penalties_dist",
+        "id": "field_player_penalties_distributed",
         "name": "penalties_distributed",
         "type": "number",
         "required": false,
@@ -252,7 +252,7 @@
         "unique": false,
         "options": {
           "min": 0,
-          "max": null,
+          "max": 1000,
           "noDecimal": true
         }
       },
@@ -266,7 +266,7 @@
         "unique": false,
         "options": {
           "min": 0,
-          "max": null,
+          "max": 5000,
           "noDecimal": true
         }
       },
@@ -280,7 +280,7 @@
         "unique": false,
         "options": {
           "min": 0,
-          "max": null,
+          "max": 5000,
           "noDecimal": true
         }
       },
@@ -300,7 +300,7 @@
     ],
     "indexes": [
       "CREATE INDEX `idx_player_room` ON `players` (`room_code`)",
-      "CREATE UNIQUE INDEX `idx_player_room_token` ON `players` (`room_code`, `player_token`)"
+      "CREATE INDEX `idx_player_token` ON `players` (`player_token`)"
     ],
     "listRule": "",
     "viewRule": "",
@@ -321,7 +321,7 @@
         "name": "room_code",
         "type": "text",
         "required": true,
-        "presentable": false,
+        "presentable": true,
         "unique": false,
         "options": {
           "min": 3,
@@ -338,8 +338,8 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "min": null,
-          "max": null,
+          "min": 5,
+          "max": 64,
           "pattern": ""
         }
       },
@@ -353,7 +353,7 @@
         "unique": false,
         "options": {
           "min": 1,
-          "max": 20,
+          "max": 30,
           "pattern": ""
         }
       },
@@ -363,11 +363,11 @@
         "name": "bet",
         "type": "text",
         "required": true,
-        "presentable": true,
+        "presentable": false,
         "unique": false,
         "options": {
-          "min": null,
-          "max": null,
+          "min": 1,
+          "max": 30,
           "pattern": ""
         }
       },
@@ -402,7 +402,7 @@
         "id": "field_roll_is_hit",
         "name": "is_hit",
         "type": "bool",
-        "required": false,
+        "required": true,
         "presentable": false,
         "unique": false,
         "options": {}
@@ -417,7 +417,7 @@
         "unique": false,
         "options": {
           "min": null,
-          "max": null,
+          "max": 200,
           "pattern": ""
         }
       },
@@ -431,7 +431,7 @@
         "unique": false,
         "options": {
           "min": 0,
-          "max": 600,
+          "max": 300,
           "noDecimal": true
         }
       },
@@ -456,6 +456,126 @@
     "createRule": "",
     "updateRule": "",
     "deleteRule": "",
+    "options": {}
+  },
+  {
+    "id": "pbc_system_rulesets_01",
+    "name": "system_rulesets",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "system": false,
+        "id": "field_sys_rule_name",
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "presentable": true,
+        "unique": false,
+        "options": {
+          "min": 1,
+          "max": 50,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "field_sys_rule_is_preset",
+        "name": "is_preset",
+        "type": "bool",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {}
+      },
+      {
+        "system": false,
+        "id": "field_sys_rule_items",
+        "name": "items",
+        "type": "json",
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_system_rule_name` ON `system_rulesets` (`name`)"
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "options": {}
+  },
+  {
+    "id": "pbc_custom_rulesets_01",
+    "name": "custom_rulesets",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "system": false,
+        "id": "field_custom_creator_token",
+        "name": "creator_token",
+        "type": "text",
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 8,
+          "max": 64,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "field_custom_name",
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "presentable": true,
+        "unique": false,
+        "options": {
+          "min": 1,
+          "max": 50,
+          "pattern": ""
+        }
+      },
+      {
+        "system": false,
+        "id": "field_custom_is_public",
+        "name": "is_public",
+        "type": "bool",
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {}
+      },
+      {
+        "system": false,
+        "id": "field_custom_items",
+        "name": "items",
+        "type": "json",
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_custom_ruleset_creator` ON `custom_rulesets` (`creator_token`)"
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.data.creator_token != ''",
+    "updateRule": "creator_token = @request.data.creator_token",
+    "deleteRule": "creator_token = @request.data.creator_token",
     "options": {}
   },
   {
@@ -506,9 +626,9 @@
     ],
     "listRule": "",
     "viewRule": "",
-    "createRule": "",
-    "updateRule": "",
-    "deleteRule": "",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
     "options": {}
   }
 ]
