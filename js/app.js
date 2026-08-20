@@ -144,7 +144,19 @@ let footerPrivacyBtn = null;
 let footerImprintBtn = null;
 
 // Initialisierung bei Seitenaufruf
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    // Intelligente Geräte-Erkennung: Wenn Smartphone (< 768px oder Touch) und kein ?spectator=1 Parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const isExplicitSpectator = urlParams.has('spectator') || urlParams.has('dashboard') || urlParams.has('tv');
+    const isMobileDevice = window.innerWidth <= 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    if (isMobileDevice && !isExplicitSpectator) {
+        const room = urlParams.get('room') || urlParams.get('r') || '';
+        const targetUrl = room ? `controller.html?room=${room}` : 'controller.html';
+        window.location.replace(targetUrl);
+        return;
+    }
+
     initDomElements();
     initSettingsAndAudio();
     initConnectionStatus();
@@ -153,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initRulesets();
 
     // Auto-Join via URL-Parameter checken (?room=CODE oder ?sync=CODE)
-    const urlParams = new URLSearchParams(window.location.search);
     const targetRoomCode = (urlParams.get('room') || urlParams.get('sync') || urlParams.get('r') || '').trim().toUpperCase();
 
     if (targetRoomCode) {
