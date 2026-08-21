@@ -11,8 +11,66 @@ export const STORAGE_KEYS = {
     PLAYER_NAME: 'quintasch_player_name',
     CUSTOM_STAKES: 'quintasch_custom_stakes',
     AUDIO_SETTINGS: 'quintasch_audio_settings',
-    LAST_ROOM_CODE: 'quintasch_last_room_code'
+    LAST_ROOM_CODE: 'quintasch_last_room_code',
+    PERSONAL_RULESET: 'quintasch_personal_ruleset',
+    JGA_UNLOCKED: 'quintasch_jga_unlocked'
 };
+
+/**
+ * Returns true if the special JGA mode has been unlocked on this device.
+ * @returns {boolean}
+ */
+export function isJgaUnlocked() {
+    try {
+        return localStorage.getItem(STORAGE_KEYS.JGA_UNLOCKED) === '1';
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Sets the unlock state for the JGA mode.
+ * @param {boolean} unlocked 
+ */
+export function setJgaUnlocked(unlocked = true) {
+    try {
+        if (unlocked) {
+            localStorage.setItem(STORAGE_KEYS.JGA_UNLOCKED, '1');
+        } else {
+            localStorage.removeItem(STORAGE_KEYS.JGA_UNLOCKED);
+        }
+    } catch (e) {
+        console.warn('Fehler beim Speichern des JGA-Unlock-Status:', e);
+    }
+}
+
+/**
+ * Returns the player's personally selected ruleset key ('auto' or specific set key).
+ * @returns {string}
+ */
+export function getPersonalRuleset() {
+    try {
+        return localStorage.getItem(STORAGE_KEYS.PERSONAL_RULESET) || 'auto';
+    } catch (e) {
+        return 'auto';
+    }
+}
+
+/**
+ * Saves the player's personally selected ruleset key.
+ * @param {string} key 
+ */
+export function setPersonalRuleset(key) {
+    try {
+        if (!key || key === 'auto') {
+            localStorage.setItem(STORAGE_KEYS.PERSONAL_RULESET, 'auto');
+        } else {
+            localStorage.setItem(STORAGE_KEYS.PERSONAL_RULESET, key);
+        }
+    } catch (e) {
+        console.warn('Fehler beim Speichern des persönlichen Regelsets:', e);
+    }
+}
 
 /**
  * Returns the configured PocketBase server URL (with fallback to default).

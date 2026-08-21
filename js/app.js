@@ -622,7 +622,7 @@ function handleLastAction(action) {
                 resultDescription.textContent = `Angesagt: ${BET_LABELS[action.bet] || action.bet} | Würfel: [${action.dice.join(', ')}]`;
             }
             if (resultAction) {
-                resultAction.textContent = action.isHit ? `Aktion: ${action.stakeText || BET_RULES[action.bet]}` : 'Keine Strafe für den Würfler.';
+                resultAction.textContent = action.isHit ? `Einsatz / Aktion: ${action.stakeText || BET_RULES[action.bet]}` : '';
             }
 
             // Gruppen Alert (Wasserfall / Quintasch)

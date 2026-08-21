@@ -4,9 +4,9 @@
  * interactive penalty distribution, synchronized 3D dice, and haptics.
  */
 
-import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, STAKE_SETS } from './game.js';
+import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, STAKE_SETS, getStakeForBet } from './game.js';
 import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
-import { getPocketBaseUrl, setPocketBaseUrl, getOrCreatePlayerToken, getSavedPlayerName, setSavedPlayerName, generateRoomCode } from './config.js';
+import { getPocketBaseUrl, setPocketBaseUrl, getOrCreatePlayerToken, getSavedPlayerName, setSavedPlayerName, generateRoomCode, getPersonalRuleset, setPersonalRuleset, isJgaUnlocked, setJgaUnlocked } from './config.js';
 import {
     createRoom,
     updateRoom,
@@ -99,8 +99,12 @@ let gameplayModeBadge = null;
 let gameplayStatusTitle = null;
 let gameplayFormWrapper = null;
 let clientPauseToggle = null;
+let personalRulesetSelect = null;
 let gameplayBetSelect = null;
 let gameplayStakeSelect = null;
+let gameplayStakePreview = null;
+let gameplayStakePreviewText = null;
+let gameplayCustomStakeGroup = null;
 let gameplayCustomStakeInput = null;
 let gameplayCustomTimerGroup = null;
 let gameplayCustomTimerInput = null;
@@ -162,6 +166,11 @@ let clientVolumeInput = null;
 let clientVolumeDisplay = null;
 let clientMuteInput = null;
 let clientVibrateInput = null;
+let settingsPersonalRuleset = null;
+let secretCodeInput = null;
+let redeemCodeBtn = null;
+let secretCodeFeedback = null;
+let jgaBadge = null;
 let saveSettingsButton = null;
 let resetSettingsButton = null;
 let closeSettingsButton = null;
@@ -216,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDomElements();
     initSettingsAndAudio();
     initConnectionStatus();
+    loadControllerRulesets();
 
     // Raum-Code aus URL auslesen (?room=xxxx)
     const urlParams = new URLSearchParams(window.location.search);
@@ -228,6 +238,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedName = getSavedPlayerName();
     if (savedName && clientPlayerNameInput) {
         clientPlayerNameInput.value = savedName;
+    }
+
+    // JGA VIP-Unlock via URL prüfen (?jga=1, ?vip=jga, ?code=jga, ?mode=jga)
+    const isJgaParam = urlParams.has('jga') || urlParams.get('vip') === 'jga' || urlParams.get('code') === 'jga' || urlParams.get('mode') === 'jga';
+    if (isJgaParam) {
+        setJgaUnlocked(true);
+        updateJgaUiState(true);
+    } else if (isJgaUnlocked()) {
+        updateJgaUiState(false);
     }
 
     // Event Listener für Beitreten
@@ -273,12 +292,47 @@ function initDomElements() {
     gameplayStatusTitle = document.getElementById('gameplay-status-title');
     gameplayFormWrapper = document.getElementById('gameplay-form-wrapper');
     clientPauseToggle = document.getElementById('client-pause-toggle');
+    personalRulesetSelect = document.getElementById('personal-ruleset-select');
+    settingsPersonalRuleset = document.getElementById('settings-personal-ruleset');
     gameplayBetSelect = document.getElementById('gameplay-bet');
     gameplayStakeSelect = document.getElementById('gameplay-stake');
+    gameplayStakePreview = document.getElementById('gameplay-stake-preview');
+    gameplayStakePreviewText = document.getElementById('gameplay-stake-preview-text');
+    gameplayCustomStakeGroup = document.getElementById('gameplay-custom-stake-group');
     gameplayCustomStakeInput = document.getElementById('gameplay-custom-stake');
     gameplayCustomTimerGroup = document.getElementById('gameplay-custom-timer-group');
     gameplayCustomTimerInput = document.getElementById('gameplay-custom-timer');
     gameplayRollButton = document.getElementById('gameplay-roll-button');
+
+    if (gameplayStakeSelect) {
+        gameplayStakeSelect.addEventListener('change', updateStakePreview);
+    }
+    if (gameplayBetSelect) {
+        gameplayBetSelect.addEventListener('change', updateStakePreview);
+    }
+
+    const savedPersonal = getPersonalRuleset();
+    if (personalRulesetSelect) {
+        personalRulesetSelect.value = savedPersonal;
+        personalRulesetSelect.addEventListener('change', () => {
+            const val = personalRulesetSelect.value;
+            setPersonalRuleset(val);
+            if (settingsPersonalRuleset) settingsPersonalRuleset.value = val;
+            lastStakeSetKey = null;
+            updateStakeDropdown(getEffectiveStakeSetKey());
+        });
+    }
+    if (settingsPersonalRuleset) {
+        settingsPersonalRuleset.value = savedPersonal;
+        settingsPersonalRuleset.addEventListener('change', () => {
+            const val = settingsPersonalRuleset.value;
+            setPersonalRuleset(val);
+            if (personalRulesetSelect) personalRulesetSelect.value = val;
+            lastStakeSetKey = null;
+            updateStakeDropdown(getEffectiveStakeSetKey());
+        });
+    }
+    updateStakePreview();
     mobileDiceTable = document.getElementById('mobile-dice-table');
     lobbyPlayersList = document.getElementById('lobby-players-list');
     clientHistoryList = document.getElementById('client-history-list');
@@ -424,6 +478,10 @@ function initDomElements() {
     connectionBadge = document.getElementById('connection-badge');
     connDot = document.getElementById('conn-dot');
     connStatusText = document.getElementById('conn-status-text');
+    secretCodeInput = document.getElementById('secret-code-input');
+    redeemCodeBtn = document.getElementById('redeem-code-btn');
+    secretCodeFeedback = document.getElementById('secret-code-feedback');
+    jgaBadge = document.getElementById('jga-badge');
 
     // Legal / Privacy & Imprint DOM
     controllerLegalModal = document.getElementById('controller-legal-modal');
@@ -465,6 +523,11 @@ function initDomElements() {
     if (resultOverlayCloseBtn) {
         resultOverlayCloseBtn.addEventListener('click', () => {
             if (rollResultOverlay) rollResultOverlay.style.display = 'none';
+        });
+    }
+    if (rollResultOverlay) {
+        rollResultOverlay.addEventListener('click', (e) => {
+            if (e.target === rollResultOverlay) rollResultOverlay.style.display = 'none';
         });
     }
     if (incomingPenaltyAckBtn) {
@@ -535,6 +598,13 @@ function initSettingsAndAudio() {
             if (pbServerUrlInput) {
                 setPocketBaseUrl(pbServerUrlInput.value);
             }
+            if (settingsPersonalRuleset) {
+                const val = settingsPersonalRuleset.value;
+                setPersonalRuleset(val);
+                if (personalRulesetSelect) personalRulesetSelect.value = val;
+                lastStakeSetKey = null;
+                updateStakeDropdown(getEffectiveStakeSetKey());
+            }
             closeSettings();
             checkServerHealth();
         });
@@ -543,8 +613,53 @@ function initSettingsAndAudio() {
         resetSettingsButton.addEventListener('click', () => {
             setPocketBaseUrl('');
             if (pbServerUrlInput) pbServerUrlInput.value = getPocketBaseUrl();
+            setPersonalRuleset('auto');
+            if (settingsPersonalRuleset) settingsPersonalRuleset.value = 'auto';
+            if (personalRulesetSelect) personalRulesetSelect.value = 'auto';
+            lastStakeSetKey = null;
+            updateStakeDropdown(getEffectiveStakeSetKey());
             closeSettings();
             checkServerHealth();
+        });
+    }
+    const handleRedeemCode = () => {
+        if (!secretCodeInput || !secretCodeFeedback) return;
+        const raw = (secretCodeInput.value || '').trim().toLowerCase();
+        const validCodes = ['jga', 'versengold', 'bräutigam', 'braeutigam', 'jga2026', 'niclas'];
+
+        if (validCodes.includes(raw)) {
+            setJgaUnlocked(true);
+            updateJgaUiState(true);
+            secretCodeFeedback.textContent = '👑 Bräutigam-Modus (JGA) erfolgreich freigeschaltet!';
+            secretCodeFeedback.style.color = 'var(--neon-green)';
+            secretCodeFeedback.style.display = 'block';
+            secretCodeInput.value = '';
+        } else {
+            secretCodeFeedback.textContent = '❌ Ungültiger VIP-Code.';
+            secretCodeFeedback.style.color = 'var(--neon-magenta)';
+            secretCodeFeedback.style.display = 'block';
+        }
+    };
+
+    const secretCodeHintBtn = document.getElementById('secret-code-hint-btn');
+    const secretCodeHintText = document.getElementById('secret-code-hint-text');
+    if (secretCodeHintBtn && secretCodeHintText) {
+        secretCodeHintBtn.addEventListener('click', () => {
+            const isHidden = secretCodeHintText.style.display === 'none' || !secretCodeHintText.style.display;
+            secretCodeHintText.style.display = isHidden ? 'block' : 'none';
+            secretCodeHintBtn.textContent = isHidden ? '🙈 Hinweis verbergen' : '💡 Rätsel-Hinweis anzeigen';
+        });
+    }
+
+    if (redeemCodeBtn) {
+        redeemCodeBtn.addEventListener('click', handleRedeemCode);
+    }
+    if (secretCodeInput) {
+        secretCodeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleRedeemCode();
+            }
         });
     }
 }
@@ -767,7 +882,7 @@ function showIncomingRollToast(roll) {
     const betName = BET_LABELS[roll.bet] || roll.bet;
     const hitBadge = roll.is_hit ? '<span style="color: var(--neon-green); font-weight: bold;">🎉 Treffer!</span>' : '<span style="color: var(--neon-magenta); font-weight: bold;">💥 Verfehlt</span>';
     const diceStr = roll.dice && Array.isArray(roll.dice) ? `[${roll.dice.join(', ')}]` : '';
-    const stakeStr = roll.stake_text ? ` • <em>${roll.stake_text}</em>` : '';
+    const stakeStr = (roll.is_hit && roll.stake_text) ? ` • <em>${roll.stake_text}</em>` : '';
 
     incomingRollText.innerHTML = `<strong>🎲 ${roll.player_name}:</strong> ${betName} ${diceStr} ➔ ${hitBadge}${stakeStr}`;
     incomingRollBanner.style.display = 'block';
@@ -781,51 +896,118 @@ function showIncomingRollToast(roll) {
 let lastStakeSetKey = null;
 let controllerCachedRulesets = [];
 
-async function updateStakeDropdown(activeStakeSetKey) {
-    if (!gameplayStakeSelect) return;
-    const setKey = activeStakeSetKey || 'klassisch';
-    if (lastStakeSetKey === setKey && gameplayStakeSelect.options.length > 1) return;
-    lastStakeSetKey = setKey;
+/**
+ * Lädt Custom- und Systemregelsätze und ergänzt dynamisch Auswahllisten.
+ */
+async function loadControllerRulesets() {
+    try {
+        const [sys, custom] = await Promise.all([fetchSystemRulesets(), fetchCustomRulesets()]);
+        controllerCachedRulesets = [...sys, ...custom];
 
-    const currentSelection = gameplayStakeSelect.value;
-    let stakes = STAKE_SETS[setKey.toLowerCase()];
+        const customRulesets = controllerCachedRulesets.filter(r => !r.is_preset);
+        if (customRulesets.length > 0) {
+            [personalRulesetSelect, settingsPersonalRuleset, mobileStakeSetSelect].forEach(selectEl => {
+                if (!selectEl) return;
+                const currentVal = selectEl.value;
 
-    if (!stakes) {
-        // Suche in gecachten Custom-Rulesets
-        const found = controllerCachedRulesets.find(r => (r.id && r.id === setKey) || r.name.toLowerCase() === setKey.toLowerCase());
-        if (found && found.items && found.items.length > 0) {
-            stakes = found.items;
-        } else {
-            try {
-                const [sys, custom] = await Promise.all([fetchSystemRulesets(), fetchCustomRulesets()]);
-                controllerCachedRulesets = [...sys, ...custom];
-                const refreshed = controllerCachedRulesets.find(r => (r.id && r.id === setKey) || r.name.toLowerCase() === setKey.toLowerCase());
-                if (refreshed && refreshed.items) {
-                    stakes = refreshed.items;
+                let customOptgroup = selectEl.querySelector('optgroup[label="✨ Custom-Sets"]');
+                if (!customOptgroup) {
+                    customOptgroup = document.createElement('optgroup');
+                    customOptgroup.label = '✨ Custom-Sets';
+                    selectEl.appendChild(customOptgroup);
                 }
-            } catch (e) {}
+                customOptgroup.innerHTML = '';
+                customRulesets.forEach(crs => {
+                    const opt = document.createElement('option');
+                    opt.value = crs.id;
+                    opt.textContent = `✍️ ${crs.name}`;
+                    customOptgroup.appendChild(opt);
+                });
+
+                if (currentVal) selectEl.value = currentVal;
+            });
+        }
+    } catch (e) {
+        console.warn('Konnte Regelsätze im Controller nicht vorab laden:', e);
+    }
+    updateJgaUiState(false);
+}
+
+/**
+ * Aktualisiert UI-Elemente und Dropdowns bezüglich des JGA Bräutigam-Modus.
+ */
+function updateJgaUiState(isNewlyUnlocked = false) {
+    const unlocked = isJgaUnlocked();
+    if (jgaBadge) {
+        jgaBadge.style.display = unlocked ? 'block' : 'none';
+    }
+
+    if (unlocked) {
+        // Dynamisch in Dropdowns einhängen falls noch nicht vorhanden
+        [personalRulesetSelect, settingsPersonalRuleset, mobileStakeSetSelect].forEach(sel => {
+            if (!sel) return;
+            const hasJga = Array.from(sel.options).some(opt => opt.value === 'jga');
+            if (!hasJga) {
+                const opt = document.createElement('option');
+                opt.value = 'jga';
+                opt.textContent = '👑 JGA Mittelalter (Festival-Edition)';
+                opt.style.color = 'var(--neon-yellow)';
+                sel.appendChild(opt);
+            }
+        });
+
+        if (isNewlyUnlocked) {
+            setPersonalRuleset('jga');
+            if (personalRulesetSelect) personalRulesetSelect.value = 'jga';
+            if (settingsPersonalRuleset) settingsPersonalRuleset.value = 'jga';
+            lastStakeSetKey = null;
+            updateStakeDropdown('jga');
+            playProceduralSound('win');
+            triggerVibration([100, 50, 100, 50, 200]);
         }
     }
+}
 
-    if (!stakes || stakes.length === 0) {
-        stakes = STAKE_SETS['klassisch'];
+/**
+ * Ermittelt das für diesen Spieler aktive Regelset (persönliche Auswahl oder Raum-Standard).
+ * @returns {string}
+ */
+function getEffectiveStakeSetKey() {
+    const personal = personalRulesetSelect ? personalRulesetSelect.value : getPersonalRuleset();
+    if (personal && personal !== 'auto') {
+        return personal;
     }
+    return (currentRoomRecord && currentRoomRecord.active_stake_set) ? currentRoomRecord.active_stake_set : 'klassisch';
+}
 
-    gameplayStakeSelect.innerHTML = '<option value="custom">Eigene Aktion...</option>';
-    stakes.forEach(stake => {
-        if (stake && stake.trim()) {
-            const opt = document.createElement('option');
-            opt.value = stake;
-            opt.textContent = stake;
-            gameplayStakeSelect.appendChild(opt);
+/**
+ * Aktualisiert die Live-Vorschau des Standard-Einsatzes basierend auf gewählter Wette und Regelset.
+ */
+function updateStakePreview() {
+    if (!gameplayStakeSelect) return;
+    const isCustom = gameplayStakeSelect.value === 'custom';
+
+    if (gameplayCustomStakeGroup) gameplayCustomStakeGroup.style.display = isCustom ? 'block' : 'none';
+    if (gameplayCustomTimerGroup) gameplayCustomTimerGroup.style.display = isCustom ? 'block' : 'none';
+    if (gameplayStakePreview) gameplayStakePreview.style.display = isCustom ? 'none' : 'block';
+
+    if (!isCustom && gameplayStakePreviewText && gameplayBetSelect) {
+        const bet = gameplayBetSelect.value;
+        const setKey = getEffectiveStakeSetKey();
+
+        let customItems = null;
+        if (!STAKE_SETS[setKey.toLowerCase()]) {
+            const found = controllerCachedRulesets.find(r => (r.id && r.id === setKey) || r.name.toLowerCase() === setKey.toLowerCase());
+            if (found && found.items) customItems = found.items;
         }
-    });
 
-    if (currentSelection === 'custom' || stakes.includes(currentSelection)) {
-        gameplayStakeSelect.value = currentSelection;
-    } else {
-        gameplayStakeSelect.value = stakes[0] || 'custom';
+        const stakeText = getStakeForBet(bet, setKey, customItems);
+        gameplayStakePreviewText.textContent = stakeText;
     }
+}
+
+async function updateStakeDropdown(activeStakeSetKey) {
+    updateStakePreview();
 }
 
 /**
@@ -835,9 +1017,7 @@ function applyRoomState(room) {
     if (!room) return;
 
     // Thematisches Einsatz-Set aktualisieren
-    if (room.active_stake_set) {
-        updateStakeDropdown(room.active_stake_set);
-    }
+    updateStakeDropdown(getEffectiveStakeSetKey());
 
     // Modus & Runden-Badges
     if (gameplayRoundBadge) {
@@ -964,7 +1144,7 @@ async function refreshPlayersList(roomCode) {
                         ${!isMe ? `<button type="button" class="btn-peer-pause" data-id="${p.id}" data-paused="${p.is_paused ? '1' : '0'}" style="background: rgba(255,255,255,0.06); border: 1px solid ${p.is_paused ? 'var(--neon-green)' : 'rgba(255,255,255,0.2)'}; color: ${p.is_paused ? 'var(--neon-green)' : 'var(--text-muted)'}; border-radius: 4px; font-size: 0.65rem; padding: 2px 6px; cursor: pointer;">${p.is_paused ? '▶️ Aktiv' : '⏸️ Inaktiv'}</button>` : ''}
                     </div>
                     <div class="player-stats-mini">
-                        Strafen: <strong style="color: var(--neon-magenta);">${p.score || 0}</strong> | Treffer: <strong style="color: var(--neon-green);">${p.hits_count || 0}/${p.rolls_count || 0}</strong>
+                        Einsätze: <strong style="color: var(--neon-magenta);">${p.score || 0}</strong> | Treffer: <strong style="color: var(--neon-green);">${p.hits_count || 0}/${p.rolls_count || 0}</strong>
                     </div>
                 `;
 
@@ -1061,7 +1241,7 @@ function showControllerVictoryPodium(actionData) {
 async function handleOpenRulesCheatsheet() {
     if (!rulesCheatsheetModal || !rulesCheatsheetList) return;
 
-    const setKey = (currentRoomRecord && currentRoomRecord.active_stake_set) ? currentRoomRecord.active_stake_set : 'klassisch';
+    const setKey = getEffectiveStakeSetKey();
     let stakes = STAKE_SETS[setKey.toLowerCase()];
 
     if (!stakes) {
@@ -1078,16 +1258,16 @@ async function handleOpenRulesCheatsheet() {
     }
 
     const betCategories = [
-        { label: 'Pasch', prob: '~90.7%' },
-        { label: 'Doppelpasch', prob: '~23.1%' },
-        { label: 'Drasch', prob: '~15.4%' },
-        { label: 'Full House', prob: '~3.9%' },
-        { label: 'Kleine Straße', prob: '~3.1%' },
-        { label: 'Große Straße', prob: '~3.1%' },
-        { label: 'Straße', prob: '~3.1%' },
-        { label: 'Quadrasch', prob: '~1.9%' },
-        { label: 'Quintasch', prob: '~0.08%' },
-        { label: 'Sonder-Regel / Joker', prob: 'Special' }
+        { label: 'Standard-Einsatz', prob: 'Basis' },
+        { label: 'Pasch (1 Paar)', prob: '~90.7%' },
+        { label: 'Doppelpasch (2 Paare)', prob: '~23.1%' },
+        { label: 'Drasch (Drilling)', prob: '~15.4%' },
+        { label: 'Full House (3+2)', prob: '~3.9%' },
+        { label: 'Straße (5er-Reihe)', prob: '~3.1%' },
+        { label: 'Quadrasch (Vierling)', prob: '~1.9%' },
+        { label: 'Quadrasch Eskalation', prob: '~1.9%' },
+        { label: 'Quintasch (5 Gleiche)', prob: '~0.08%' },
+        { label: 'Quintasch Ultimativ', prob: '👑 Special' }
     ];
 
     rulesCheatsheetList.innerHTML = betCategories.map((cat, idx) => {
@@ -1184,11 +1364,76 @@ function showControllerGroupAlert(groupAlert) {
 function showIncomingPenaltyAlert(senderName, amount, type) {
     if (!incomingPenaltyAlert || !incomingPenaltyText) return;
 
-    incomingPenaltyText.innerHTML = `<strong>${senderName}</strong> verdonnert dich zu:<br><span style="font-size: 1.5rem; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif;">${amount} ${type || 'Schlucke'}</span>`;
+    incomingPenaltyText.innerHTML = `<strong>${senderName}</strong> verteilt folgenden Einsatz an dich:<br><span style="font-size: 1.5rem; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif;">${amount} ${type || 'Schlucke'}</span>`;
     incomingPenaltyAlert.style.display = 'flex';
 
     playProceduralSound('fail');
     triggerVibration([200, 100, 200, 100, 400]);
+}
+
+/**
+ * Zeigt das spannende Würfelergebnis-Overlay direkt auf dem Smartphone an.
+ */
+function showRollResultOverlay({ dice, bet, isHit, resultRank, stakeText, timerSecs }) {
+    if (!rollResultOverlay || !resultOverlayTitle || !resultOverlayDice || !resultOverlayText) return;
+
+    const betName = BET_LABELS[bet] || bet;
+    const rolledRankName = Object.keys(BET_RANKS).find(k => BET_RANKS[k] === resultRank);
+    const rolledName = BET_LABELS[rolledRankName] || 'Keine Kombination';
+
+    const panel = rollResultOverlay.querySelector('.panel');
+    if (isHit) {
+        resultOverlayTitle.textContent = '🎉 TREFFER!';
+        resultOverlayTitle.style.color = 'var(--neon-green)';
+        resultOverlayTitle.style.textShadow = '0 0 15px rgba(0, 255, 102, 0.6)';
+        if (panel) {
+            panel.style.borderColor = 'var(--neon-green)';
+            panel.style.boxShadow = '0 0 25px rgba(0, 255, 102, 0.3)';
+        }
+    } else {
+        resultOverlayTitle.textContent = '💥 VERFEHLT!';
+        resultOverlayTitle.style.color = 'var(--neon-magenta)';
+        resultOverlayTitle.style.textShadow = '0 0 15px rgba(255, 0, 127, 0.6)';
+        if (panel) {
+            panel.style.borderColor = 'var(--neon-magenta)';
+            panel.style.boxShadow = '0 0 25px rgba(255, 0, 127, 0.3)';
+        }
+    }
+
+    // Würfel visualisieren
+    resultOverlayDice.innerHTML = (dice || []).map(val => {
+        const isEven = val % 2 === 0;
+        return `<div class="mobile-die ${isEven ? 'even' : ''}">${val}</div>`;
+    }).join('');
+
+    // Textuelle Details
+    const hitBadge = isHit
+        ? '<span style="color: var(--neon-green); font-weight: bold;">[Erfolgreich]</span>'
+        : '<span style="color: var(--neon-magenta); font-weight: bold;">[Verfehlt]</span>';
+
+    const stakeBlock = isHit ? `
+        <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 12px; margin-top: 5px;">
+            <div style="font-size: 0.8rem; color: var(--neon-green); text-transform: uppercase; font-family: 'Orbitron', sans-serif; margin-bottom: 4px;">
+                ⚡ Dein Einsatz / Aktion:
+            </div>
+            <div style="font-size: 1.15rem; color: #fff; font-weight: bold; line-height: 1.35;">
+                ${stakeText || '1 Schluck trinken'}
+            </div>
+            ${timerSecs > 0 ? `<div style="font-size: 0.82rem; color: var(--neon-yellow); margin-top: 6px;">⏱️ Timer: ${timerSecs} Sekunden</div>` : ''}
+        </div>
+    ` : '';
+
+    resultOverlayText.innerHTML = `
+        <div style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 4px;">
+            Wette: <strong style="color: #fff;">${betName}</strong> ${hitBadge}
+        </div>
+        <div style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: ${isHit ? '12px' : '0'};">
+            Gewürfelt: <strong style="color: var(--neon-cyan);">${rolledName}</strong>
+        </div>
+        ${stakeBlock}
+    `;
+
+    rollResultOverlay.style.display = 'flex';
 }
 
 /**
@@ -1331,12 +1576,31 @@ async function handleRollClick() {
     if (gameplayStakeSelect && gameplayStakeSelect.value === 'custom') {
         stakeText = (gameplayCustomStakeInput ? gameplayCustomStakeInput.value : '').trim() || 'Eigener Einsatz';
         timerSecs = parseInt(gameplayCustomTimerInput ? gameplayCustomTimerInput.value : 0, 10) || 0;
-    } else if (gameplayStakeSelect) {
-        stakeText = gameplayStakeSelect.value;
+    } else {
+        const setKey = getEffectiveStakeSetKey();
+        let customItems = null;
+        if (!STAKE_SETS[setKey.toLowerCase()]) {
+            const found = controllerCachedRulesets.find(r => (r.id && r.id === setKey) || r.name.toLowerCase() === setKey.toLowerCase());
+            if (found && found.items) customItems = found.items;
+        }
+        stakeText = getStakeForBet(bet, setKey, customItems);
+        timerSecs = 0;
     }
 
     // 3. Sofortige lokale 3D Animation starten (Zero-Latency)
     animateDiceRoll(dice, () => {
+        // Lokaler Sound & Vibration
+        if (isHit) {
+            playProceduralSound('win');
+            triggerVibration([100, 50, 150]);
+        } else {
+            playProceduralSound('fail');
+            triggerVibration([200, 100, 200]);
+        }
+
+        // Zeige das interaktive Ergebnis-Overlay direkt auf dem Handy des Würflers!
+        showRollResultOverlay({ dice, bet, isHit, resultRank, stakeText, timerSecs });
+
         if (isHit) {
             if (bet === 'doppelpasch') {
                 openPenaltyModal('Doppelpasch getroffen!', 2, 'Schlucke');
@@ -1345,27 +1609,13 @@ async function handleRollClick() {
             }
         }
 
-        // Lokaler Sound
-        if (isHit) {
-            playProceduralSound('win');
-        } else {
-            playProceduralSound('fail');
-        }
-
-        // Gruppen-Alert lokal triggern falls Straße / Quintasch
-        if (resultRank === BET_RANKS.strasse) {
-            showControllerGroupAlert({
-                type: 'wasserfall',
-                title: '🌊 WASSERFALL!',
-                description: 'Du hast eine Straße gewürfelt! Alle trinken!',
-                timerSeconds: 15
-            });
-        } else if (resultRank === BET_RANKS.quintasch) {
+        // Gruppen-Alert lokal nur noch im Falle eines Quintasch
+        if ((isHit && bet === 'quintasch') || resultRank === BET_RANKS.quintasch) {
             showControllerGroupAlert({
                 type: 'quintasch',
                 title: '👑 QUINTASCH!',
-                description: '5 Gleiche! ALLE AUF EX!',
-                timerSeconds: 10
+                description: '5 Gleiche! Alle stoßen an und trinken einen Shot auf dein Wohl!',
+                timerSeconds: 20
             });
         }
 
@@ -1545,6 +1795,7 @@ function prependHistoryItem(roll) {
         </div>
         <div style="color: var(--text-muted); font-size: 0.78rem;">
             Wette: ${BET_LABELS[roll.bet] || roll.bet} | Würfel: [${(roll.dice || []).join(', ')}]
+            ${(roll.is_hit && roll.stake_text) ? `<div style="color: var(--neon-cyan); margin-top: 2px;">Einsatz: ${roll.stake_text}</div>` : ''}
         </div>
     `;
 

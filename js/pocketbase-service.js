@@ -3,7 +3,7 @@
  * Handles SSE subscriptions, room state, player resilience, rolls, and statistics.
  */
 
-import { getPocketBaseUrl, getOrCreatePlayerToken } from './config.js';
+import { getPocketBaseUrl, getOrCreatePlayerToken, isJgaUnlocked } from './config.js';
 import { BET_POINTS, STAKE_SETS } from './game.js';
 
 let pbInstance = null;
@@ -356,19 +356,11 @@ export async function recordRoll({
         // 3. Raum `last_action` aktualisieren (löst SSE für 3D-Würfel & Alert bei allen Clients aus)
         if (roomRecordId) {
             let groupAlert = null;
-            if (isHit && bet === 'strasse') {
-                groupAlert = {
-                    type: 'waterfall',
-                    title: '🌊 WASSERFALL!',
-                    description: `${playerName} hat Straße gewürfelt! Alle trinken!`,
-                    senderName: playerName,
-                    timerSeconds: 15
-                };
-            } else if (isHit && bet === 'quintasch') {
+            if ((isHit && bet === 'quintasch') || resultRank === 7) {
                 groupAlert = {
                     type: 'quintasch',
                     title: '👑 QUINTASCH!',
-                    description: `LEGENDÄR! ${playerName} hat Quintasch gewürfelt! Alle außer ${playerName} leeren ihr Getränk auf Ex!`,
+                    description: `LEGENDÄR! ${playerName} hat Quintasch gewürfelt! Alle stoßen an und trinken einen Shot auf ${playerName}!`,
                     senderName: playerName,
                     timerSeconds: 20
                 };
@@ -570,13 +562,15 @@ export async function fetchSystemRulesets() {
         console.warn('PocketBase System-Regelsätze nicht erreichbar, nutze lokale Standard-Sets:', err);
     }
 
-    // Lokaler Fallback
-    return Object.keys(STAKE_SETS).map(key => ({
-        id: `local_${key}`,
-        name: key.charAt(0).toUpperCase() + key.slice(1),
-        is_preset: true,
-        items: STAKE_SETS[key]
-    }));
+    // Lokaler Fallback (JGA nur einbinden wenn freigeschaltet)
+    return Object.keys(STAKE_SETS)
+        .filter(key => key !== 'jga' || isJgaUnlocked())
+        .map(key => ({
+            id: `local_${key}`,
+            name: key === 'jga' ? '👑 JGA Mittelalter' : (key.charAt(0).toUpperCase() + key.slice(1)),
+            is_preset: true,
+            items: STAKE_SETS[key]
+        }));
 }
 
 /**

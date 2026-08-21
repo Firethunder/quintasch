@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Quintasch V2 — Controller</title>
+    <link rel="icon" href="icons/icon-192.png" type="image/png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="manifest.json">
     <script src="js/lib/pocketbase.umd.js"></script>
@@ -195,6 +196,9 @@
                 <span id="conn-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--neon-cyan);"></span>
                 <span id="conn-status-text">Online</span>
             </div>
+            <div id="jga-badge" style="display: none; background: rgba(255, 221, 0, 0.15); border: 1px solid var(--neon-yellow); border-radius: 20px; padding: 3px 12px; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--neon-yellow); text-shadow: 0 0 8px rgba(255, 221, 0, 0.6); margin: 6px auto 0 auto; width: fit-content; box-shadow: 0 0 10px rgba(255, 221, 0, 0.2);">
+                👑 BRÄUTIGAM-MODUS
+            </div>
             <button id="header-settings-btn" style="position: absolute; right: 10px; top: 15px; background: none; border: none; color: var(--neon-cyan); font-size: 1.5rem; cursor: pointer; text-shadow: var(--glow-cyan); z-index: 10;">⚙️</button>
         </header>
 
@@ -245,7 +249,7 @@
                             <strong style="color: #fff; font-size: 0.9rem;">💀 Survival (Point-Race)</strong>
                             <div style="font-size: 0.75rem; color: var(--text-muted);">Wer zuerst das Limit erreicht, verliert</div>
                             <div id="mobile-survival-config" style="display: none; margin-top: 6px;">
-                                <label style="font-size: 0.75rem; color: var(--neon-yellow);">Max. Strafen:</label>
+                                <label style="font-size: 0.75rem; color: var(--neon-yellow);">Max. Einsätze:</label>
                                 <input type="number" id="mobile-target-score" class="form-control" value="10" min="1" max="50" style="padding: 4px 8px; font-size: 0.85rem; width: 70px; display: inline-block; margin-left: 5px;">
                             </div>
                         </div>
@@ -265,8 +269,8 @@
                     <select id="mobile-stake-set-select" class="form-control" style="font-size: 0.9rem; width: 100%;">
                         <option value="klassisch">Klassisch (Trinkspiel)</option>
                         <option value="alkoholfrei">Alkoholfrei (Sport/Action)</option>
-                        <option value="spanien">Spanien-Edition (¡Hola!)</option>
                         <option value="mittelalter">Mittelalter-Edition (Seyd gegrüßt!)</option>
+                        <option value="spanien">Spanien-Edition (¡Hola!)</option>
                     </select>
                 </div>
 
@@ -338,6 +342,21 @@
                     <input type="checkbox" id="client-pause-toggle" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--neon-yellow);">
                 </div>
 
+                <!-- Persönliches Regelset Auswahl -->
+                <div class="form-group" style="text-align: left; margin-bottom: 15px; background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.15); border-radius: 8px; padding: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <label for="personal-ruleset-select" style="font-size: 0.8rem; color: var(--neon-cyan); margin-bottom: 0; font-family: 'Orbitron', sans-serif;">👤 Mein Regelset</label>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">Individuell</span>
+                    </div>
+                    <select id="personal-ruleset-select" class="form-control" style="font-size: 0.85rem; width: 100%;">
+                        <option value="auto">🌐 Wie Raum (Standard)</option>
+                        <option value="klassisch">🍺 Klassisch (Trinkspiel)</option>
+                        <option value="alkoholfrei">🥤 Alkoholfrei (Sport/Action)</option>
+                        <option value="mittelalter">⚔️ Mittelalter-Edition</option>
+                        <option value="spanien">☀️ Spanien-Edition</option>
+                    </select>
+                </div>
+
                 <div class="form-group" style="text-align: left;">
                     <label for="gameplay-bet">Dein Wetteinsatz</label>
                     <select id="gameplay-bet" class="form-control">
@@ -352,26 +371,25 @@
                 </div>
 
                 <div class="form-group" style="text-align: left; margin-top: 15px;">
-                    <label for="gameplay-stake">Dein Einsatz</label>
+                    <label for="gameplay-stake">Einsatz</label>
                     <select id="gameplay-stake" class="form-control">
-                        <option value="custom" selected>Eigene Aktion...</option>
-                        <option value="standard">Standard-Einsatz</option>
-                        <option value="1 Schluck">1 Schluck</option>
-                        <option value="2 Schlucke">2 Schlucke</option>
-                        <option value="3 Schlucke">3 Schlucke</option>
-                        <option value="4 Schlucke">4 Schlucke</option>
-                        <option value="5 Schlucke">5 Schlucke</option>
-                        <option value="1 Shot">1 Shot</option>
-                        <option value="2 Shots">2 Shots</option>
+                        <option value="standard" selected>📜 Standard-Einsatz (laut Regelset)</option>
+                        <option value="custom">✍️ Eigene Aktion...</option>
                     </select>
 
-                    <button type="button" id="open-rules-cheatsheet-btn" style="background: rgba(0, 240, 255, 0.08); border: 1px dashed var(--neon-cyan); border-radius: 6px; color: var(--neon-cyan); font-size: 0.8rem; padding: 6px 10px; width: 100%; margin-top: 10px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
-                        📜 Alle Sprüche & Regeln des Sets ansehen
+                    <div id="gameplay-stake-preview" style="font-size: 0.82rem; color: var(--neon-cyan); background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 6px; padding: 8px 10px; margin-top: 8px; line-height: 1.35;">
+                        ⚡ <strong>Aktion bei Wette:</strong><br>
+                        <span id="gameplay-stake-preview-text" style="color: #fff; font-weight: 500;">1 Schluck (Pasch)</span>
+                    </div>
+
+                    <button type="button" id="open-rules-cheatsheet-btn" style="background: rgba(0, 240, 255, 0.08); border: 1px dashed var(--neon-cyan); border-radius: 6px; color: var(--neon-cyan); font-size: 0.8rem; padding: 6px 10px; width: 100%; margin-top: 8px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                        📜 Alle 10 Regeln des Sets ansehen
                     </button>
                 </div>
 
-                <div class="form-group" id="gameplay-custom-stake-group" style="text-align: left; margin-top: 10px;">
-                    <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 2 Schlucke an Tom" style="display: block;">
+                <div class="form-group" id="gameplay-custom-stake-group" style="text-align: left; margin-top: 10px; display: none;">
+                    <label for="gameplay-custom-stake" style="font-size: 0.8rem; color: var(--text-muted);">Eigene Aktion beschreiben:</label>
+                    <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 2 Schlucke trinken / 10 Liegestütze">
                 </div>
 
                 <div class="form-group" id="gameplay-custom-timer-group" style="text-align: left; margin-top: 10px; display: none;">
@@ -381,7 +399,7 @@
             </div>
 
             <!-- Spielfeld mit 5 3D-CSS-Würfeln auf dem Handy -->
-            <section class="mobile-dice-table" id="mobile-dice-table" style="display: none;">
+            <section class="mobile-dice-table" id="mobile-dice-table">
                 <div class="cube-container"><div class="cube" id="mobile-dice-0"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
                 <div class="cube-container"><div class="cube" id="mobile-dice-1"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
                 <div class="cube-container"><div class="cube" id="mobile-dice-2"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
@@ -414,20 +432,20 @@
         </footer>
     </div>
 
-    <!-- STRAFEN-VERTEILEN MODAL (Doppelpasch / Full House) -->
+    <!-- EINSATZ-VERTEILEN MODAL (Doppelpasch / Full House) -->
     <div id="penalty-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 11, 15, 0.95); z-index: 1100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
         <div class="panel" style="width: 100%; max-width: 450px; text-align: center; border: 2px solid var(--neon-magenta); box-shadow: var(--glow-magenta); display: flex; flex-direction: column; gap: 15px; padding: 20px;">
-            <h2 id="penalty-modal-title" class="sidebar-title" style="font-size: 1.4rem; border: none; margin-bottom: 0; color: var(--neon-magenta); text-shadow: var(--glow-magenta);">Strafen verteilen!</h2>
+            <h2 id="penalty-modal-title" class="sidebar-title" style="font-size: 1.4rem; border: none; margin-bottom: 0; color: var(--neon-magenta); text-shadow: var(--glow-magenta);">Einsätze verteilen!</h2>
             
             <p id="penalty-modal-desc" style="font-size: 0.95rem; color: #fff; line-height: 1.4; margin: 0;">
-                Du hast <span id="penalty-remaining-count" style="font-weight: bold; color: var(--neon-yellow);">2</span> Strafen zu verteilen.
+                Du hast <span id="penalty-remaining-count" style="font-weight: bold; color: var(--neon-yellow);">2</span> Einsätze zu verteilen.
             </p>
 
             <div id="penalty-targets-list" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
                 <!-- Dynamische Mitspieler-Reihen mit + / - Buttons -->
             </div>
 
-            <button class="btn-neon" id="penalty-confirm-btn" style="--neon-cyan: var(--neon-green); border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 10px; padding: 12px 20px; font-size: 1rem;">Strafen zuweisen & Bestätigen</button>
+            <button class="btn-neon" id="penalty-confirm-btn" style="--neon-cyan: var(--neon-green); border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 10px; padding: 12px 20px; font-size: 1rem;">Einsätze zuweisen & Bestätigen</button>
         </div>
     </div>
 
@@ -435,11 +453,11 @@
     <div id="incoming-penalty-alert" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 127, 0.25); z-index: 1200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
         <div class="panel" style="width: 100%; max-width: 420px; text-align: center; border: 2px solid var(--neon-magenta); box-shadow: var(--glow-magenta); background: rgba(15, 10, 20, 0.95); animation: pulse-ring 1s infinite; padding: 25px;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🚨 🍻</div>
-            <h2 class="sidebar-title" style="font-size: 1.5rem; border: none; margin-bottom: 10px; color: var(--neon-magenta); text-shadow: var(--glow-magenta);">STRAFE ERHALTEN!</h2>
+            <h2 class="sidebar-title" style="font-size: 1.5rem; border: none; margin-bottom: 10px; color: var(--neon-magenta); text-shadow: var(--glow-magenta);">EINSATZ ERHALTEN!</h2>
             <div id="incoming-penalty-text" style="font-size: 1.15rem; color: #fff; line-height: 1.5; margin-bottom: 20px;">
                 Max hat dir 2 Schlucke zugewiesen!
             </div>
-            <button class="btn-neon" id="incoming-penalty-ack-btn" style="--neon-cyan: var(--neon-magenta); border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); padding: 12px 25px; font-size: 1.05rem;">Getrunken / Weiter</button>
+            <button class="btn-neon" id="incoming-penalty-ack-btn" style="--neon-cyan: var(--neon-magenta); border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); padding: 12px 25px; font-size: 1.05rem;">Erledigt / Weiter</button>
         </div>
     </div>
 
@@ -493,6 +511,33 @@
                 </small>
             </div>
             
+            <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">👤 Mein Standard-Regelset</h4>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="settings-personal-ruleset" style="font-size: 0.8rem;">Bevorzugtes Set (z. B. Alkoholfrei für dich)</label>
+                <select id="settings-personal-ruleset" class="form-control" style="font-size: 0.9rem; width: 100%;">
+                    <option value="auto">🌐 Wie Raum (Standard)</option>
+                    <option value="klassisch">🍺 Klassisch (Trinkspiel)</option>
+                    <option value="alkoholfrei">🥤 Alkoholfrei (Sport/Action)</option>
+                    <option value="mittelalter">⚔️ Mittelalter-Edition</option>
+                    <option value="spanien">☀️ Spanien-Edition</option>
+                </select>
+            </div>
+
+            <h4 style="margin: 15px 0 10px 0; color: var(--neon-yellow); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">🎁 VIP / Gimmick-Code</h4>
+            <div class="form-group" style="margin-bottom: 5px; display: flex; gap: 8px;">
+                <input type="text" id="secret-code-input" class="form-control" placeholder="Geheimcode eingeben..." style="padding: 6px 12px; font-size: 0.9rem; flex: 2; text-transform: uppercase;">
+                <button class="btn-neon" id="redeem-code-btn" type="button" style="font-size: 0.82rem; padding: 6px 12px; border-color: var(--neon-yellow); color: var(--neon-yellow); flex: 1; min-height: auto;">Einlösen</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; margin-bottom: 8px;">
+                <button type="button" id="secret-code-hint-btn" style="background: none; border: none; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; text-decoration: underline; padding: 0;">
+                    💡 Rätsel-Hinweis anzeigen
+                </button>
+            </div>
+            <div id="secret-code-hint-text" style="display: none; font-size: 0.78rem; color: var(--neon-yellow); background: rgba(255, 221, 0, 0.08); border: 1px dashed rgba(255, 221, 0, 0.3); border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; line-height: 1.35;">
+                📜 <em>„3 Buchstaben vor dem Traualtar, die Band um 22 Uhr oder der Vorname des heutigen Königs...“</em>
+            </div>
+            <div id="secret-code-feedback" style="font-size: 0.78rem; display: none; margin-bottom: 10px; line-height: 1.3;"></div>
+
             <h4 style="margin: 15px 0 10px 0; color: var(--neon-magenta); font-family: 'Orbitron', sans-serif; font-size: 0.95rem; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 10px;">🛡️ Datenschutz (DSGVO) & Rechtliches</h4>
             <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px;">
                 Quintasch speichert keine personenbezogenen Daten (keine E-Mail, kein Login, kein Tracking). Die Spielidentifikation erfolgt über ein anonymes Token im LocalStorage dieses Geräts.
@@ -544,15 +589,15 @@
         </div>
     </div>
 
-    <!-- MOBILE GRUPPEN-ALERT MODAL (Wasserfall / Quintasch) -->
+    <!-- MOBILE GRUPPEN-ALERT MODAL (Quintasch) -->
     <div id="controller-group-alert" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 127, 0.25); z-index: 1250; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
         <div class="panel" style="width: 100%; max-width: 420px; text-align: center; border: 2px solid var(--neon-magenta); box-shadow: var(--glow-magenta); background: rgba(15, 10, 20, 0.95); padding: 25px;">
-            <div id="controller-group-icon" style="font-size: 3rem; margin-bottom: 10px;">🌊</div>
-            <h2 id="controller-group-title" class="sidebar-title" style="font-size: 1.5rem; border: none; margin-bottom: 10px; color: var(--neon-magenta); text-shadow: var(--glow-magenta);">WASSERFALL!</h2>
+            <div id="controller-group-icon" style="font-size: 3rem; margin-bottom: 10px;">👑</div>
+            <h2 id="controller-group-title" class="sidebar-title" style="font-size: 1.5rem; border: none; margin-bottom: 10px; color: var(--neon-magenta); text-shadow: var(--glow-magenta);">QUINTASCH!</h2>
             <div id="controller-group-desc" style="font-size: 1.05rem; color: #fff; line-height: 1.5; margin-bottom: 15px;">
-                Alle trinken!
+                5 Gleiche! Alle stoßen an und trinken einen Shot auf dein Wohl!
             </div>
-            <div id="controller-group-timer" style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; color: var(--neon-yellow); margin-bottom: 15px;">15s</div>
+            <div id="controller-group-timer" style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; color: var(--neon-yellow); margin-bottom: 15px;">20s</div>
             <button class="btn-neon" id="controller-group-ack-btn" style="--neon-cyan: var(--neon-magenta); border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: var(--glow-magenta); text-shadow: var(--glow-magenta); width: 100%; padding: 12px 20px; font-size: 1rem;">Verstanden</button>
         </div>
     </div>
