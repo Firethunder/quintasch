@@ -20,3 +20,7 @@ Thumbs.db
 .DS_Store
 ehthumbs.db
 desktop.ini
+
+# Production Builds & Release Bundles
+dist/
+*.zip

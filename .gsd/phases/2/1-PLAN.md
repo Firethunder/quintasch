@@ -4,94 +4,94 @@ plan: 1
 wave: 1
 depends_on: []
 files_modified:
-  - controller.html
-  - js/controller.js
-  - js/app.js
+  - pb_schema.json
+  - js/pocketbase-service.js
+  - README.md
 autonomous: true
+user_setup: []
+
 must_haves:
   truths:
-    - "Client controller settings UI includes a checkbox to enable/disable vibration"
-    - "Mobile controller vibrates in sync with the rattle sound during dice rolls"
-    - "Mobile controller vibrates with a double pulse on success and a single long pulse on failure"
-    - "Mobile controller vibrates with a triple pulse when the penalty timer expires"
-    - "Vibration preferences persist in localStorage and respect user settings"
+    - "pb_schema.json defines two distinct areas: Session Area (rooms, players, rolls) and Global Area (system_rulesets, custom_rulesets)"
+    - "System rulesets collection has strict client lockdown (createRule, updateRule, deleteRule = null; listRule, viewRule = empty string)"
+    - "Custom rulesets collection enforces creator_token matching for update and delete actions"
+    - "pocketbase-service.js provides helper functions to query system rulesets and perform CRUD on custom rulesets"
   artifacts:
-    - "js/controller.js implements triggerVibration helper and integrates haptic feedback"
+    - "pb_schema.json contains system_rulesets and custom_rulesets collections"
+    - "js/pocketbase-service.js exports fetchSystemRulesets, fetchCustomRulesets, saveCustomRuleset, deleteCustomRuleset"
 ---
 
-# Plan 2.1: Client Haptic Feedback
+# Plan 2.1: Zweigeteilte PocketBase-Architektur & Systemregeln-Schutz
 
 <objective>
-Integrate haptic vibration feedback on mobile clients via the Web Haptic API (`navigator.vibrate`), providing tactile feedback for dice rolling, success/failure outcomes, and penalty timer timeouts.
+Implementierung der zweigeteilten Datenbankarchitektur in PocketBase (temporärer Session-Bereich vs. geschützter globaler Bereich) mit Read-Only-Schreibschutz für Systemregeln und Token-gesicherten Custom-Rulesets.
 
-Purpose: Enhance player immersion and responsiveness on smartphones.
-Output: Vibration setting UI control and dynamic haptic patterns.
+Purpose: Schutz der Systemintegrität und klare architektonische Trennung zwischen flüchtigen Mehrspieler-Sitzungen und dauerhaften Regelsätzen.
+Output: Aktualisierte pb_schema.json, Service-Methoden in js/pocketbase-service.js, Architektur-Dokumentation in README.md.
 </objective>
 
 <context>
 Load for context:
-- .gsd/SPEC.md
-- controller.html
-- js/controller.js
-- js/app.js
+- pb_schema.json
+- js/pocketbase-service.js
+- js/config.js
+- js/game.js
 </context>
 
 <tasks>
 
-<task type="auto">
-  <name>Add Vibration Setting Control in controller.html</name>
-  <files>controller.html</files>
+<task type="auto" effort="medium">
+  <name>PocketBase Schema (pb_schema.json) auf zweigeteilte Architektur aktualisieren</name>
+  <files>pb_schema.json</files>
   <action>
-    In `controller.html`, inside the settings panel under the 'Audio Einstellungen' section, add a new checkbox element `#client-vibrate` with the label 'Vibration aktivieren'. Pre-check the checkbox by default.
-    AVOID: Breaking existing settings layout; style it consistently with other settings checkboxes (e.g. `#client-mute`).
+    1. Konfiguriere den Session-Bereich: `rooms`, `players`, `rolls` mit uneingeschränktem Zugriff für Spielsessions.
+    2. Konfiguriere die System-Regelsätze als `system_rulesets` (bzw. `stake_sets` mit Systemschutz):
+       - `createRule`: null (Client-Schreibschutz)
+       - `updateRule`: null (Client-Schreibschutz)
+       - `deleteRule`: null (Client-Schreibschutz)
+       - `listRule`: "" (öffentlich lesbar)
+       - `viewRule`: "" (öffentlich einsehbar)
+    3. Füge die Collection `custom_rulesets` hinzu:
+       - Felder: `creator_token` (Text, required), `name` (Text, required), `items` (JSON, required), `is_public` (Bool)
+       - Rules: `createRule: "@request.data.creator_token != ''"`, `updateRule: "creator_token = @request.data.creator_token"`, `deleteRule: "creator_token = @request.data.creator_token"`, `listRule: ""`, `viewRule: ""`
   </action>
-  <verify>Open controller settings panel and confirm the 'Vibration aktivieren' checkbox renders properly next to other audio settings.</verify>
-  <done>Vibration checkbox is present in controller settings markup.</done>
+  <verify>Validierung des JSON-Schemas mit node -e "JSON.parse(fs.readFileSync('pb_schema.json'))"</verify>
+  <done>pb_schema.json ist syntaktisch valide und enthält beide Bereiche mit korrekten Access Rules.</done>
 </task>
 
-<task type="auto">
-  <name>Implement Haptic Engine and Events in js/controller.js</name>
-  <files>js/controller.js</files>
+<task type="auto" effort="medium">
+  <name>PocketBase Service API-Methoden für Rulesets implementieren</name>
+  <files>js/pocketbase-service.js</files>
   <action>
-    Add a module variable `isVibrateEnabled = true`.
-    On load, retrieve `quintasch_client_vibrate` from localStorage and set `isVibrateEnabled` accordingly (default: true).
-    Query the `#client-vibrate` element and bind a change event listener to toggle `isVibrateEnabled` and save to localStorage.
-    Add a helper function `triggerVibration(pattern)` that checks if `isVibrateEnabled` is true and if `'vibrate' in navigator`, and invokes `navigator.vibrate(pattern)`.
-    Define `isMyTurn = false` and set to `true` on `yourTurn` message and `false` on `waitTurn` message.
-    Integrate haptic patterns:
-    - Inside `rollStart` rattle interval: trigger `triggerVibration(50)` at each tick to match the 150ms rattle sound.
-    - Inside `rollResult` handler, if `isMyTurn` is true: if `data.success` is true, trigger success double pulse `triggerVibration([150, 100, 150])`; if false, trigger failure single pulse `triggerVibration(300)`.
-    - In `conn.on('data', ...)` listen for `data.action === 'timerExpired'`: trigger triple warning pulse `triggerVibration([200, 100, 200, 100, 200])`.
-    Update the reset settings button click listener to clear `quintasch_client_vibrate`, check the checkbox, and set `isVibrateEnabled = true`.
-    AVOID: Invoking vibration if the device does not support it (check `'vibrate' in navigator`) to prevent errors.
+    1. Implementiere `fetchSystemRulesets()`: Ruft Systemregeln aus PocketBase ab (mit graceful fallback auf die statischen `STAKE_SETS` aus `js/game.js`).
+    2. Implementiere `fetchCustomRulesets(creatorToken)`: Holt benutzerdefinierte Regelsätze des aktiven `creatorToken` sowie öffentliche Sets.
+    3. Implementiere `saveCustomRuleset({ id, name, items, isPublic, creatorToken })`: Erstellt oder aktualisiert einen Regelsatz unter Beachtung des `creatorToken`.
+    4. Implementiere `deleteCustomRuleset(id, creatorToken)`: Löscht einen Regelsatz nur, wenn der Token übereinstimmt.
   </action>
-  <verify>Adjusting the vibration checkbox updates `isVibrateEnabled` and persists the state. Roll start and results trigger haptic vibration commands in the JS execution flow.</verify>
-  <done>Client controller supports vibration settings, saves preferences, and executes specific haptic feedback cycles.</done>
+  <verify>node -c js/pocketbase-service.js gibt 0 Syntaxfehler</verify>
+  <done>Alle Ruleset-Funktionen sind exportiert und robust gegen Offline-Zustände abgesichert.</done>
 </task>
 
-<task type="auto">
-  <name>Broadcast Penalty Timer Expiration from js/app.js</name>
-  <files>js/app.js</files>
+<task type="auto" effort="low">
+  <name>README.md um Architektur-Erläuterung ergänzen</name>
+  <files>README.md</files>
   <action>
-    In `js/app.js` inside the timer countdown interval where `timerTimeLeft <= 0` is reached, broadcast a `{ action: 'timerExpired' }` payload to all connected clients.
-    Ensure this broadcast runs side-by-side with `playTimerBuzzer()`.
-    AVOID: Sending messages to disconnected peers by validating `conn.open` before sending.
+    Ergänze den Abschnitt 'PocketBase Setup' in README.md um die Beschreibung der zweigeteilten Architektur (Session-Bereich vs. Globaler Bereich) und den Schutz der Systemregeln.
   </action>
-  <verify>Verify that when the timer expires, the host iterates through connected clients and sends the `timerExpired` signal.</verify>
-  <done>Dashboard signals penalty timeouts over WebRTC to connected controllers.</done>
+  <verify>README.md enthält die neue Architektur-Dokumentation</verify>
+  <done>Architektur ist vollständig und verständlich dokumentiert.</done>
 </task>
 
 </tasks>
 
 <verification>
 After all tasks, verify:
-- [ ] Toggling vibration settings updates the local preference state in localStorage.
-- [ ] During the dice roll animation, the smartphone vibrates with short pulses matching the rattle sound.
-- [ ] A double pulse vibrates on success, a single long pulse vibrates on failure.
-- [ ] When the penalty timer runs out on the dashboard, the phone receives `timerExpired` and vibrates with a triple alarm pulse.
+- [ ] pb_schema.json enthält alle Collections mit exakten Access-Regeln
+- [ ] js/pocketbase-service.js kompiliert fehlerfrei
+- [ ] README.md beschreibt die zweigeteilte Datenbankstruktur
 </verification>
 
 <success_criteria>
-- [ ] All tasks verified
-- [ ] Must-haves confirmed
+- [ ] Alle 3 Tasks sind implementiert und validiert
+- [ ] Schreibschutz für Systemregeln und Token-Sicherheit für Custom Rulesets sind schema- und codespezifisch sichergestellt
 </success_criteria>

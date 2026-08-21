@@ -1,27 +1,27 @@
 # STATE.md — Project Memory
 
 > **Current Status**: Milestone Ready for Audit
-> **Active Milestone**: Haptic-and-Audio-UX
-> **Active Phase**: 5
+> **Active Milestone**: V2-Datenschutz-Architektur-und-Custom-Rulesets
+> **Active Phase**: 3
 
 ## Phase Progress
-- **Phase 1: Sound-Einstellungen & Mute/Volume-Support**: ✅ Complete
-- **Phase 2: Client-seitiges Vibrations-Feedback (Web Haptic API)**: ✅ Complete
-- **Phase 3: Soundboard-Panel auf dem Host-Dashboard**: ✅ Complete
-- **Phase 4: WebRTC Soundboard- & Audio-Sync**: ✅ Complete
-- **Phase 5: Verification & Polish**: ✅ Complete
+- **Phase 1: Rechtliche Hinweise, DSGVO-Erklärung & Impressum**: ✅ Complete
+- **Phase 2: Zweigeteilte PocketBase-Architektur & Systemregeln-Schutz**: ✅ Complete
+- **Phase 3: Custom Rulesets & Pseudonyme Creator-Tokens**: ✅ Complete
 
 ## Blockers
 - Keine
 
 ## Current Position
-- **Milestone**: Haptic-and-Audio-UX
-- **Phase**: 5
+- **Milestone**: V2-Datenschutz-Architektur-und-Custom-Rulesets
+- **Phase**: 3
 - **Status**: Milestone Complete & Verified
 
 ## Last Session Summary
-Phase 5 'Verification & Polish' wurde erfolgreich abgeschlossen. Der gesamte Code für Audio-Routing, LocalStorage-Konfigurationen und Haptik-Steuerung wurde auditiert. Alle Töne laufen über den zentralen Master-Gain-Kanal, die Einstellungen-Schlüssel kollidieren nicht und WebRTC-Wiedergaben werden sauber ohne Rückkopplungsschleifen verteilt. Haptische Vibrationsaufrufe sind mit Try-Catch und API-Prüfungen abgesichert.
+Alle 3 Phasen des Milestones wurden erfolgreich implementiert und verifiziert:
+1. DSGVO-Erklärung, technische Server-Log-Aufklärung, Impressum und Footer in UI/Doku.
+2. Zweigeteilte PB-Architektur (Session- vs. Global-Bereich) mit Read-Only-Schreibschutz für Systemregeln.
+3. Tokenbasierte Custom-Ruleset-Verwaltung (CRUD ohne Accounts), UI-Editor und Echtzeit-Lobby-Sync.
 
 ## Next Steps
-1. /audit-milestone — Führe den Milestone-Audit durch, um die Qualität zu verifizieren.
-2. /complete-milestone — Schließe den aktuellen Milestone 'Haptic-and-Audio-UX' ab und archiviere ihn.
+1. Audit und Abschluss des aktuellen Milestones.

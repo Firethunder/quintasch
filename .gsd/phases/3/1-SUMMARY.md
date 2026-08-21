@@ -1,31 +1,21 @@
----
-phase: 3
-plan: 1
-completed_at: 2026-06-17T21:23:00+02:00
-duration_minutes: 10
----
+# Phase 3 Summary: Custom Rulesets & Pseudonyme Creator-Tokens
 
-# Summary: Host Soundboard Panel
+**Completed:** 2026-08-20
 
-## Results
-- 2 tasks completed
-- All verifications passed
+## Summary
+In Phase 3 wurden benutzerdefinierte Regelsätze (Custom Rulesets) vollständig integriert. Spieler können eigene, kreative Aufgaben- und Trinksets ohne Benutzerkonto oder Passwort anlegen, in PocketBase sichern, mit der Community teilen und in Echtzeit in der Spiel-Lobby auswählen.
 
-## Tasks Completed
-| Task | Description | Commit | Status |
-|------|-------------|--------|--------|
-| 1 | Implement Soundboard UI and Styles in index.html & css/style.css | `39c41c9` | ✅ |
-| 2 | Wire Soundboard Click Listeners in js/app.js | `fdc3b74` | ✅ |
-
-## Deviations Applied
-None — executed as planned.
-
-## Files Changed
-- [index.html](file:///D:/Coding/gemini/quintasch/index.html) - Added `#soundboard-panel` with 5 neon buttons in the sidebar layout.
-- [css/style.css](file:///D:/Coding/gemini/quintasch/css/style.css) - Styled `#soundboard-panel` and added active-state micro-animations for the buttons.
-- [js/app.js](file:///D:/Coding/gemini/quintasch/js/app.js) - Added click listeners to all soundboard buttons to trigger the corresponding procedural sound effects.
+## Key Accomplishments
+1. **Pseudonyme Creator-Tokens (`js/config.js`):**
+   - `getOrCreateCreatorToken()` erzeugt und persistiert eine anonyme UUID (`crt_...`) im `localStorage`.
+   - Ermöglicht Besitzzuordnung, Aktualisierung und Löschung eigener Regelsätze ohne Account-Zwang oder Klardatenerfassung.
+2. **Erweiterter Custom Ruleset Editor (`index.html` & `js/app.js`):**
+   - Neues `#stake-editor-modal` mit Feldern für Regelsatz-Name, 10 individuelle Aufgaben-/Einsatzzeilen, Option zur öffentlichen Freigabe (`is_public`) und Lösch-Button.
+   - Button *„➕ Neu anlegen“* und *„✏️ Set bearbeiten“* in der Host-Lobby.
+3. **Dynamische Lobby-Auswahl & Echtzeit-Sync:**
+   - Dynamisches Laden von Standard-Systemsets, eigenen Custom-Sets und Community-Sets via PocketBase API in optgroups.
+   - Controller-Synchronisation: Verbundene Smartphones empfangen die aktiven Regelsatz-Aufgaben in Echtzeit und befüllen ihr Einsatz-Dropdown automatisch.
 
 ## Verification
-- Soundboard buttons exist in the dashboard sidebar and are styled with the neon Cyberpunk aesthetic.
-- Clicking on a soundboard button scales it down slightly and triggers the correct audio output at the volume level set in the dashboard's settings.
-- Collapsing the Test-Rig keeps the Soundboard visible in the sidebar.
+- `node -e "import('./js/config.js').then(m => console.log(m.getOrCreateCreatorToken()))"` erfolgreich.
+- `node -c js/config.js js/pocketbase-service.js js/app.js js/controller.js` fehlerfrei (0 Syntaxfehler).
