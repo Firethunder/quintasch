@@ -1,29 +1,64 @@
 /**
- * Quintasch V2 - Mobile Game Controller
+ * Quintasch V3 - Mobile Game Controller & Travel Mode
  * Pure PocketBase Realtime (SSE) architecture with offline resilience,
- * interactive penalty distribution, synchronized 3D dice, and haptics.
+ * interactive penalty distribution, synchronized 3D dice, planned stakes pool, and haptics.
  */
 
-import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, STAKE_SETS, getStakeForBet } from './game.js';
+import { evaluateHand, checkResult, BET_RANKS, BET_LABELS, BET_RULES, BET_POINTS, STAKE_SETS, getStakeForBet } from './game.js';
 import { playRollSound, playWinSound, playFailSound, playTimerTick, playTimerBuzzer, setVolume, setMuted, getVolume, getMuted } from './audio.js';
-import { getPocketBaseUrl, setPocketBaseUrl, getOrCreatePlayerToken, getSavedPlayerName, setSavedPlayerName, generateRoomCode, getPersonalRuleset, setPersonalRuleset, isJgaUnlocked, setJgaUnlocked } from './config.js';
+import {
+    getPocketBaseUrl,
+    setPocketBaseUrl,
+    getOrCreatePlayerToken,
+    getOrCreateCreatorToken,
+    getSavedPlayerName,
+    setSavedPlayerName,
+    generateRoomCode,
+    getPersonalRuleset,
+    setPersonalRuleset,
+    isJgaUnlocked,
+    setJgaUnlocked,
+    getSavedSessions,
+    saveSessionToHistory,
+    removeSavedSession,
+    getThemeMode,
+    setThemeMode,
+    getSavedRecoveryPin,
+    setSavedRecoveryPin
+} from './config.js';
 import {
     createRoom,
     updateRoom,
     getRoomByCode,
+    setRoomPlayStyle,
+    pauseOrResumeRoom,
     subscribeToRoom,
     joinPlayer,
     getPlayers,
-    subscribeToPlayers,
     updatePlayer,
+    adoptPlayerIdentity,
+    claimPlayerSlot,
+    subscribeToPlayers,
     recordRoll,
     distributePenalties,
     getRollsHistory,
     subscribeToRolls,
-    onConnectionChange,
-    checkServerHealth,
+    rematchRoom,
     fetchSystemRulesets,
-    fetchCustomRulesets
+    fetchCustomRulesets,
+    saveCustomRuleset,
+    deleteCustomRuleset,
+    getPlannedStakes,
+    createPlannedStake,
+    votePlannedStake,
+    activatePlannedStake,
+    drawRandomPlannedStake,
+    resolvePlannedStake,
+    deletePlannedStake,
+    markRollFulfilled,
+    subscribeToPlannedStakes,
+    onConnectionChange,
+    checkServerHealth
 } from './pocketbase-service.js';
 
 // State Variablen
@@ -35,6 +70,31 @@ let isMyTurn = false;
 let isRolling = false;
 let isAnimating = false;
 let isVibrateEnabled = true;
+let lastRecordedRollId = null;
+
+// Travel & Planned Stakes State
+let activeTravelTab = 'play'; // 'play' | 'pool' | 'chronicle'
+let cachedPlannedStakes = [];
+let activePlannedStake = null;
+let currentStakeCategoryFilter = 'all';
+let selectedMobilePlayStyle = 'travel';
+
+const STAKE_CATEGORIES = {
+    drink: { label: 'Drink', icon: '🍹', color: '#ff007f' },
+    dare: { label: 'Mutprobe', icon: '🎯', color: '#00f0ff' },
+    food: { label: 'Food/Gastro', icon: '🍽️', color: '#ffdd00' },
+    sport: { label: 'Sport', icon: '🏃', color: '#39ff14' },
+    treat: { label: 'Spendieren', icon: '💸', color: '#9d00ff' },
+    other: { label: 'Sonstiges', icon: '✨', color: '#00f0ff' }
+};
+
+const STAKE_SITUATIONS = {
+    anytime: { label: 'Jederzeit', icon: '⚡' },
+    bar: { label: 'Bar/Kneipe', icon: '🍻' },
+    food: { label: 'Beim Essen', icon: '🍽️' },
+    beach: { label: 'Strand/Outdoor', icon: '🏖️' },
+    transit: { label: 'Unterwegs/Transit', icon: '🚆' }
+};
 
 // Timer State
 let timerInterval = null;
@@ -223,9 +283,11 @@ function playProceduralSound(type) {
 // Initialisierung bei DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     initDomElements();
+    initV3ControllerFeatures();
     initSettingsAndAudio();
     initConnectionStatus();
     loadControllerRulesets();
+    renderSavedSessions();
 
     // Raum-Code aus URL auslesen (?room=xxxx)
     const urlParams = new URLSearchParams(window.location.search);
@@ -238,6 +300,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedName = getSavedPlayerName();
     if (savedName && clientPlayerNameInput) {
         clientPlayerNameInput.value = savedName;
+    }
+    const savedPin = getSavedRecoveryPin();
+    const pinEl = document.getElementById('client-recovery-pin');
+    if (savedPin && pinEl) {
+        pinEl.value = savedPin;
     }
 
     // JGA VIP-Unlock via URL prüfen (?jga=1, ?vip=jga, ?code=jga, ?mode=jga)
@@ -705,12 +772,19 @@ async function handleCreateRoomOnMobile() {
         }
 
         // 1. Raum in PocketBase erstellen und sofort auf 'playing' schalten
+        const sessionTitleEl = document.getElementById('create-session-title');
+        const playStyleEl = document.getElementById('create-play-style');
+        const sessionTitle = sessionTitleEl ? sessionTitleEl.value.trim() : '';
+        const playStyle = playStyleEl ? playStyleEl.value : selectedMobilePlayStyle;
+
         const room = await createRoom({
             code: roomCode,
             gameMode: selectedMobileMode,
             targetScore,
             totalRounds,
-            stakeSet
+            stakeSet,
+            sessionTitle,
+            playStyle
         });
 
         await updateRoom(room.id, { status: 'playing' });
@@ -720,18 +794,32 @@ async function handleCreateRoomOnMobile() {
         setSavedPlayerName(playerName);
 
         // 2. Spieler registrieren
-        const joinResult = await joinPlayer(roomCode, playerName, myPlayerToken);
+        const pinEl = document.getElementById('client-recovery-pin');
+        const recoveryPin = pinEl ? pinEl.value.trim() : getSavedRecoveryPin();
+        if (recoveryPin) setSavedRecoveryPin(recoveryPin);
+        const joinResult = await joinPlayer(roomCode, playerName, myPlayerToken, recoveryPin);
         myPlayerRecord = joinResult.player;
         myPlayerToken = joinResult.token;
+        saveSessionToHistory({
+            code: roomCode,
+            title: sessionTitle || `Raum ${roomCode}`,
+            playStyle,
+            playerName,
+            playerToken: myPlayerToken,
+            score: 0
+        });
 
         // 3. UI umschalten
         if (joinContainer) joinContainer.style.display = 'none';
         if (lobbyRoomCodeDisplay) lobbyRoomCodeDisplay.textContent = roomCode;
         if (lobbyRoomCodeBadge) lobbyRoomCodeBadge.textContent = roomCode;
         if (gameplayRoomCodeBadge) gameplayRoomCodeBadge.textContent = roomCode;
+        const navEl = document.getElementById('travel-bottom-nav');
+        if (navEl) navEl.style.display = 'flex';
 
         await setupRealtimeSubscriptions(room.id, roomCode);
         await refreshPlayersAndHistory(roomCode);
+        await refreshPlannedStakes(roomCode);
         applyRoomState(room);
 
     } catch (err) {
@@ -783,21 +871,35 @@ async function handleJoinRoom() {
         setSavedPlayerName(playerName);
 
         // 2. Spieler registrieren / reaktivieren
-        const joinResult = await joinPlayer(roomCode, playerName, myPlayerToken);
+        const pinEl = document.getElementById('client-recovery-pin');
+        const recoveryPin = pinEl ? pinEl.value.trim() : getSavedRecoveryPin();
+        if (recoveryPin) setSavedRecoveryPin(recoveryPin);
+        const joinResult = await joinPlayer(roomCode, playerName, myPlayerToken, recoveryPin);
         myPlayerRecord = joinResult.player;
         myPlayerToken = joinResult.token;
+        saveSessionToHistory({
+            code: roomCode,
+            title: room.session_title || (room.last_action && room.last_action.meta && room.last_action.meta.sessionTitle) || `Raum ${roomCode}`,
+            playStyle: room.play_style || (room.last_action && room.last_action.meta && room.last_action.meta.playStyle) || 'travel',
+            playerName,
+            playerToken: myPlayerToken,
+            score: myPlayerRecord ? (myPlayerRecord.score || 0) : 0
+        });
 
         // 3. UI Umschalten & Realtime abonnieren
         if (joinContainer) joinContainer.style.display = 'none';
         if (lobbyRoomCodeDisplay) lobbyRoomCodeDisplay.textContent = roomCode;
         if (lobbyRoomCodeBadge) lobbyRoomCodeBadge.textContent = roomCode;
         if (gameplayRoomCodeBadge) gameplayRoomCodeBadge.textContent = roomCode;
+        const navEl = document.getElementById('travel-bottom-nav');
+        if (navEl) navEl.style.display = 'flex';
 
         // Realtime Subscriptions aufsetzen
         await setupRealtimeSubscriptions(room.id, roomCode);
 
         // Initialen State rendern
         await refreshPlayersAndHistory(roomCode);
+        await refreshPlannedStakes(roomCode);
         applyRoomState(room);
 
     } catch (err) {
@@ -844,7 +946,7 @@ function handleCopyRoomLink() {
  * Richtet die SSE Realtime Subscriptions für Raum, Spieler und Würfe ein.
  */
 async function setupRealtimeSubscriptions(roomId, roomCode) {
-    // 1. Raum Änderungen
+    // 1. Raum Änderungen + Hybrid Stakes Sync
     await subscribeToRoom(roomId, (action, updatedRoom) => {
         if (action === 'delete') {
             alert('Der Raum wurde vom Host geschlossen.');
@@ -853,7 +955,21 @@ async function setupRealtimeSubscriptions(roomId, roomCode) {
         }
         currentRoomRecord = updatedRoom;
         applyRoomState(updatedRoom);
+    }, (stakesSnapshot) => {
+        if (Array.isArray(stakesSnapshot)) {
+            cachedPlannedStakes = stakesSnapshot;
+            syncActivePlannedStakeFromList();
+            renderActivePlannedStakeBanner();
+            renderPlannedStakesPool();
+        }
     });
+
+    // 1b. Geplante Einsätze Realtime Subscription
+    try {
+        await subscribeToPlannedStakes(roomCode, async () => {
+            await refreshPlannedStakes(roomCode);
+        });
+    } catch (e) {}
 
     // 2. Spieler Änderungen
     await subscribeToPlayers(roomCode, async (action, updatedPlayer) => {
@@ -870,9 +986,12 @@ async function setupRealtimeSubscriptions(roomId, roomCode) {
     await subscribeToRolls(roomCode, (action, newRoll) => {
         if (action === 'create') {
             prependHistoryItem(newRoll);
+            renderPendingFulfillments();
             if (newRoll.player_token !== myPlayerToken) {
                 showIncomingRollToast(newRoll);
             }
+        } else if (action === 'update') {
+            refreshPlayersAndHistory(roomCode);
         }
     });
 }
@@ -1570,10 +1689,14 @@ async function handleRollClick() {
     const isHit = checkResult(dice, bet);
     const resultRank = evaluateHand(dice);
 
-    // Einsatz & Timer ermitteln
+    // Einsatz & Timer ermitteln (inkl. geplantem Einsatz aus dem Pool!)
     let stakeText = '';
     let timerSecs = 0;
-    if (gameplayStakeSelect && gameplayStakeSelect.value === 'custom') {
+    const usedPlannedStake = activePlannedStake;
+    if (usedPlannedStake && usedPlannedStake.title) {
+        stakeText = usedPlannedStake.title;
+        timerSecs = 0;
+    } else if (gameplayStakeSelect && gameplayStakeSelect.value === 'custom') {
         stakeText = (gameplayCustomStakeInput ? gameplayCustomStakeInput.value : '').trim() || 'Eigener Einsatz';
         timerSecs = parseInt(gameplayCustomTimerInput ? gameplayCustomTimerInput.value : 0, 10) || 0;
     } else {
@@ -1625,6 +1748,7 @@ async function handleRollClick() {
     });
 
     // 4. Paralleler Netzwerk-Speichervorgang in PocketBase
+    // GOLDENE QUINTASCH-REGEL: Nur bei TREFFER (isHit === true) ist der Einsatz ausgelöst ('pending')!
     try {
         await recordRoll({
             roomRecordId: currentRoomRecord.id,
@@ -1636,8 +1760,16 @@ async function handleRollClick() {
             resultRank,
             isHit,
             stakeText,
-            timerSeconds: timerSecs
+            timerSeconds: timerSecs,
+            plannedStakeId: usedPlannedStake ? usedPlannedStake.id : '',
+            fulfillmentStatus: isHit ? 'pending' : 'none'
         });
+        if (usedPlannedStake) {
+            if (isHit) {
+                activePlannedStake = null;
+            }
+            await refreshPlannedStakes(currentRoomRecord.code);
+        }
 
         // Prüfen, ob Turniermodus beendet ist (alle aktiven Spieler haben ihre Würfe)
         if (currentRoomRecord.game_mode === 'tournament') {
@@ -1765,39 +1897,678 @@ function startControllerTimer(seconds) {
 /**
  * Spielerliste und Historie aktualisieren
  */
+let cachedRollsHistory = [];
+
 async function refreshPlayersAndHistory(roomCode) {
     await refreshPlayersList(roomCode);
     try {
-        const historyData = await getRollsHistory(roomCode, 20);
-        if (clientHistoryList && historyData.items) {
-            clientHistoryList.innerHTML = '';
-            historyData.items.forEach(roll => prependHistoryItem(roll));
+        const historyData = await getRollsHistory(roomCode, 30);
+        if (historyData && historyData.items) {
+            cachedRollsHistory = historyData.items;
+            if (clientHistoryList) {
+                clientHistoryList.innerHTML = '';
+                // Älteste zuerst einfügen, damit neueste via prependHistoryItem oben stehen
+                [...historyData.items].reverse().forEach(roll => prependHistoryItem(roll, false));
+            }
+            renderPendingFulfillments();
         }
     } catch (e) {}
 }
 
-function prependHistoryItem(roll) {
+function prependHistoryItem(roll, addToCache = true) {
+    if (addToCache && roll && roll.id) {
+        cachedRollsHistory = [roll, ...cachedRollsHistory.filter(r => r.id !== roll.id)];
+    }
     if (!clientHistoryList) return;
 
     const li = document.createElement('li');
-    li.className = 'history-item';
+    li.className = `history-item chronicle-item ${roll.is_hit ? 'hit' : 'miss'}`;
     li.style.fontSize = '0.85rem';
     li.style.padding = '8px 10px';
 
+    const pts = roll.is_hit ? (BET_POINTS[roll.bet] || 1) : 0;
     const hitBadge = roll.is_hit
-        ? '<span style="color: var(--neon-green); font-weight: bold;">[GETROFFEN]</span>'
-        : '<span style="color: var(--neon-magenta);">[VERFEHLT]</span>';
+        ? `<span style="color: var(--neon-green); font-weight: bold;">🎉 TREFFER (+${pts} Pkt)</span>`
+        : '<span style="color: var(--text-muted);">💨 Fehlwurf (Kein Einsatz)</span>';
+
+    const isDone = roll.fulfillment_status === 'done' || roll.fulfillment_status === 'verified';
 
     li.innerHTML = `
-        <div style="display: flex; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
             <strong>${roll.player_name}</strong>
             ${hitBadge}
         </div>
-        <div style="color: var(--text-muted); font-size: 0.78rem;">
-            Wette: ${BET_LABELS[roll.bet] || roll.bet} | Würfel: [${(roll.dice || []).join(', ')}]
-            ${(roll.is_hit && roll.stake_text) ? `<div style="color: var(--neon-cyan); margin-top: 2px;">Einsatz: ${roll.stake_text}</div>` : ''}
+        <div style="color: var(--text-muted); font-size: 0.78rem; margin-top: 2px;">
+            Kombination: ${BET_LABELS[roll.bet] || roll.bet} | Würfel: [${(roll.dice || []).join(', ')}]
+            ${(roll.is_hit && roll.stake_text) ? `
+                <div style="color: var(--neon-cyan); margin-top: 4px; display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                    <span>⚡ <strong>Muss einlösen:</strong> ${roll.stake_text}</span>
+                    ${isDone
+                        ? '<span style="color: var(--neon-green); font-size: 0.72rem; font-weight: bold;">✅ Eingelöst</span>'
+                        : `<button type="button" class="btn-fulfill-roll" data-roll-id="${roll.id}" style="background: rgba(57,255,20,0.15); border: 1px solid var(--neon-green); color: var(--neon-green); border-radius: 4px; font-size: 0.7rem; padding: 2px 6px; cursor: pointer;">✅ Abhaken</button>`
+                    }
+                </div>
+            ` : ''}
         </div>
     `;
 
+    const fulfillBtn = li.querySelector('.btn-fulfill-roll');
+    if (fulfillBtn) {
+        fulfillBtn.addEventListener('click', async () => {
+            if (!currentRoomRecord) return;
+            fulfillBtn.disabled = true;
+            fulfillBtn.textContent = '...';
+            await markRollFulfilled(currentRoomRecord.code, roll.id, 'done');
+            roll.fulfillment_status = 'done';
+            await refreshPlayersAndHistory(currentRoomRecord.code);
+        });
+    }
+
     clientHistoryList.insertBefore(li, clientHistoryList.firstChild);
+}
+
+/* ==========================================================================
+   QUINTASCH V3: TRAVEL MODE, SAVED SESSIONS, SLOT CLAIM & PLANNED STAKES POOL
+   ========================================================================== */
+
+function initV3ControllerFeatures() {
+    // 1. Daylight / Neon Theme Toggle
+    const currentTheme = getThemeMode();
+    setThemeMode(currentTheme);
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    if (themeBtn) {
+        themeBtn.textContent = currentTheme === 'daylight' ? '🌙' : '☀️';
+        themeBtn.addEventListener('click', () => {
+            const next = getThemeMode() === 'daylight' ? 'neon' : 'daylight';
+            setThemeMode(next);
+            themeBtn.textContent = next === 'daylight' ? '🌙' : '☀️';
+        });
+    }
+
+    // 2. Play Style Auswahl beim Erstellen (Travel vs Tisch)
+    const styleCards = document.querySelectorAll('.mobile-play-style-card');
+    const styleInput = document.getElementById('create-play-style');
+    styleCards.forEach(card => {
+        card.addEventListener('click', () => {
+            styleCards.forEach(c => {
+                c.classList.remove('selected');
+                c.style.background = 'rgba(15, 15, 22, 0.6)';
+                c.style.borderColor = 'rgba(0, 240, 255, 0.2)';
+            });
+            card.classList.add('selected');
+            card.style.background = 'rgba(0, 240, 255, 0.08)';
+            card.style.borderColor = 'var(--neon-cyan)';
+            selectedMobilePlayStyle = card.dataset.style || 'travel';
+            if (styleInput) styleInput.value = selectedMobilePlayStyle;
+        });
+    });
+
+    // 3. Gameplay Style Badge Live-Switch
+    const styleBadge = document.getElementById('gameplay-style-badge');
+    if (styleBadge) {
+        styleBadge.addEventListener('click', async () => {
+            if (!currentRoomRecord) return;
+            const curr = currentRoomRecord.play_style || (currentRoomRecord.last_action?.meta?.playStyle) || 'travel';
+            const next = curr === 'travel' ? 'table' : 'travel';
+            try {
+                await setRoomPlayStyle(currentRoomRecord.id, next, currentRoomRecord.session_title || '');
+                currentRoomRecord.play_style = next;
+                updateStyleBadgeUi(next);
+            } catch (e) {}
+        });
+    }
+
+    // 4. Bottom Navigation Tabs (Spiel / Pool / Chronik)
+    const navButtons = document.querySelectorAll('.travel-nav-item');
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchTravelTab(btn.dataset.tab || 'play');
+        });
+    });
+
+    // 5. Horizontal Bet Quick-Pills
+    const pillContainer = document.getElementById('bet-quick-pills');
+    if (pillContainer) {
+        pillContainer.querySelectorAll('.bet-pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('disabled')) return;
+                const betVal = btn.dataset.bet || 'pasch';
+                if (gameplayBetSelect) {
+                    gameplayBetSelect.value = betVal;
+                    updateStakePreview();
+                }
+                syncBetPillsWithSelect();
+            });
+        });
+    }
+    if (gameplayBetSelect) {
+        gameplayBetSelect.addEventListener('change', syncBetPillsWithSelect);
+    }
+
+    // 6. Slot-Claim Modal ("Akku leer / Neues Handy")
+    const openClaimBtn = document.getElementById('open-slot-claim-btn');
+    const closeClaimBtn = document.getElementById('close-slot-claim-btn');
+    const claimModal = document.getElementById('slot-claim-modal');
+    if (openClaimBtn) {
+        openClaimBtn.addEventListener('click', handleOpenSlotClaimModal);
+    }
+    if (closeClaimBtn && claimModal) {
+        closeClaimBtn.addEventListener('click', () => { claimModal.style.display = 'none'; });
+    }
+
+    // 7. Geplante Einsätze (Pool) Formular & Filter
+    const toggleFormBtn = document.getElementById('toggle-stake-form-btn');
+    const cancelFormBtn = document.getElementById('cancel-planned-stake-btn');
+    const stakeForm = document.getElementById('planned-stake-form');
+    const submitStakeBtn = document.getElementById('submit-planned-stake-btn');
+    const targetModeSelect = document.getElementById('stake-target-mode-select');
+    const targetPlayerGroup = document.getElementById('stake-target-player-group');
+    const rouletteBtn = document.getElementById('pool-roulette-btn');
+
+    if (toggleFormBtn && stakeForm) {
+        toggleFormBtn.addEventListener('click', () => {
+            const isHidden = stakeForm.style.display === 'none' || !stakeForm.style.display;
+            stakeForm.style.display = isHidden ? 'block' : 'none';
+            populateTargetPlayerSelect();
+        });
+    }
+    if (cancelFormBtn && stakeForm) {
+        cancelFormBtn.addEventListener('click', () => { stakeForm.style.display = 'none'; });
+    }
+    if (targetModeSelect && targetPlayerGroup) {
+        targetModeSelect.addEventListener('change', () => {
+            targetPlayerGroup.style.display = (targetModeSelect.value === 'bounty' || targetModeSelect.value === 'target_player') ? 'block' : 'none';
+            populateTargetPlayerSelect();
+        });
+    }
+    if (submitStakeBtn) {
+        submitStakeBtn.addEventListener('click', handleCreatePlannedStake);
+    }
+    if (rouletteBtn) {
+        rouletteBtn.addEventListener('click', handleDrawRouletteStake);
+    }
+
+    const filterBar = document.getElementById('stake-filter-bar');
+    if (filterBar) {
+        filterBar.querySelectorAll('.stake-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBar.querySelectorAll('.stake-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentStakeCategoryFilter = btn.dataset.filter || 'all';
+                renderPlannedStakesPool();
+            });
+        });
+    }
+
+    renderActivePlannedStakeBanner();
+}
+
+function updateStyleBadgeUi(playStyle) {
+    const styleBadge = document.getElementById('gameplay-style-badge');
+    if (!styleBadge) return;
+    if (playStyle === 'table') {
+        styleBadge.textContent = '🏠 Tisch-Modus';
+    } else {
+        styleBadge.textContent = '🎒 Reise-Modus';
+    }
+}
+
+function switchTravelTab(tabName) {
+    activeTravelTab = tabName;
+    const panes = {
+        play: document.getElementById('tab-pane-play'),
+        pool: document.getElementById('tab-pane-pool'),
+        chronicle: document.getElementById('tab-pane-chronicle')
+    };
+    Object.entries(panes).forEach(([key, el]) => {
+        if (el) el.style.display = (key === tabName) ? 'block' : 'none';
+    });
+    document.querySelectorAll('.travel-nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    if (tabName === 'pool' && currentRoomRecord) {
+        refreshPlannedStakes(currentRoomRecord.code);
+    } else if (tabName === 'chronicle') {
+        renderPendingFulfillments();
+    }
+}
+
+function syncBetPillsWithSelect() {
+    const pillContainer = document.getElementById('bet-quick-pills');
+    if (!pillContainer || !gameplayBetSelect) return;
+    const minBetKey = (activePlannedStake && activePlannedStake.min_bet && activePlannedStake.min_bet !== 'flexible')
+        ? activePlannedStake.min_bet
+        : null;
+    const minRank = minBetKey ? (BET_RANKS[minBetKey] || 0) : 0;
+
+    if (minRank > 0 && (BET_RANKS[gameplayBetSelect.value] || 0) < minRank) {
+        gameplayBetSelect.value = minBetKey;
+        updateStakePreview();
+    }
+
+    const currentBet = gameplayBetSelect.value;
+    pillContainer.querySelectorAll('.bet-pill-btn').forEach(btn => {
+        const bKey = btn.dataset.bet;
+        const rank = BET_RANKS[bKey] || 0;
+        const isDisabled = minRank > 0 && rank < minRank;
+        btn.classList.toggle('disabled', isDisabled);
+        btn.classList.toggle('active', bKey === currentBet);
+    });
+}
+
+function renderSavedSessions() {
+    const container = document.getElementById('saved-sessions-container');
+    const listEl = document.getElementById('saved-sessions-list');
+    if (!container || !listEl) return;
+
+    const sessions = getSavedSessions();
+    if (!sessions || sessions.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    listEl.innerHTML = '';
+
+    sessions.slice(0, 4).forEach(sess => {
+        const card = document.createElement('div');
+        card.className = 'saved-session-card';
+        const modeIcon = sess.playStyle === 'table' ? '🏠' : '🎒';
+        card.innerHTML = `
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); font-weight: bold;">
+                    ${modeIcon} ${sess.code} ${sess.title && sess.title !== `Raum ${sess.code}` ? `• <span style="color: #fff;">${sess.title}</span>` : ''}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    Spieler: <strong>${sess.playerName || 'Gast'}</strong>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <button type="button" class="btn-rejoin-session" style="background: rgba(57, 255, 20, 0.15); border: 1px solid var(--neon-green); color: var(--neon-green); border-radius: 6px; padding: 5px 10px; font-family: 'Orbitron', sans-serif; font-size: 0.72rem; cursor: pointer;">
+                    ⚡ Teilnehmen
+                </button>
+                <button type="button" class="btn-remove-session" title="Aus Liste entfernen" style="background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; padding: 2px 5px;">✕</button>
+            </div>
+        `;
+
+        card.querySelector('.btn-rejoin-session').addEventListener('click', () => {
+            if (clientRoomCodeInput) clientRoomCodeInput.value = sess.code;
+            if (clientPlayerNameInput && sess.playerName) clientPlayerNameInput.value = sess.playerName;
+            handleJoinRoom();
+        });
+        card.querySelector('.btn-remove-session').addEventListener('click', () => {
+            removeSavedSession(sess.code);
+            renderSavedSessions();
+        });
+        listEl.appendChild(card);
+    });
+}
+
+async function handleOpenSlotClaimModal() {
+    const roomCode = (clientRoomCodeInput ? clientRoomCodeInput.value : '').trim().toUpperCase();
+    if (!roomCode || roomCode.length < 3) {
+        showJoinError('Bitte gib zuerst den Raum-Code ein, um deinen Spieler-Slot zu übernehmen!');
+        return;
+    }
+    const modal = document.getElementById('slot-claim-modal');
+    const listEl = document.getElementById('slot-claim-list');
+    const errEl = document.getElementById('slot-claim-error');
+    if (!modal || !listEl) return;
+
+    if (errEl) errEl.style.display = 'none';
+    listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">Lade Spieler im Raum...</div>';
+    modal.style.display = 'flex';
+
+    try {
+        const playersInRoom = await getPlayers(roomCode);
+        if (!playersInRoom || playersInRoom.length === 0) {
+            listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Spieler in diesem Raum gefunden.</div>';
+            return;
+        }
+        listEl.innerHTML = '';
+        playersInRoom.forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'saved-session-card';
+            row.innerHTML = `
+                <div>
+                    <strong style="color: #fff; font-family: 'Orbitron', sans-serif;">${p.name}</strong>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Punkte: ${p.score || 0} | Würfe: ${p.rolls_count || 0}</div>
+                </div>
+                <button type="button" class="btn-claim-slot" style="background: rgba(0, 240, 255, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); border-radius: 6px; padding: 5px 10px; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; cursor: pointer;">
+                    🔄 Übernehmen
+                </button>
+            `;
+            row.querySelector('.btn-claim-slot').addEventListener('click', async () => {
+                try {
+                    const pinEl = document.getElementById('client-recovery-pin');
+                    const pin = pinEl ? pinEl.value.trim() : '';
+                    const claimed = await claimPlayerSlot({
+                        roomCode,
+                        targetPlayerId: p.id,
+                        recoveryPin: pin
+                    });
+                    myPlayerToken = claimed.player_token;
+                    myPlayerRecord = claimed;
+                    if (clientPlayerNameInput) clientPlayerNameInput.value = claimed.name;
+                    modal.style.display = 'none';
+                    await handleJoinRoom();
+                } catch (claimErr) {
+                    if (errEl) {
+                        errEl.textContent = claimErr.message || 'Slot konnte nicht übernommen werden (PIN prüfen).';
+                        errEl.style.display = 'block';
+                    }
+                }
+            });
+            listEl.appendChild(row);
+        });
+    } catch (e) {
+        listEl.innerHTML = '<div style="color: var(--neon-magenta); font-size: 0.85rem;">Fehler beim Laden der Spielerliste.</div>';
+    }
+}
+
+function populateTargetPlayerSelect() {
+    const sel = document.getElementById('stake-target-player-select');
+    if (!sel) return;
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">– Spieler wählen –</option>';
+    currentPlayers.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.player_token;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+    });
+    if (currentVal) sel.value = currentVal;
+}
+
+async function refreshPlannedStakes(roomCode) {
+    if (!roomCode) return;
+    try {
+        cachedPlannedStakes = await getPlannedStakes(roomCode);
+        syncActivePlannedStakeFromList();
+        renderActivePlannedStakeBanner();
+        renderPlannedStakesPool();
+    } catch (e) {
+        console.warn('Konnte geplante Einsätze nicht laden:', e);
+    }
+}
+
+function syncActivePlannedStakeFromList() {
+    const openCount = cachedPlannedStakes.filter(s => s.status !== 'completed' && s.status !== 'skipped').length;
+    const countEl = document.getElementById('pool-stakes-count');
+    const navBadge = document.getElementById('nav-pool-badge');
+    if (countEl) countEl.textContent = String(openCount);
+    if (navBadge) {
+        navBadge.textContent = String(openCount);
+        navBadge.style.display = openCount > 0 ? 'inline-block' : 'none';
+    }
+
+    const foundActive = cachedPlannedStakes.find(s => s.status === 'active');
+    if (foundActive) {
+        activePlannedStake = foundActive;
+    } else if (activePlannedStake) {
+        const stillOpen = cachedPlannedStakes.find(s => s.id === activePlannedStake.id && s.status !== 'completed' && s.status !== 'skipped');
+        activePlannedStake = stillOpen || null;
+    }
+    syncBetPillsWithSelect();
+    updateStakePreview();
+}
+
+function renderActivePlannedStakeBanner() {
+    const box = document.getElementById('active-planned-stake-box');
+    if (!box) return;
+
+    const openStakes = cachedPlannedStakes.filter(s => s.status !== 'completed' && s.status !== 'skipped');
+
+    if (activePlannedStake) {
+        const cat = STAKE_CATEGORIES[activePlannedStake.category] || STAKE_CATEGORIES.dare;
+        const sit = STAKE_SITUATIONS[activePlannedStake.situation_tag] || STAKE_SITUATIONS.anytime;
+        const minBetLabel = (activePlannedStake.min_bet && activePlannedStake.min_bet !== 'flexible')
+            ? `Mindest-Wurf: ${BET_LABELS[activePlannedStake.min_bet] || activePlannedStake.min_bet}`
+            : 'Freie Kombinations-Wahl';
+        box.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                <div>
+                    <div style="font-size: 0.72rem; color: var(--neon-yellow); font-family: 'Orbitron', sans-serif; text-transform: uppercase;">
+                        📌 Geplanter Einsatz aktiv (${cat.icon} ${cat.label} • ${sit.icon} ${sit.label})
+                    </div>
+                    <div style="font-size: 1rem; color: #fff; font-weight: bold; margin-top: 3px;">
+                        ${activePlannedStake.title}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                        🎯 ${minBetLabel} • <em>Bei Treffer wird dieser Einsatz ausgelöst!</em>
+                    </div>
+                </div>
+                <button type="button" id="btn-clear-active-stake" title="Standard-Regelset nutzen" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); border-radius: 6px; padding: 3px 7px; font-size: 0.72rem; cursor: pointer;">
+                    ✖ Standard
+                </button>
+            </div>
+        `;
+        const clearBtn = box.querySelector('#btn-clear-active-stake');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                activePlannedStake = null;
+                syncBetPillsWithSelect();
+                renderActivePlannedStakeBanner();
+            });
+        }
+    } else {
+        box.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    💡 <strong>${openStakes.length} geplante Einsätze</strong> im Reise-Pool
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <button type="button" id="banner-roulette-btn" style="background: rgba(255, 221, 0, 0.15); border: 1px solid var(--neon-yellow); color: var(--neon-yellow); border-radius: 6px; padding: 4px 8px; font-family: 'Orbitron', sans-serif; font-size: 0.72rem; cursor: pointer;">
+                        🎰 Zufalls-Einsatz
+                    </button>
+                    <button type="button" id="banner-open-pool-btn" style="background: rgba(0, 240, 255, 0.12); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); border-radius: 6px; padding: 4px 8px; font-family: 'Orbitron', sans-serif; font-size: 0.72rem; cursor: pointer;">
+                        💡 Pool öffnen
+                    </button>
+                </div>
+            </div>
+        `;
+        const rBtn = box.querySelector('#banner-roulette-btn');
+        const pBtn = box.querySelector('#banner-open-pool-btn');
+        if (rBtn) rBtn.addEventListener('click', handleDrawRouletteStake);
+        if (pBtn) pBtn.addEventListener('click', () => switchTravelTab('pool'));
+    }
+}
+
+async function handleCreatePlannedStake() {
+    if (!currentRoomRecord) return;
+    const titleEl = document.getElementById('stake-title-input');
+    const catEl = document.getElementById('stake-category-select');
+    const sitEl = document.getElementById('stake-situation-select');
+    const modeEl = document.getElementById('stake-target-mode-select');
+    const targetPlayerEl = document.getElementById('stake-target-player-select');
+    const minBetEl = document.getElementById('stake-min-bet-select');
+
+    const title = titleEl ? titleEl.value.trim() : '';
+    if (!title) {
+        alert('Bitte gib einen Titel für den geplanten Einsatz ein!');
+        return;
+    }
+
+    const rawMode = modeEl ? modeEl.value : 'pool';
+    const targetMode = rawMode === 'bounty' ? 'target_player' : (rawMode === 'group' ? 'group_round' : rawMode);
+    const targetToken = targetPlayerEl ? targetPlayerEl.value : '';
+    const foundTargetPlayer = currentPlayers.find(p => p.player_token === targetToken);
+
+    try {
+        await createPlannedStake({
+            roomCode: currentRoomRecord.code,
+            title,
+            category: catEl ? catEl.value : 'dare',
+            situationTag: sitEl ? sitEl.value : 'anytime',
+            targetMode,
+            targetPlayerToken: targetToken,
+            targetPlayerName: foundTargetPlayer ? foundTargetPlayer.name : '',
+            minBet: minBetEl ? minBetEl.value : 'flexible'
+        });
+        if (titleEl) titleEl.value = '';
+        const formEl = document.getElementById('planned-stake-form');
+        if (formEl) formEl.style.display = 'none';
+        await refreshPlannedStakes(currentRoomRecord.code);
+    } catch (e) {
+        console.error('Fehler beim Planen des Einsatzes:', e);
+    }
+}
+
+async function handleDrawRouletteStake() {
+    if (!currentRoomRecord) return;
+    const drawn = await drawRandomPlannedStake(currentRoomRecord.code);
+    if (!drawn) {
+        alert('Noch keine offenen Einsätze im Pool! Plane zuerst eine Idee im Tab "💡 Pool".');
+        switchTravelTab('pool');
+        return;
+    }
+    activePlannedStake = drawn;
+    playProceduralSound('roll');
+    await refreshPlannedStakes(currentRoomRecord.code);
+    switchTravelTab('play');
+}
+
+function renderPlannedStakesPool() {
+    const listEl = document.getElementById('planned-stakes-list');
+    if (!listEl) return;
+
+    const openStakes = cachedPlannedStakes.filter(s => {
+        if (s.status === 'completed' || s.status === 'skipped') return false;
+        if (currentStakeCategoryFilter !== 'all' && s.category !== currentStakeCategoryFilter) return false;
+        return true;
+    });
+
+    if (openStakes.length === 0) {
+        listEl.innerHTML = `
+            <div style="text-align: center; padding: 18px; color: var(--text-muted); font-size: 0.85rem; border: 1px dashed rgba(0, 240, 255, 0.2); border-radius: 8px;">
+                Noch keine geplanten Einsätze in dieser Kategorie.<br>Tippe oben auf <strong>➕ Planen</strong>, um eine Idee für den Tag einzutragen!
+            </div>
+        `;
+        return;
+    }
+
+    listEl.innerHTML = '';
+    openStakes.forEach(stake => {
+        const cat = STAKE_CATEGORIES[stake.category] || STAKE_CATEGORIES.dare;
+        const sit = STAKE_SITUATIONS[stake.situation_tag] || STAKE_SITUATIONS.anytime;
+        const isActive = activePlannedStake && activePlannedStake.id === stake.id;
+        const votesObj = (stake.votes && typeof stake.votes === 'object') ? stake.votes : {};
+
+        const countEmoji = (em) => Object.values(votesObj).filter(v => v === em).length;
+        const myVote = votesObj[myPlayerToken] || '';
+
+        const targetBadge = (stake.target_mode === 'target_player' && stake.target_player_name)
+            ? `<span style="color: var(--neon-magenta);">🎯 Ziel: ${stake.target_player_name}</span>`
+            : (stake.target_mode === 'group_round' ? '<span style="color: var(--neon-yellow);">👥 Gruppen-Runde</span>' : '<span>🎲 Offener Pool</span>');
+
+        const minBetBadge = (stake.min_bet && stake.min_bet !== 'flexible')
+            ? ` • Min: <strong>${BET_LABELS[stake.min_bet] || stake.min_bet}</strong>`
+            : '';
+
+        const card = document.createElement('div');
+        card.className = `planned-stake-card ${isActive ? 'is-active' : ''}`;
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-muted);">
+                <span>${cat.icon} ${cat.label} • ${sit.icon} ${sit.label}</span>
+                <span>von ${stake.creator_name || 'Spieler'}</span>
+            </div>
+            <div style="font-size: 1rem; font-weight: bold; color: #fff;">
+                ${stake.title}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                ${targetBadge}${minBetBadge}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                <div style="display: flex; gap: 5px;">
+                    ${['🔥', '😂', '💀', '🍺'].map(em => `
+                        <button type="button" class="stake-reaction-btn ${myVote === em ? 'voted' : ''}" data-emoji="${em}">
+                            ${em} ${countEmoji(em) || ''}
+                        </button>
+                    `).join('')}
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <button type="button" class="btn-activate-stake" style="background: rgba(57, 255, 20, 0.15); border: 1px solid var(--neon-green); color: var(--neon-green); border-radius: 6px; padding: 4px 10px; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; cursor: pointer;">
+                        🎲 Darauf würfeln
+                    </button>
+                    <button type="button" class="btn-delete-stake" title="Entfernen" style="background: none; border: 1px solid rgba(255,0,127,0.3); color: var(--neon-magenta); border-radius: 6px; padding: 4px 7px; font-size: 0.75rem; cursor: pointer;">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `;
+
+        card.querySelectorAll('.stake-reaction-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!currentRoomRecord) return;
+                await votePlannedStake(currentRoomRecord.code, stake.id, btn.dataset.emoji);
+                await refreshPlannedStakes(currentRoomRecord.code);
+            });
+        });
+
+        card.querySelector('.btn-activate-stake').addEventListener('click', async () => {
+            if (!currentRoomRecord) return;
+            await activatePlannedStake(currentRoomRecord.code, stake.id);
+            activePlannedStake = stake;
+            await refreshPlannedStakes(currentRoomRecord.code);
+            switchTravelTab('play');
+        });
+
+        card.querySelector('.btn-delete-stake').addEventListener('click', async () => {
+            if (!currentRoomRecord) return;
+            await deletePlannedStake(currentRoomRecord.code, stake.id);
+            await refreshPlannedStakes(currentRoomRecord.code);
+        });
+
+        listEl.appendChild(card);
+    });
+}
+
+function renderPendingFulfillments() {
+    const listEl = document.getElementById('pending-fulfillments-list');
+    const badgeEl = document.getElementById('pending-fulfillments-count-badge');
+    const navPendingBadge = document.getElementById('nav-pending-badge');
+    if (!listEl) return;
+
+    // GOLDENE QUINTASCH-REGEL: Alle Treffer (is_hit === true), deren Einsatz noch nicht als 'done' abgehakt wurde!
+    const pendingRolls = cachedRollsHistory.filter(r =>
+        r.is_hit && r.stake_text && r.fulfillment_status !== 'done' && r.fulfillment_status !== 'verified'
+    );
+
+    if (badgeEl) badgeEl.textContent = String(pendingRolls.length);
+    if (navPendingBadge) {
+        navPendingBadge.textContent = String(pendingRolls.length);
+        navPendingBadge.style.display = pendingRolls.length > 0 ? 'inline-block' : 'none';
+    }
+
+    if (pendingRolls.length === 0) {
+        listEl.innerHTML = '<div style="font-size: 0.82rem; color: var(--text-muted); padding: 8px 0;">Alle getroffenen Einsätze wurden eingelöst! 🎉</div>';
+        return;
+    }
+
+    listEl.innerHTML = '';
+    pendingRolls.forEach(roll => {
+        const card = document.createElement('div');
+        card.className = 'pending-fulfillment-card';
+        card.innerHTML = `
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.82rem; color: var(--neon-yellow);">
+                    🎲 ${roll.player_name} • ${BET_LABELS[roll.bet] || roll.bet} getroffen!
+                </div>
+                <div style="font-size: 0.92rem; color: #fff; font-weight: bold; margin-top: 2px;">
+                    ⚡ ${roll.stake_text}
+                </div>
+            </div>
+            <button type="button" class="btn-done-pending" style="background: rgba(57, 255, 20, 0.2); border: 1px solid var(--neon-green); color: var(--neon-green); border-radius: 6px; padding: 6px 10px; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; cursor: pointer; white-space: nowrap;">
+                ✅ Eingelöst!
+            </button>
+        `;
+        card.querySelector('.btn-done-pending').addEventListener('click', async () => {
+            if (!currentRoomRecord) return;
+            await markRollFulfilled(currentRoomRecord.code, roll.id, 'done');
+            roll.fulfillment_status = 'done';
+            renderPendingFulfillments();
+            await refreshPlayersAndHistory(currentRoomRecord.code);
+        });
+        listEl.appendChild(card);
+    });
 }

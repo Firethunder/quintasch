@@ -127,6 +127,19 @@
                         </div>
                     </div>
 
+                    <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 4px;">
+                        <label for="host-session-title" style="font-family: 'Orbitron', sans-serif; font-size: 0.8rem; color: var(--neon-cyan);">Session-Name / Reise (optional):</label>
+                        <input type="text" id="host-session-title" class="form-control" placeholder="z. B. JGA Mallorca 2026, WG-Abend..." maxlength="40" style="padding: 6px 10px; font-size: 0.88rem;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label for="host-play-style" style="font-family: 'Orbitron', sans-serif; font-size: 0.8rem; color: var(--neon-cyan);">Spiel-Modus / Umgebung:</label>
+                        <select id="host-play-style" class="form-control" style="padding: 6px 10px; font-size: 0.88rem; font-family: inherit;">
+                            <option value="table">🏠 Tisch-Modus (Normal)</option>
+                            <option value="travel">🎒 Travel- / Reise-Modus (Wegbier / Strand)</option>
+                        </select>
+                    </div>
+
                     <button class="btn-neon" id="host-game-btn" style="border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: var(--glow-cyan); text-shadow: var(--glow-cyan); margin-top: 10px;">
                         Spielraum erstellen (Host)
                     </button>
@@ -145,6 +158,17 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Saved Sessions ("Wieder teilnehmen") -->
+                <div id="dashboard-saved-sessions" class="saved-sessions-box" style="display: none; margin-top: 10px; text-align: left;">
+                    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-yellow);">💾 Gespeicherte Sessions</span>
+                        <span id="saved-sessions-count" style="font-size: 0.75rem; color: var(--text-muted); font-family: 'Rajdhani', sans-serif;"></span>
+                    </div>
+                    <div id="saved-sessions-list" class="saved-sessions-list" style="max-height: 180px; overflow-y: auto;">
+                        <!-- Dynamisch befüllt -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -154,10 +178,15 @@
         <main class="dashboard">
             <header class="header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 900px; margin-bottom: 15px;">
                 <div style="text-align: left;">
-                    <h1 style="margin: 0; font-size: 2.2rem;">Quintasch</h1>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <h1 style="margin: 0; font-size: 2.2rem;">Quintasch</h1>
+                        <span id="dashboard-session-badge" style="display: none; font-size: 0.78rem; font-family: 'Orbitron', sans-serif; padding: 2px 8px; border-radius: 4px; background: rgba(0, 240, 255, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan);"></span>
+                        <span id="dashboard-style-badge" style="display: none; font-size: 0.78rem; font-family: 'Orbitron', sans-serif; padding: 2px 8px; border-radius: 4px; background: rgba(255, 221, 0, 0.15); border: 1px solid var(--neon-yellow); color: var(--neon-yellow);"></span>
+                    </div>
                     <p style="margin: 0; font-size: 0.9rem;">Multiplayer V2</p>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button id="dashboard-theme-toggle-btn" class="btn-neon" style="font-size: 0.8rem; padding: 5px 12px; cursor: pointer; border-color: var(--neon-yellow); color: var(--neon-yellow);">☀️ Daylight</button>
                     <div id="dashboard-conn-badge" class="connection-badge">
                         <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--neon-green);"></span>
                         <span>Online</span>
@@ -228,6 +257,22 @@
                 </div>
             </section>
 
+            <!-- Aktiver Pool-Einsatz Banner in der Würfel-Arena -->
+            <div id="dashboard-active-stake-banner" class="active-stake-banner" style="display: none; width: 100%; max-width: 650px; margin: 0 auto 15px auto;">
+                <div class="active-stake-banner-top">
+                    <span style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-yellow); display: flex; align-items: center; gap: 6px;">
+                        📌 <strong>Aktiver Pool-Einsatz</strong>
+                    </span>
+                    <div id="active-stake-badges" class="active-stake-badges"></div>
+                </div>
+                <div id="active-stake-title" class="stake-title" style="font-size: 1.15rem; color: #fff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.4); margin: 4px 0;">
+                    <!-- Titel des aktiven Einsatzes -->
+                </div>
+                <div id="active-stake-meta" class="stake-meta-row" style="font-size: 0.82rem; color: var(--text-muted);">
+                    <!-- Meta-Info -->
+                </div>
+            </div>
+
             <!-- Spielfeld mit 5 3D-CSS-Würfeln -->
             <section class="dice-table" id="dice-table">
                 <div class="cube-container"><div class="cube" id="dice-0"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
@@ -290,6 +335,39 @@
                     <button class="btn-neon sound-btn" data-sound="fail" style="font-size: 0.8rem; padding: 8px; border-color: var(--neon-magenta); color: var(--neon-magenta); box-shadow: none; text-shadow: none;">💥 Fehlwurf</button>
                     <button class="btn-neon sound-btn" data-sound="tick" style="font-size: 0.8rem; padding: 8px; border-color: var(--neon-yellow); color: var(--neon-yellow); box-shadow: none; text-shadow: none;">⏱️ Ticken</button>
                     <button class="btn-neon sound-btn" data-sound="buzzer" style="font-size: 0.8rem; padding: 8px; grid-column: span 2; border-color: var(--neon-magenta); color: var(--neon-magenta); --neon-cyan: var(--neon-magenta); box-shadow: none; text-shadow: none;">🚨 Buzzer</button>
+                </div>
+            </div>
+
+            <!-- Geplante Einsätze (Pool) Panel -->
+            <div class="panel" id="planned-stakes-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(0, 240, 255, 0.15); padding-bottom: 8px;">
+                    <h3 class="sidebar-title" style="font-size: 1.05rem; border: none; margin: 0; color: var(--neon-yellow); text-shadow: 0 0 10px rgba(255, 221, 0, 0.4);">
+                        💡 Geplante Einsätze <span id="dashboard-pool-count" style="font-size: 0.85rem; color: var(--neon-cyan); font-weight: normal;">(0)</span>
+                    </h3>
+                    <button class="btn-neon" id="dashboard-roulette-btn" style="font-size: 0.75rem; padding: 4px 8px; border-color: var(--neon-yellow); color: var(--neon-yellow);" title="Zufälligen Einsatz gewichtet nach Votes aktivieren">
+                        🎰 Roulette
+                    </button>
+                </div>
+
+                <!-- Schnell-Eingabe für neue Einsätze am Dashboard -->
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; background: rgba(0, 0, 0, 0.25); padding: 8px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.15);">
+                    <input type="text" id="dashboard-stake-input" class="form-control" placeholder="Einsatz-Idee / Mutprobe..." maxlength="60" style="padding: 6px 10px; font-size: 0.85rem;">
+                    <div style="display: flex; gap: 6px;">
+                        <select id="dashboard-stake-category" class="form-control" style="flex: 1; padding: 5px 8px; font-size: 0.8rem; font-family: inherit;">
+                            <option value="dare">🔥 Mutprobe</option>
+                            <option value="drink">🍺 Trinken</option>
+                            <option value="social">👥 Social</option>
+                            <option value="fun">🎉 Fun / Joke</option>
+                        </select>
+                        <button class="btn-neon" id="dashboard-add-stake-btn" style="padding: 5px 12px; font-size: 0.8rem; border-color: var(--neon-green); color: var(--neon-green);">
+                            ➕ Planen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Liste der offenen geplanten Einsätze -->
+                <div id="dashboard-planned-stakes-list" class="stake-pool-list" style="max-height: 250px; overflow-y: auto;">
+                    <!-- Dynamisch befüllt -->
                 </div>
             </div>
 

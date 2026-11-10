@@ -12,9 +12,11 @@
 
 * **Einsatz & Wette bestimmen:** Vor jedem Wurf wählt der Spieler auf seinem Smartphone die gewünschte Ziel-Kombination (den Einsatz / die Aufgabe).
 * **Der Wurf:** Es wird genau **ein Wurf mit 5 Würfeln** durchgeführt und auf allen Bildschirmen in 3D synchronisiert.
-* **Auswertung & Gewinn:**
-  * 🏆 **Einsatz gewonnen (Treffer / Hit):** Trifft oder übertrifft der Wurf die angesagte Kombination, punktet der Spieler im Turniermodus (1–10 Punkte), erhöht seine Trefferquote und schaltet bei bestimmten Kombinationen (*Doppelpasch*, *Full House*) die interaktive Weitergabe von Einsätzen an Mitspieler frei.
-  * 💥 **Einsatz verfehlt (Fehlwurf / Miss):** Wird die angesagte Kombination verfehlt, muss der Würfler die Konsequenz / den Einsatz **selbst einlösen** (z. B. Schluck trinken, Exen oder sportliche Aufgabe). Im Survival-Modus erhöht jeder Fehlwurf das persönliche Punktekonto.
+* **Auswertung & Goldene Quintasch-Regel („Treffer löst den Einsatz aus!“):**
+  * 🎉 **TREFFER (`isHit === true` – Kombination erreicht oder übertroffen):**
+    Der zuvor gewählte **Einsatz ist AUSGELÖST und MUSS erfüllt werden** (z. B. Schluck trinken, Exen, sportliche Aufgabe oder geplanter Reise-Einsatz)! Gleichzeitig erhält der Spieler dafür die **Punkte** der Kombination (1–10 Punkte), erhöht seine Trefferquote und schaltet bei *Doppelpasch* / *Full House* die interaktive Weitergabe frei.
+  * 💨 **FEHLWURF (`isHit === false` – Kombination verfehlt):**
+    Der Einsatz wird **NICHT ausgelöst**! Es muss nichts eingelöst werden, es gibt 0 Punkte, und ein geplanter Einsatz aus dem Pool bleibt weiterhin offen im Pool, bis ihn jemand trifft.
 
 ---
 

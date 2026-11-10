@@ -45,6 +45,7 @@
         "values": [
           "lobby",
           "playing",
+          "paused",
           "finished"
         ]
       },
@@ -120,6 +121,49 @@
         "max": 0,
         "min": 0,
         "name": "active_player_token",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_room_session_title",
+        "max": 80,
+        "min": 0,
+        "name": "session_title",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "hidden": false,
+        "id": "field_room_play_style",
+        "maxSelect": 1,
+        "name": "play_style",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "select",
+        "values": [
+          "table",
+          "travel",
+          "hybrid"
+        ]
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_room_active_planned_stake_id",
+        "max": 64,
+        "min": 0,
+        "name": "active_planned_stake_id",
         "pattern": "",
         "presentable": false,
         "primaryKey": false,
@@ -299,6 +343,32 @@
         "max": 5000,
         "min": 0,
         "name": "hits_count",
+        "onlyInt": true,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_player_recovery_pin",
+        "max": 10,
+        "min": 0,
+        "name": "recovery_pin",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "hidden": false,
+        "id": "field_player_stakes_completed",
+        "max": 5000,
+        "min": 0,
+        "name": "stakes_completed",
         "onlyInt": true,
         "presentable": false,
         "required": false,
@@ -486,6 +556,36 @@
         "required": false,
         "system": false,
         "type": "json"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_roll_planned_stake_id",
+        "max": 64,
+        "min": 0,
+        "name": "planned_stake_id",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "hidden": false,
+        "id": "field_roll_fulfillment_status",
+        "maxSelect": 1,
+        "name": "fulfillment_status",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "select",
+        "values": [
+          "none",
+          "pending",
+          "done",
+          "verified"
+        ]
       },
       {
         "hidden": false,
@@ -771,5 +871,248 @@
     "createRule": null,
     "updateRule": null,
     "deleteRule": null
+  },
+  {
+    "id": "pbc_planned_stakes_01",
+    "name": "planned_stakes",
+    "type": "base",
+    "system": false,
+    "fields": [
+      {
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210262",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_ps_room_code",
+        "max": 10,
+        "min": 3,
+        "name": "room_code",
+        "pattern": "",
+        "presentable": true,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_ps_creator_token",
+        "max": 64,
+        "min": 1,
+        "name": "creator_token",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_ps_creator_name",
+        "max": 50,
+        "min": 1,
+        "name": "creator_name",
+        "pattern": "",
+        "presentable": true,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_ps_title",
+        "max": 200,
+        "min": 1,
+        "name": "title",
+        "pattern": "",
+        "presentable": true,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "hidden": false,
+        "id": "field_ps_category",
+        "maxSelect": 1,
+        "name": "category",
+        "presentable": false,
+        "required": true,
+        "system": false,
+        "type": "select",
+        "values": [
+          "drink",
+          "dare",
+          "food",
+          "sport",
+          "spend",
+          "custom"
+        ]
+      },
+      {
+        "hidden": false,
+        "id": "field_ps_situation_tag",
+        "maxSelect": 1,
+        "name": "situation_tag",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "select",
+        "values": [
+          "anytime",
+          "bar",
+          "food",
+          "beach",
+          "transit"
+        ]
+      },
+      {
+        "hidden": false,
+        "id": "field_ps_target_mode",
+        "maxSelect": 1,
+        "name": "target_mode",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "select",
+        "values": [
+          "pool",
+          "target_player",
+          "group_round"
+        ]
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_ps_target_player_token",
+        "max": 64,
+        "min": 0,
+        "name": "target_player_token",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_ps_target_player_name",
+        "max": 50,
+        "min": 0,
+        "name": "target_player_name",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "hidden": false,
+        "id": "field_ps_min_bet",
+        "maxSelect": 1,
+        "name": "min_bet",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "select",
+        "values": [
+          "flexible",
+          "pasch",
+          "doppelpasch",
+          "drasch",
+          "fullhouse",
+          "strasse",
+          "quadrasch",
+          "quintasch"
+        ]
+      },
+      {
+        "hidden": false,
+        "id": "field_ps_status",
+        "maxSelect": 1,
+        "name": "status",
+        "presentable": false,
+        "required": true,
+        "system": false,
+        "type": "select",
+        "values": [
+          "idea",
+          "ready",
+          "active",
+          "completed",
+          "skipped"
+        ]
+      },
+      {
+        "hidden": false,
+        "id": "field_ps_votes",
+        "maxSize": 2000000,
+        "name": "votes",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "json"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "field_ps_resolved_by_roll_id",
+        "max": 64,
+        "min": 0,
+        "name": "resolved_by_roll_id",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "hidden": false,
+        "id": "autodate2990389182",
+        "name": "created",
+        "onCreate": true,
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      },
+      {
+        "hidden": false,
+        "id": "autodate3332085501",
+        "name": "updated",
+        "onCreate": true,
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      }
+    ],
+    "indexes": [],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": ""
   }
 ]

@@ -20,6 +20,10 @@ This file provides Gemini-specific integration. For the complete methodology, se
 2. **State Is Sacred** — Every action updates persistent memory
 3. **Context Is Limited** — Prevent degradation through hygiene
 4. **Verify Empirically** — No "trust me, it works"
+5. **Goldene Quintasch-Regel (Domain Invariant — NEVER INVERT!)**:
+   - Vor dem Wurf wählt der Spieler eine **Ziel-Kombination** (`pasch` bis `quintasch`) und einen **Einsatz**.
+   - **TREFFER (`isHit === true`, Kombination erreicht oder übertroffen):** Der Einsatz ist **AUSGELÖST und MUSS erfüllt werden**! Dafür erhält der Spieler die **Punkte** (`BET_POINTS`).
+   - **FEHLWURF (`isHit === false`, Kombination verfehlt):** Der Einsatz wird **NICHT ausgelöst**! Keine Aktion, 0 Punkte. Geplante Einsätze aus dem Pool bleiben bei einem Fehlwurf im Pool (`status: 'ready'`), bis sie jemand trifft!
 
 ---
 

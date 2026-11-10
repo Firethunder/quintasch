@@ -722,3 +722,1318 @@ select.form-control option {
     transform: scale(0.95);
     box-shadow: 0 0 15px currentColor !important;
 }
+
+/* === QUINTASCH V3: TRAVEL MODE, PLANNED STAKES & DAYLIGHT THEME === */
+
+/* Fallback & Aliases for V3 variables in default (Neon Obsidian) mode */
+:root {
+    --bg-color: #0b0b0f;
+    --panel-bg: rgba(20, 20, 28, 0.7);
+}
+
+/* ==========================================================================
+   1. OUTDOOR / DAYLIGHT THEME ([data-theme="daylight"])
+   Optimiert für einwandfreie Lesbarkeit bei hellem Sonnenlicht unterwegs
+   ========================================================================== */
+[data-theme="daylight"] {
+    --bg-color: #f4f6fb;
+    --panel-bg: rgba(255, 255, 255, 0.96);
+    --bg-obsidian: #f4f6fb;
+    --bg-panel: rgba(255, 255, 255, 0.96);
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --neon-cyan: #0284c7;
+    --neon-magenta: #db2777;
+    --neon-green: #059669;
+    --neon-yellow: #d97706;
+    --glow-cyan: 0 2px 8px rgba(2, 132, 199, 0.25);
+    --glow-magenta: 0 2px 8px rgba(219, 39, 119, 0.25);
+    --glow-green: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+[data-theme="daylight"] body {
+    background-color: var(--bg-color);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(219, 39, 119, 0.05) 0px, transparent 50%);
+    color: var(--text-main);
+}
+
+/* Headings & Text contrast in Daylight */
+[data-theme="daylight"] h1,
+[data-theme="daylight"] h2,
+[data-theme="daylight"] h3,
+[data-theme="daylight"] h4,
+[data-theme="daylight"] .header h1,
+[data-theme="daylight"] .sidebar-title,
+[data-theme="daylight"] .result-action {
+    color: var(--text-main);
+    text-shadow: none;
+}
+
+/* Panels, Modals, Containers & Sidebars in Daylight */
+[data-theme="daylight"] .panel,
+[data-theme="daylight"] .modal-panel,
+[data-theme="daylight"] .sidebar,
+[data-theme="daylight"] .landing-panel,
+[data-theme="daylight"] .history-panel,
+[data-theme="daylight"] .status-card {
+    background: var(--panel-bg);
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .modal-overlay {
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Form Controls, Inputs & Selects in Daylight */
+[data-theme="daylight"] .form-control,
+[data-theme="daylight"] input[type="text"],
+[data-theme="daylight"] input[type="number"],
+[data-theme="daylight"] input[type="password"],
+[data-theme="daylight"] select.form-control,
+[data-theme="daylight"] textarea {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="daylight"] .form-control:focus,
+[data-theme="daylight"] input:focus,
+[data-theme="daylight"] select:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+    background: #ffffff;
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] select.form-control option {
+    background: #ffffff;
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .form-group label {
+    color: var(--text-muted);
+}
+
+/* Dice in Daylight Mode */
+[data-theme="daylight"] .face {
+    background: #ffffff;
+    border: 2px solid var(--neon-cyan);
+    color: var(--text-main);
+    text-shadow: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="daylight"] .cube-container:nth-child(even) .cube .face {
+    border-color: var(--neon-magenta);
+    color: var(--text-main);
+    text-shadow: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Standard Buttons & Result Panels in Daylight */
+[data-theme="daylight"] .btn-neon {
+    background: #ffffff;
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    text-shadow: none;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2);
+}
+
+[data-theme="daylight"] .btn-neon:hover {
+    background: var(--neon-cyan);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+[data-theme="daylight"] .result-panel {
+    background: var(--panel-bg);
+}
+
+[data-theme="daylight"] .result-panel.win {
+    border-color: var(--neon-green);
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.2);
+}
+
+[data-theme="daylight"] .result-panel.fail {
+    border-color: var(--neon-magenta);
+    box-shadow: 0 4px 16px rgba(219, 39, 119, 0.2);
+}
+
+/* Optional Daylight Theme Toggle Button in Header */
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: var(--glow-cyan);
+}
+
+[data-theme="daylight"] .theme-toggle-btn {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: var(--text-main);
+}
+
+
+/* ==========================================================================
+   2. SAVED SESSIONS ("WIEDER TEILNEHMEN") & SLOT-CLAIM UI
+   Multi-Day Sessions, 1-Tap Rejoin & Slot-Übernahme bei leerem Akku
+   ========================================================================== */
+.saved-sessions-box {
+    margin: 16px 0;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 12px;
+}
+
+.saved-sessions-box .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.95rem;
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.saved-sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.saved-session-card {
+    background: rgba(20, 20, 28, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.saved-session-card:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 2px 10px rgba(0, 240, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.saved-session-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+}
+
+.saved-session-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.saved-session-code {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    color: var(--neon-cyan);
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+}
+
+.saved-session-mode-badge {
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.saved-session-mode-badge.travel {
+    background: rgba(0, 240, 255, 0.15);
+    border-color: rgba(0, 240, 255, 0.35);
+    color: var(--neon-cyan);
+}
+
+.saved-session-mode-badge.table {
+    background: rgba(157, 0, 255, 0.15);
+    border-color: rgba(157, 0, 255, 0.35);
+    color: var(--neon-purple);
+}
+
+.saved-session-details {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.saved-session-details .player-highlight {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.saved-session-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-rejoin-session {
+    background: var(--neon-cyan);
+    color: #000000;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 13px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.btn-rejoin-session:hover {
+    box-shadow: var(--glow-cyan);
+    transform: scale(1.02);
+}
+
+.btn-delete-saved-session {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-delete-saved-session:hover {
+    color: var(--neon-magenta);
+    background: rgba(255, 0, 127, 0.1);
+}
+
+/* Slot Claiming UI */
+.slot-claim-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.slot-claim-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+
+.slot-claim-item:hover {
+    border-color: rgba(0, 240, 255, 0.4);
+}
+
+.slot-claim-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.slot-claim-name {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+.slot-claim-score {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.slot-claim-form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.slot-pin-input {
+    width: 72px;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-main);
+}
+
+.slot-pin-input:focus {
+    border-color: var(--neon-cyan);
+    outline: none;
+}
+
+.btn-slot-claim {
+    background: transparent;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-slot-claim:hover {
+    background: var(--neon-cyan);
+    color: #000000;
+}
+
+
+/* ==========================================================================
+   3. TRAVEL-MODE BOTTOM TAB NAVIGATION (THUMB-ZONE)
+   Mobile Bottom-Bar für controller.html & Tab-Pane Management
+   ========================================================================== */
+.travel-bottom-nav {
+    position: sticky;
+    bottom: 0;
+    z-index: 900;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding: 8px 10px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(0, 240, 255, 0.25);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.travel-nav-btn {
+    min-height: 46px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.travel-nav-btn .nav-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.travel-nav-btn .nav-label {
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.travel-nav-btn .nav-badge {
+    position: absolute;
+    top: 3px;
+    right: 8px;
+    background: var(--neon-magenta);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    line-height: 1.2;
+    box-shadow: 0 0 6px var(--neon-magenta);
+}
+
+.travel-nav-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.travel-nav-btn.active {
+    color: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.12);
+    box-shadow: var(--glow-cyan);
+}
+
+.travel-nav-btn.active .nav-icon {
+    transform: scale(1.15);
+}
+
+.travel-tab-pane {
+    display: none;
+}
+
+.travel-tab-pane.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ==========================================================================
+   4. HORIZONTAL BET QUICK-PILLS & ACTIVE PLANNED STAKE BANNER (TAB 1)
+   Daumen-Schnellwahl für Wett-Kombinationen und aktiver Einsatz
+   ========================================================================== */
+.active-stake-banner {
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.12), rgba(255, 0, 127, 0.12));
+    border: 1.5px solid var(--neon-cyan);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    box-shadow: var(--glow-cyan);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.active-stake-banner-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.active-stake-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.category-badge,
+.situation-tag,
+.target-badge,
+.min-bet-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.category-badge {
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    color: var(--neon-cyan);
+}
+
+.category-badge.dare {
+    background: rgba(255, 0, 127, 0.15);
+    border-color: rgba(255, 0, 127, 0.4);
+    color: var(--neon-magenta);
+}
+
+.category-badge.drink {
+    background: rgba(255, 221, 0, 0.15);
+    border-color: rgba(255, 221, 0, 0.4);
+    color: var(--neon-yellow);
+}
+
+.situation-tag {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-muted);
+}
+
+.target-badge {
+    background: rgba(157, 0, 255, 0.15);
+    border: 1px solid rgba(157, 0, 255, 0.4);
+    color: var(--neon-purple);
+}
+
+.min-bet-badge {
+    background: rgba(57, 255, 20, 0.15);
+    border: 1px solid rgba(57, 255, 20, 0.4);
+    color: var(--neon-green);
+}
+
+.active-stake-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.35;
+}
+
+.active-stake-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.btn-change-stake,
+.btn-roulette-mini {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-change-stake:hover,
+.btn-roulette-mini:hover {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+
+/* Horizontal Bet Quick-Pills */
+.bet-quick-pills {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.bet-quick-pills::-webkit-scrollbar {
+    display: none;
+}
+
+.bet-pill {
+    flex: 0 0 auto;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    min-height: 44px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-main);
+    font-family: 'Rajdhani', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.bet-pill .bet-pill-rank {
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.bet-pill .bet-pill-prob {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.1;
+}
+
+.bet-pill:hover {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 240, 255, 0.08);
+}
+
+.bet-pill.active {
+    background: var(--neon-cyan);
+    color: #000000;
+    border-color: var(--neon-cyan);
+    font-weight: 700;
+    box-shadow: var(--glow-cyan);
+    transform: scale(1.02);
+}
+
+.bet-pill.active .bet-pill-prob {
+    color: #1a1a24;
+    font-weight: 600;
+}
+
+
+/* ==========================================================================
+   5. PLANNED STAKES POOL ("EINSÄTZE PLANEN" - TAB 2 & DASHBOARD)
+   Ideen-Pool, Filter-Chips, Stake Cards, Emoji-Voting & Zufalls-Roulette
+   ========================================================================== */
+.stake-filter-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.stake-filter-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.stake-filter-chip {
+    flex: 0 0 auto;
+    padding: 6px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.stake-filter-chip:hover {
+    border-color: var(--neon-magenta);
+    color: var(--text-main);
+}
+
+.stake-filter-chip.active {
+    background: var(--neon-magenta);
+    color: #ffffff;
+    border-color: var(--neon-magenta);
+    box-shadow: var(--glow-magenta);
+}
+
+.stake-pool-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stake-card {
+    background: rgba(20, 20, 28, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.stake-card:hover {
+    border-color: var(--neon-cyan);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.stake-card.is-active {
+    border-color: var(--neon-green);
+    box-shadow: var(--glow-green);
+    background: rgba(57, 255, 20, 0.05);
+}
+
+.stake-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.stake-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.stake-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.35;
+    margin: 2px 0;
+}
+
+.stake-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.stake-author {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.stake-vote-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    align-items: center;
+}
+
+.vote-pill {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.vote-pill:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.vote-pill.voted {
+    background: rgba(255, 0, 127, 0.2);
+    border-color: var(--neon-magenta);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(255, 0, 127, 0.3);
+}
+
+.stake-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 8px;
+}
+
+.btn-stake-action {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-stake-action:hover {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+
+.btn-stake-roll {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+    background: rgba(57, 255, 20, 0.08);
+}
+
+.btn-stake-roll:hover {
+    background: var(--neon-green);
+    color: #000000;
+    box-shadow: var(--glow-green);
+}
+
+.btn-stake-delete {
+    border-color: rgba(255, 0, 127, 0.3);
+    color: var(--text-muted);
+}
+
+.btn-stake-delete:hover {
+    border-color: var(--neon-magenta);
+    color: var(--neon-magenta);
+    background: rgba(255, 0, 127, 0.1);
+}
+
+/* Roulette Button & Animation */
+.roulette-btn {
+    background: linear-gradient(135deg, var(--neon-magenta), var(--neon-cyan));
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 15px rgba(255, 0, 127, 0.3);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.roulette-btn:hover {
+    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.roulette-spinning {
+    animation: roulette-spin-pulse 0.8s infinite ease-in-out;
+}
+
+@keyframes roulette-spin-pulse {
+    0%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.04);
+        filter: brightness(1.3) drop-shadow(0 0 15px var(--neon-magenta));
+    }
+}
+
+
+/* ==========================================================================
+   6. CHRONIK & OFFENE AUSGELÖSTE EINSÄTZE (TAB 3)
+   Pending Stakes Tracker & Chronicle Hit/Miss Status
+   ========================================================================== */
+.pending-stakes-section {
+    background: rgba(255, 221, 0, 0.08);
+    border: 1.5px solid var(--neon-yellow);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 15px rgba(255, 221, 0, 0.15);
+}
+
+.pending-stakes-section .pending-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.pending-stakes-section .pending-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--neon-yellow);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pending-stakes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pending-stake-item {
+    background: var(--panel-bg);
+    border: 1px solid rgba(255, 221, 0, 0.3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.pending-stake-item:hover {
+    border-color: var(--neon-yellow);
+    box-shadow: 0 2px 8px rgba(255, 221, 0, 0.2);
+}
+
+.pending-stake-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pending-player-name {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+.pending-roll-info {
+    font-size: 0.8rem;
+    color: var(--neon-cyan);
+    font-weight: 600;
+}
+
+.pending-stake-desc {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    line-height: 1.4;
+    padding-left: 8px;
+    border-left: 2px solid var(--neon-yellow);
+}
+
+.btn-fulfill-stake {
+    background: rgba(57, 255, 20, 0.15);
+    border: 1.5px solid var(--neon-green);
+    color: var(--neon-green);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    align-self: flex-start;
+}
+
+.btn-fulfill-stake:hover {
+    background: var(--neon-green);
+    color: #000000;
+    box-shadow: var(--glow-green);
+    transform: scale(1.02);
+}
+
+/* Chronicle List Items */
+.chronicle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chronicle-item {
+    border-radius: 10px;
+    padding: 12px 14px;
+    border-left: 4px solid transparent;
+    background: rgba(255, 255, 255, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.chronicle-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.chronicle-item.hit {
+    border-left-color: var(--neon-green);
+    background: rgba(57, 255, 20, 0.06);
+    border: 1px solid rgba(57, 255, 20, 0.25);
+    border-left-width: 4px;
+}
+
+.chronicle-item.hit .hit-tag {
+    color: var(--neon-green);
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chronicle-item.miss {
+    border-left-color: var(--text-muted);
+    opacity: 0.75;
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left-width: 4px;
+}
+
+.chronicle-item.miss .miss-tag {
+    color: var(--text-muted);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chronicle-item-body {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    line-height: 1.35;
+}
+
+.chronicle-item-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 10px;
+}
+
+
+/* ==========================================================================
+   DAYLIGHT THEME OVERRIDES FOR V3 COMPONENTS
+   Garantierte Kontraste und helle Panels für alle V3-Elemente
+   ========================================================================== */
+[data-theme="daylight"] .saved-sessions-box {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="daylight"] .saved-session-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .saved-session-card:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+}
+
+[data-theme="daylight"] .saved-session-mode-badge {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: var(--text-muted);
+}
+
+[data-theme="daylight"] .saved-session-mode-badge.travel {
+    background: rgba(2, 132, 199, 0.1);
+    border-color: rgba(2, 132, 199, 0.25);
+    color: var(--neon-cyan);
+}
+
+[data-theme="daylight"] .saved-session-mode-badge.table {
+    background: rgba(157, 0, 255, 0.08);
+    border-color: rgba(157, 0, 255, 0.2);
+    color: #7c3aed;
+}
+
+[data-theme="daylight"] .btn-rejoin-session {
+    background: var(--neon-cyan);
+    color: #ffffff;
+}
+
+[data-theme="daylight"] .slot-claim-item {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="daylight"] .slot-pin-input {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .travel-bottom-nav {
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid #cbd5e1;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="daylight"] .travel-nav-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+}
+
+[data-theme="daylight"] .travel-nav-btn.active {
+    background: rgba(2, 132, 199, 0.1);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2);
+}
+
+[data-theme="daylight"] .active-stake-banner {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(219, 39, 119, 0.06));
+    border-color: var(--neon-cyan);
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.15);
+}
+
+[data-theme="daylight"] .active-stake-title {
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .btn-change-stake,
+[data-theme="daylight"] .btn-roulette-mini {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .bet-pill {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="daylight"] .bet-pill.active {
+    background: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    color: #ffffff;
+}
+
+[data-theme="daylight"] .bet-pill.active .bet-pill-prob {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="daylight"] .stake-filter-chip {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+}
+
+[data-theme="daylight"] .stake-filter-chip.active {
+    background: var(--neon-magenta);
+    border-color: var(--neon-magenta);
+    color: #ffffff;
+}
+
+[data-theme="daylight"] .stake-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .stake-card.is-active {
+    background: rgba(5, 150, 105, 0.06);
+    border-color: var(--neon-green);
+    box-shadow: 0 2px 10px rgba(5, 150, 105, 0.15);
+}
+
+[data-theme="daylight"] .vote-pill {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #0f172a;
+}
+
+[data-theme="daylight"] .vote-pill.voted {
+    background: rgba(219, 39, 119, 0.12);
+    border-color: var(--neon-magenta);
+    color: var(--neon-magenta);
+}
+
+[data-theme="daylight"] .btn-stake-action {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .pending-stakes-section {
+    background: rgba(217, 119, 6, 0.06);
+    border-color: var(--neon-yellow);
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.15);
+}
+
+[data-theme="daylight"] .pending-stake-item {
+    background: #ffffff;
+    border: 1px solid #fde68a;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .btn-fulfill-stake {
+    background: rgba(5, 150, 105, 0.1);
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+}
+
+[data-theme="daylight"] .btn-fulfill-stake:hover {
+    background: var(--neon-green);
+    color: #ffffff;
+}
+
+[data-theme="daylight"] .chronicle-item.hit {
+    background: rgba(5, 150, 105, 0.06);
+    border: 1px solid rgba(5, 150, 105, 0.25);
+    border-left-width: 4px;
+    border-left-color: var(--neon-green);
+    color: var(--text-main);
+}
+
+[data-theme="daylight"] .chronicle-item.miss {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left-width: 4px;
+    border-left-color: #94a3b8;
+    color: #64748b;
+}
+

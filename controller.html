@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Quintasch V2 — Controller</title>
+    <title>Quintasch V3 — Travel & Game Controller</title>
     <link rel="icon" href="icons/icon-192.png" type="image/png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="manifest.json">
@@ -185,13 +185,336 @@
             box-shadow: inset 0 0 10px rgba(255, 0, 127, 0.2), 0 0 5px rgba(255, 0, 127, 0.2);
             text-shadow: 0 0 5px #fff, 0 0 10px var(--neon-magenta);
         }
+
+        /* Daylight Theme (High Contrast Outdoor Mode) */
+        html[data-theme="daylight"] {
+            --bg-obsidian: #f3f4f8;
+            --bg-panel: rgba(255, 255, 255, 0.96);
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --neon-cyan: #0284c7;
+            --neon-magenta: #be123c;
+            --neon-yellow: #a16207;
+            --neon-purple: #7e22ce;
+            --neon-green: #15803d;
+            --glow-cyan: none;
+            --glow-magenta: none;
+            --glow-green: none;
+        }
+
+        html[data-theme="daylight"] body {
+            background-color: #f3f4f8;
+            background-image: none;
+            color: #0f172a;
+        }
+
+        html[data-theme="daylight"] .panel,
+        html[data-theme="daylight"] .modal-panel {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        html[data-theme="daylight"] .form-control {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+
+        html[data-theme="daylight"] .btn-neon {
+            background: #ffffff;
+            color: #0284c7;
+            border-color: #0284c7;
+            text-shadow: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+        }
+
+        html[data-theme="daylight"] .lobby-player-badge {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #0f172a;
+            text-shadow: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        html[data-theme="daylight"] .mobile-die {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #0284c7;
+            text-shadow: none;
+        }
+
+        /* Travel Sticky Bottom Navigation */
+        .travel-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(15, 15, 22, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--neon-cyan);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 12px;
+            z-index: 999;
+        }
+
+        html[data-theme="daylight"] .travel-bottom-nav {
+            background: rgba(255, 255, 255, 0.98);
+            border-top-color: #cbd5e1;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        .travel-nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 6px 4px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .travel-nav-item.active {
+            color: var(--neon-cyan);
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.15);
+        }
+
+        html[data-theme="daylight"] .travel-nav-item.active {
+            color: #0284c7;
+            background: rgba(2, 132, 199, 0.1);
+            box-shadow: none;
+        }
+
+        .travel-nav-icon {
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+
+        .travel-nav-badge {
+            position: absolute;
+            top: 2px;
+            right: 18%;
+            background: var(--neon-magenta);
+            color: #fff;
+            font-size: 0.65rem;
+            padding: 1px 5px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .travel-tab-pane {
+            padding-bottom: 75px;
+        }
+
+        /* Bet Quick Pills */
+        .bet-quick-pills {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 6px 2px;
+            margin-bottom: 12px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .bet-quick-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .bet-pill-btn {
+            flex: 0 0 auto;
+            background: rgba(15, 15, 22, 0.7);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.78rem;
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .bet-pill-btn.active {
+            background: rgba(0, 240, 255, 0.2);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+            font-weight: bold;
+        }
+
+        .bet-pill-btn.disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+
+        html[data-theme="daylight"] .bet-pill-btn {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+
+        html[data-theme="daylight"] .bet-pill-btn.active {
+            background: rgba(2, 132, 199, 0.12);
+            border-color: #0284c7;
+            color: #0284c7;
+            box-shadow: none;
+        }
+
+        /* Stake Filter Bar */
+        .stake-filter-bar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 4px 2px;
+            margin-bottom: 12px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .stake-filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .stake-filter-btn {
+            flex: 0 0 auto;
+            background: rgba(15, 15, 22, 0.6);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 16px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .stake-filter-btn.active {
+            background: rgba(0, 240, 255, 0.15);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        html[data-theme="daylight"] .stake-filter-btn {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #475569;
+        }
+
+        html[data-theme="daylight"] .stake-filter-btn.active {
+            background: rgba(2, 132, 199, 0.12);
+            border-color: #0284c7;
+            color: #0284c7;
+        }
+
+        /* Planned Stake Cards */
+        .planned-stake-card {
+            background: rgba(15, 15, 22, 0.75);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .planned-stake-card.is-active {
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 15px rgba(255, 221, 0, 0.25);
+            background: rgba(255, 221, 0, 0.05);
+        }
+
+        html[data-theme="daylight"] .planned-stake-card {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+
+        .stake-reaction-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            color: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .stake-reaction-btn:active {
+            transform: scale(1.15);
+        }
+
+        .stake-reaction-btn.voted {
+            background: rgba(0, 240, 255, 0.25);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        /* Saved Sessions & Pending Cards */
+        .saved-session-card {
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        html[data-theme="daylight"] .saved-session-card {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+
+        .pending-fulfillment-card {
+            background: rgba(255, 221, 0, 0.06);
+            border: 1px solid var(--neon-yellow);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        html[data-theme="daylight"] .pending-fulfillment-card {
+            background: #fffbeb;
+            border-color: #f59e0b;
+        }
     </style>
 </head>
 <body>
     <div class="controller-wrapper">
         <header class="header" style="position: relative; text-align: center;">
             <h1 style="font-size: 2.2rem; letter-spacing: 2px;">Quintasch</h1>
-            <p style="font-size: 0.95rem; margin-bottom: 8px;">Game Controller V2</p>
+            <p style="font-size: 0.95rem; margin-bottom: 8px;">Travel & Game Controller V3</p>
             <div id="connection-badge" class="connection-badge">
                 <span id="conn-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--neon-cyan);"></span>
                 <span id="conn-status-text">Online</span>
@@ -199,11 +522,23 @@
             <div id="jga-badge" style="display: none; background: rgba(255, 221, 0, 0.15); border: 1px solid var(--neon-yellow); border-radius: 20px; padding: 3px 12px; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--neon-yellow); text-shadow: 0 0 8px rgba(255, 221, 0, 0.6); margin: 6px auto 0 auto; width: fit-content; box-shadow: 0 0 10px rgba(255, 221, 0, 0.2);">
                 👑 BRÄUTIGAM-MODUS
             </div>
-            <button id="header-settings-btn" style="position: absolute; right: 10px; top: 15px; background: none; border: none; color: var(--neon-cyan); font-size: 1.5rem; cursor: pointer; text-shadow: var(--glow-cyan); z-index: 10;">⚙️</button>
+            <div style="position: absolute; right: 10px; top: 15px; display: flex; align-items: center; gap: 8px; z-index: 10;">
+                <button id="theme-toggle-btn" type="button" title="Outdoor / Daylight Modus" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 2px 4px; line-height: 1;">☀️</button>
+                <button id="header-settings-btn" type="button" style="background: none; border: none; color: var(--neon-cyan); font-size: 1.5rem; cursor: pointer; text-shadow: var(--glow-cyan); padding: 2px 4px; line-height: 1;">⚙️</button>
+            </div>
         </header>
 
         <!-- BEITRITTS- & ERSTELLUNGS-BEREICH -->
         <main class="panel" id="join-container">
+            <!-- Saved Sessions Box -->
+            <div id="saved-sessions-container" style="display: none; margin-bottom: 18px; text-align: left;">
+                <div style="font-family: 'Orbitron', sans-serif; font-size: 0.82rem; color: var(--neon-cyan); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>🕒 Gespeicherte Sessions</span>
+                    <small style="color: var(--text-muted); font-size: 0.72rem;">Wieder beitreten</small>
+                </div>
+                <div id="saved-sessions-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+
             <!-- Tabs: Beitreten vs Neues Spiel -->
             <div style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0, 240, 255, 0.05); padding: 4px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.2);">
                 <button type="button" id="tab-join-btn" style="flex: 1; padding: 8px; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; cursor: pointer; border: none; background: var(--neon-cyan); color: #0b0b0f; font-weight: bold; transition: all 0.2s;">
@@ -223,12 +558,25 @@
                     <input type="text" id="client-room-code" class="form-control" placeholder="z. B. QU7X" maxlength="8" style="text-transform: uppercase; font-family: 'Orbitron', sans-serif; font-size: 1.2rem; text-align: center; letter-spacing: 2px;">
                 </div>
 
-                <div class="form-group" style="margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 15px;">
                     <label for="client-player-name">Dein Nickname</label>
                     <input type="text" id="client-player-name" class="form-control" placeholder="z. B. Max" maxlength="12">
                 </div>
 
+                <div class="form-group" style="margin-bottom: 18px; text-align: left;">
+                    <label for="client-recovery-pin" style="font-size: 0.8rem; color: var(--text-muted);">
+                        🔒 4-stellige Schutz-PIN (optional für Gerätewechsel):
+                    </label>
+                    <input type="password" id="client-recovery-pin" class="form-control" placeholder="z. B. 1234" maxlength="6" inputmode="numeric" style="letter-spacing: 3px; font-family: 'Orbitron', sans-serif; font-size: 1rem; text-align: center;">
+                </div>
+
                 <button class="btn-neon" id="join-button">Beitreten</button>
+
+                <div style="margin-top: 15px; border-top: 1px dashed rgba(0, 240, 255, 0.2); padding-top: 12px; text-align: center;">
+                    <button type="button" id="open-slot-claim-btn" style="background: none; border: none; color: var(--neon-cyan); font-size: 0.82rem; text-decoration: underline; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                        🔄 Akku leer / Neues Handy? Bestehenden Spieler übernehmen
+                    </button>
+                </div>
             </div>
 
             <!-- Tab 2: Neues Spiel erstellen -->
@@ -236,6 +584,26 @@
                 <div class="form-group" style="margin-bottom: 15px;">
                     <label for="create-player-name">Dein Nickname</label>
                     <input type="text" id="create-player-name" class="form-control" placeholder="z. B. Host-Max" maxlength="12">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label for="create-session-title" style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan);">Name der Session / Reise (optional):</label>
+                    <input type="text" id="create-session-title" class="form-control" placeholder="z. B. Mallorca 2026 / JGA Niclas" maxlength="30">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan); margin-bottom: 6px; display: block;">Spiel-Stil:</label>
+                    <div style="display: flex; gap: 8px;">
+                        <div class="mobile-play-style-card selected" data-style="travel" style="flex: 1; background: rgba(0, 240, 255, 0.08); border: 1px solid var(--neon-cyan); border-radius: 6px; padding: 10px 8px; cursor: pointer; text-align: center;">
+                            <strong style="color: #fff; font-size: 0.82rem; display: block;">🎒 Travel- / Reise-Modus</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Ganztägig & Einsatz-Pool</div>
+                        </div>
+                        <div class="mobile-play-style-card" data-style="table" style="flex: 1; background: rgba(15, 15, 22, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 6px; padding: 10px 8px; cursor: pointer; text-align: center;">
+                            <strong style="color: #fff; font-size: 0.82rem; display: block;">🏠 Klassischer Tisch-Modus</strong>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">Direkt am Tisch spielen</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="create-play-style" value="travel">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 15px; text-align: left;">
@@ -306,12 +674,15 @@
 
         <!-- GAMEPLAY-AKTIONSBEREICH -->
         <main class="panel" id="gameplay-container" style="display: none; text-align: center;">
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 6px 12px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; gap: 6px; flex-wrap: wrap;">
                 <span style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--neon-cyan);">
                     Raum: <strong id="gameplay-room-code-badge" style="color: var(--neon-yellow); letter-spacing: 1px;">----</strong>
                 </span>
+                <button type="button" id="gameplay-style-badge" title="Tippen zum Umschalten zwischen Reise- & Tisch-Modus" style="background: rgba(0, 240, 255, 0.12); border: 1px solid var(--neon-cyan); border-radius: 12px; color: var(--neon-cyan); font-size: 0.72rem; padding: 3px 8px; cursor: pointer; font-family: 'Orbitron', sans-serif; transition: all 0.2s;">
+                    🎒 Reise-Modus
+                </button>
                 <button id="gameplay-copy-link-btn" type="button" style="background: rgba(0, 240, 255, 0.15); border: 1px solid var(--neon-cyan); border-radius: 4px; color: var(--neon-cyan); font-size: 0.75rem; padding: 3px 8px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
-                    📋 Link kopieren
+                    📋 Link
                 </button>
             </div>
 
@@ -325,111 +696,292 @@
                 <span id="gameplay-mode-badge" style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">PARTY-MODUS</span>
             </div>
 
-            <h2 class="sidebar-title" id="gameplay-status-title" style="font-size: 1.5rem; margin-bottom: 20px; border: none; color: var(--neon-green); text-shadow: var(--glow-green);">Du bist dran!</h2>
-            
-            <!-- Turn Countdown Timer (Live Sync) -->
-            <div id="controller-timer-container" style="display: none; margin-bottom: 15px; background: rgba(0, 240, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 8px; padding: 10px;">
-                <div style="font-size: 0.9rem; font-family: 'Orbitron', sans-serif; color: var(--neon-yellow); margin-bottom: 5px;">TIMER: <span id="controller-timer-text">30s</span></div>
-                <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden;">
-                    <div id="controller-timer-progress" style="height: 100%; width: 100%; background: var(--neon-yellow); transition: width 1s linear;"></div>
-                </div>
-            </div>
-
-            <div id="gameplay-form-wrapper">
-                <!-- Pause/Aussetzen Schalter -->
-                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 0, 127, 0.15); padding-bottom: 10px; margin-bottom: 15px;">
-                    <label for="client-pause-toggle" style="margin-bottom: 0; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; color: var(--neon-yellow); text-shadow: 0 0 5px rgba(255, 230, 0, 0.2);">Aussetzen (Runde überspringen)</label>
-                    <input type="checkbox" id="client-pause-toggle" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--neon-yellow);">
-                </div>
-
-                <!-- Persönliches Regelset Auswahl -->
-                <div class="form-group" style="text-align: left; margin-bottom: 15px; background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.15); border-radius: 8px; padding: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <label for="personal-ruleset-select" style="font-size: 0.8rem; color: var(--neon-cyan); margin-bottom: 0; font-family: 'Orbitron', sans-serif;">👤 Mein Regelset</label>
-                        <span style="font-size: 0.72rem; color: var(--text-muted);">Individuell</span>
+            <!-- TAB 1: 🎲 SPIEL -->
+            <div id="tab-pane-play" class="travel-tab-pane">
+                <h2 class="sidebar-title" id="gameplay-status-title" style="font-size: 1.5rem; margin-bottom: 15px; border: none; color: var(--neon-green); text-shadow: var(--glow-green);">Du bist dran!</h2>
+                
+                <!-- Turn Countdown Timer (Live Sync) -->
+                <div id="controller-timer-container" style="display: none; margin-bottom: 15px; background: rgba(0, 240, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 8px; padding: 10px;">
+                    <div style="font-size: 0.9rem; font-family: 'Orbitron', sans-serif; color: var(--neon-yellow); margin-bottom: 5px;">TIMER: <span id="controller-timer-text">30s</span></div>
+                    <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden;">
+                        <div id="controller-timer-progress" style="height: 100%; width: 100%; background: var(--neon-yellow); transition: width 1s linear;"></div>
                     </div>
-                    <select id="personal-ruleset-select" class="form-control" style="font-size: 0.85rem; width: 100%;">
-                        <option value="auto">🌐 Wie Raum (Standard)</option>
-                        <option value="klassisch">🍺 Klassisch (Trinkspiel)</option>
-                        <option value="alkoholfrei">🥤 Alkoholfrei (Sport/Action)</option>
-                        <option value="mittelalter">⚔️ Mittelalter-Edition</option>
-                        <option value="spanien">☀️ Spanien-Edition</option>
-                    </select>
                 </div>
 
-                <div class="form-group" style="text-align: left;">
-                    <label for="gameplay-bet">Dein Wetteinsatz</label>
-                    <select id="gameplay-bet" class="form-control">
-                        <option value="pasch">Pasch (~90.7%)</option>
-                        <option value="doppelpasch">Doppelpasch (~23.1%)</option>
-                        <option value="drasch">Drasch (~15.4%)</option>
-                        <option value="fullhouse">Full House (~3.9%)</option>
-                        <option value="strasse">Straße (~3.1%)</option>
-                        <option value="quadrasch">Quadrasch (~1.9%)</option>
-                        <option value="quintasch">Quintasch (~0.08%)</option>
-                    </select>
+                <!-- Geplanter-Einsatz-Banner -->
+                <div id="active-planned-stake-box" style="margin-bottom: 15px; background: rgba(0, 240, 255, 0.05); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; padding: 12px; text-align: left;">
+                    <!-- Dynamischer Inhalt -->
                 </div>
 
-                <div class="form-group" style="text-align: left; margin-top: 15px;">
-                    <label for="gameplay-stake">Einsatz</label>
-                    <select id="gameplay-stake" class="form-control">
-                        <option value="standard" selected>📜 Standard-Einsatz (laut Regelset)</option>
-                        <option value="custom">✍️ Eigene Aktion...</option>
-                    </select>
+                <!-- Horizontale Kombinations-Schnellwahl -->
+                <div style="text-align: left; margin-bottom: 4px;">
+                    <label style="font-size: 0.8rem; color: var(--neon-cyan); font-family: 'Orbitron', sans-serif;">🎯 Ziel-Kombination:</label>
+                </div>
+                <div class="bet-quick-pills" id="bet-quick-pills">
+                    <button type="button" class="bet-pill-btn active" data-bet="pasch">Pasch 91%</button>
+                    <button type="button" class="bet-pill-btn" data-bet="doppelpasch">Doppelpasch 23%</button>
+                    <button type="button" class="bet-pill-btn" data-bet="drasch">Drasch 15%</button>
+                    <button type="button" class="bet-pill-btn" data-bet="fullhouse">Full House 4%</button>
+                    <button type="button" class="bet-pill-btn" data-bet="strasse">Straße 3%</button>
+                    <button type="button" class="bet-pill-btn" data-bet="quadrasch">Quadrasch 2%</button>
+                    <button type="button" class="bet-pill-btn" data-bet="quintasch">Quintasch 0.1%</button>
+                    <button type="button" class="bet-pill-btn" data-bet="none">Kein Einsatz</button>
+                </div>
 
-                    <div id="gameplay-stake-preview" style="font-size: 0.82rem; color: var(--neon-cyan); background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 6px; padding: 8px 10px; margin-top: 8px; line-height: 1.35;">
-                        ⚡ <strong>Aktion bei Wette:</strong><br>
-                        <span id="gameplay-stake-preview-text" style="color: #fff; font-weight: 500;">1 Schluck (Pasch)</span>
+                <div id="gameplay-form-wrapper">
+                    <!-- Pause/Aussetzen Schalter -->
+                    <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 0, 127, 0.15); padding-bottom: 10px; margin-bottom: 15px;">
+                        <label for="client-pause-toggle" style="margin-bottom: 0; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; color: var(--neon-yellow); text-shadow: 0 0 5px rgba(255, 230, 0, 0.2);">Aussetzen (Runde überspringen)</label>
+                        <input type="checkbox" id="client-pause-toggle" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--neon-yellow);">
                     </div>
 
-                    <button type="button" id="open-rules-cheatsheet-btn" style="background: rgba(0, 240, 255, 0.08); border: 1px dashed var(--neon-cyan); border-radius: 6px; color: var(--neon-cyan); font-size: 0.8rem; padding: 6px 10px; width: 100%; margin-top: 8px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
-                        📜 Alle 10 Regeln des Sets ansehen
-                    </button>
+                    <!-- Persönliches Regelset Auswahl -->
+                    <div class="form-group" style="text-align: left; margin-bottom: 15px; background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.15); border-radius: 8px; padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label for="personal-ruleset-select" style="font-size: 0.8rem; color: var(--neon-cyan); margin-bottom: 0; font-family: 'Orbitron', sans-serif;">👤 Mein Regelset</label>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Individuell</span>
+                        </div>
+                        <select id="personal-ruleset-select" class="form-control" style="font-size: 0.85rem; width: 100%;">
+                            <option value="auto">🌐 Wie Raum (Standard)</option>
+                            <option value="klassisch">🍺 Klassisch (Trinkspiel)</option>
+                            <option value="alkoholfrei">🥤 Alkoholfrei (Sport/Action)</option>
+                            <option value="mittelalter">⚔️ Mittelalter-Edition</option>
+                            <option value="spanien">☀️ Spanien-Edition</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="text-align: left; display: none;">
+                        <label for="gameplay-bet">Dein Wetteinsatz</label>
+                        <select id="gameplay-bet" class="form-control">
+                            <option value="none">Kein Einsatz</option>
+                            <option value="pasch" selected>Pasch (~90.7%)</option>
+                            <option value="doppelpasch">Doppelpasch (~23.1%)</option>
+                            <option value="drasch">Drasch (~15.4%)</option>
+                            <option value="fullhouse">Full House (~3.9%)</option>
+                            <option value="strasse">Straße (~3.1%)</option>
+                            <option value="quadrasch">Quadrasch (~1.9%)</option>
+                            <option value="quintasch">Quintasch (~0.08%)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="text-align: left; margin-top: 15px;">
+                        <label for="gameplay-stake">Einsatz</label>
+                        <select id="gameplay-stake" class="form-control">
+                            <option value="standard" selected>📜 Standard-Einsatz (laut Regelset)</option>
+                            <option value="custom">✍️ Eigene Aktion...</option>
+                        </select>
+
+                        <div id="gameplay-stake-preview" style="font-size: 0.82rem; color: var(--neon-cyan); background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 6px; padding: 8px 10px; margin-top: 8px; line-height: 1.35;">
+                            ⚡ <strong>Aktion bei Wette:</strong><br>
+                            <span id="gameplay-stake-preview-text" style="color: #fff; font-weight: 500;">1 Schluck (Pasch)</span>
+                        </div>
+
+                        <button type="button" id="open-rules-cheatsheet-btn" style="background: rgba(0, 240, 255, 0.08); border: 1px dashed var(--neon-cyan); border-radius: 6px; color: var(--neon-cyan); font-size: 0.8rem; padding: 6px 10px; width: 100%; margin-top: 8px; cursor: pointer; font-family: 'Orbitron', sans-serif;">
+                            📜 Alle 10 Regeln des Sets ansehen
+                        </button>
+                    </div>
+
+                    <div class="form-group" id="gameplay-custom-stake-group" style="text-align: left; margin-top: 10px; display: none;">
+                        <label for="gameplay-custom-stake" style="font-size: 0.8rem; color: var(--text-muted);">Eigene Aktion beschreiben:</label>
+                        <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 2 Schlucke trinken / 10 Liegestütze">
+                    </div>
+
+                    <div class="form-group" id="gameplay-custom-timer-group" style="text-align: left; margin-top: 10px; display: none;">
+                        <label for="gameplay-custom-timer" style="font-size: 0.8rem; color: var(--neon-yellow);">Countdown Timer (Sekunden, optional):</label>
+                        <input type="number" id="gameplay-custom-timer" class="form-control" placeholder="z. B. 15" min="0" max="180">
+                    </div>
                 </div>
 
-                <div class="form-group" id="gameplay-custom-stake-group" style="text-align: left; margin-top: 10px; display: none;">
-                    <label for="gameplay-custom-stake" style="font-size: 0.8rem; color: var(--text-muted);">Eigene Aktion beschreiben:</label>
-                    <input type="text" id="gameplay-custom-stake" class="form-control" placeholder="z. B. 2 Schlucke trinken / 10 Liegestütze">
+                <!-- Spielfeld mit 5 3D-CSS-Würfeln auf dem Handy -->
+                <section class="mobile-dice-table" id="mobile-dice-table">
+                    <div class="cube-container"><div class="cube" id="mobile-dice-0"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
+                    <div class="cube-container"><div class="cube" id="mobile-dice-1"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
+                    <div class="cube-container"><div class="cube" id="mobile-dice-2"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
+                    <div class="cube-container"><div class="cube" id="mobile-dice-3"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
+                    <div class="cube-container"><div class="cube" id="mobile-dice-4"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
+                </section>
+
+                <button class="btn-neon" id="gameplay-roll-button" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 15px;">WÜRFELN!</button>
+            </div>
+
+            <!-- TAB 2: 💡 POOL (Einsätze planen) -->
+            <div id="tab-pane-pool" class="travel-tab-pane" style="display: none; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
+                    <h3 style="font-size: 1.05rem; color: var(--neon-cyan); margin: 0; font-family: 'Orbitron', sans-serif;">
+                        💡 Einsatz-Pool (<span id="pool-stakes-count">0</span>)
+                    </h3>
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" id="toggle-stake-form-btn" class="btn-neon" style="font-size: 0.75rem; padding: 5px 10px; min-height: auto;">➕ Planen</button>
+                        <button type="button" id="pool-roulette-btn" class="btn-neon" style="font-size: 0.75rem; padding: 5px 10px; min-height: auto; border-color: var(--neon-yellow); color: var(--neon-yellow);">🎰 Roulette</button>
+                    </div>
                 </div>
 
-                <div class="form-group" id="gameplay-custom-timer-group" style="text-align: left; margin-top: 10px; display: none;">
-                    <label for="gameplay-custom-timer" style="font-size: 0.8rem; color: var(--neon-yellow);">Countdown Timer (Sekunden, optional):</label>
-                    <input type="number" id="gameplay-custom-timer" class="form-control" placeholder="z. B. 15" min="0" max="180">
+                <!-- Schnell-Formular zum Planen neuer Einsätze -->
+                <div id="planned-stake-form" style="display: none; background: rgba(0, 240, 255, 0.05); border: 1px solid var(--neon-cyan); border-radius: 8px; padding: 14px; margin-bottom: 15px;">
+                    <h4 style="font-size: 0.9rem; color: var(--neon-cyan); margin: 0 0 10px 0; font-family: 'Orbitron', sans-serif;">➕ Neuen Einsatz vorschlagen</h4>
+                    
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label for="stake-title-input" style="font-size: 0.8rem;">Titel / Aktion</label>
+                        <input type="text" id="stake-title-input" class="form-control" placeholder="z. B. Katalanischen Trinkspruch rufen" maxlength="60" style="font-size: 0.9rem; padding: 7px 10px;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="stake-category-select" style="font-size: 0.75rem;">Kategorie</label>
+                            <select id="stake-category-select" class="form-control" style="font-size: 0.85rem; padding: 6px 8px;">
+                                <option value="drink">🍹 Drink</option>
+                                <option value="dare" selected>🎯 Mutprobe</option>
+                                <option value="food">🍽️ Food/Gastro</option>
+                                <option value="sport">🏃 Sport</option>
+                                <option value="treat">💸 Spendieren</option>
+                                <option value="other">✨ Sonstiges</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="stake-situation-select" style="font-size: 0.75rem;">Situations-Tag</label>
+                            <select id="stake-situation-select" class="form-control" style="font-size: 0.85rem; padding: 6px 8px;">
+                                <option value="anytime" selected>⚡ Jederzeit</option>
+                                <option value="bar">🍻 Bar/Kneipe</option>
+                                <option value="food">🍽️ Beim Essen</option>
+                                <option value="beach">🏖️ Strand/Outdoor</option>
+                                <option value="transit">🚆 Unterwegs/Transit</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="stake-target-mode-select" style="font-size: 0.75rem;">Ziel-Modus</label>
+                            <select id="stake-target-mode-select" class="form-control" style="font-size: 0.85rem; padding: 6px 8px;">
+                                <option value="pool" selected>🎲 Offener Pool</option>
+                                <option value="bounty">🎯 Kopfgeld (Zielspieler)</option>
+                                <option value="group">👥 Gruppen-Showdown</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="stake-min-bet-select" style="font-size: 0.75rem;">Mindest-Wurf</label>
+                            <select id="stake-min-bet-select" class="form-control" style="font-size: 0.85rem; padding: 6px 8px;">
+                                <option value="flexible" selected>Flexibel (Freie Wahl)</option>
+                                <option value="pasch">Pasch (91%)</option>
+                                <option value="doppelpasch">Doppelpasch (23%)</option>
+                                <option value="drasch">Drasch (15%)</option>
+                                <option value="fullhouse">Full House (4%)</option>
+                                <option value="strasse">Straße (3%)</option>
+                                <option value="quadrasch">Quadrasch (2%)</option>
+                                <option value="quintasch">Quintasch (0.1%)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="stake-target-player-group" style="margin-bottom: 12px; display: none;">
+                        <label for="stake-target-player-select" style="font-size: 0.75rem; color: var(--neon-magenta);">Zielspieler auswählen</label>
+                        <select id="stake-target-player-select" class="form-control" style="font-size: 0.85rem; padding: 6px 8px;">
+                            <option value="">– Spieler wählen –</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" id="submit-planned-stake-btn" class="btn-neon" style="flex: 1; font-size: 0.85rem; padding: 8px 12px; border-color: var(--neon-green); color: var(--neon-green); min-height: auto;">
+                            💾 In den Pool legen
+                        </button>
+                        <button type="button" id="cancel-planned-stake-btn" class="btn-neon" style="font-size: 0.85rem; padding: 8px 12px; --neon-cyan: var(--neon-magenta); min-height: auto;">
+                            Abbrechen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter-Leiste -->
+                <div class="stake-filter-bar" id="stake-filter-bar">
+                    <button type="button" class="stake-filter-btn active" data-filter="all">Alle</button>
+                    <button type="button" class="stake-filter-btn" data-filter="drink">🍹 Drink</button>
+                    <button type="button" class="stake-filter-btn" data-filter="dare">🎯 Mutprobe</button>
+                    <button type="button" class="stake-filter-btn" data-filter="food">🍽️ Food</button>
+                    <button type="button" class="stake-filter-btn" data-filter="sport">🏃 Sport</button>
+                    <button type="button" class="stake-filter-btn" data-filter="treat">💸 Spendieren</button>
+                </div>
+
+                <!-- Pool Karten-Liste -->
+                <div id="planned-stakes-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <!-- Dynamische Pool-Karten -->
                 </div>
             </div>
 
-            <!-- Spielfeld mit 5 3D-CSS-Würfeln auf dem Handy -->
-            <section class="mobile-dice-table" id="mobile-dice-table">
-                <div class="cube-container"><div class="cube" id="mobile-dice-0"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
-                <div class="cube-container"><div class="cube" id="mobile-dice-1"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
-                <div class="cube-container"><div class="cube" id="mobile-dice-2"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
-                <div class="cube-container"><div class="cube" id="mobile-dice-3"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
-                <div class="cube-container"><div class="cube" id="mobile-dice-4"><div class="face front">1</div><div class="face back">6</div><div class="face right">3</div><div class="face left">4</div><div class="face top">2</div><div class="face bottom">5</div></div></div>
-            </section>
+            <!-- TAB 3: 📜 CHRONIK (Tages-Chronik, Offene Einsätze & Rangliste) -->
+            <div id="tab-pane-chronicle" class="travel-tab-pane" style="display: none; text-align: left;">
+                <!-- Sektion 1: Offene ausgelöste Einsätze -->
+                <div style="margin-bottom: 20px;">
+                    <h3 class="sidebar-title" style="font-size: 1.05rem; border: none; margin-bottom: 8px; color: var(--neon-yellow); display: flex; align-items: center; gap: 6px;">
+                        <span>⚡ Noch einzulösen (Offen)</span>
+                        <span id="pending-fulfillments-count-badge" style="font-size: 0.72rem; padding: 1px 6px; border-radius: 10px; background: rgba(255, 221, 0, 0.2); color: var(--neon-yellow);">0</span>
+                    </h3>
+                    <div id="pending-fulfillments-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Dynamisch gefüllte Liste noch einzulösender Treffer -->
+                    </div>
+                </div>
 
-            <button class="btn-neon" id="gameplay-roll-button" style="border-color: var(--neon-green); color: var(--neon-green); box-shadow: var(--glow-green); text-shadow: var(--glow-green); margin-top: 15px;">WÜRFELN!</button>
-            
-            <div style="margin-top: 25px; text-align: left; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 15px;">
-                <h3 class="sidebar-title" style="font-size: 1rem; border: none; margin-bottom: 10px; color: var(--text-muted);">Mitspieler im Raum:</h3>
-                <ul class="lobby-players" id="lobby-players-list">
-                    <!-- Dynamische Spielerliste mit Score & Status -->
-                </ul>
-            </div>
+                <!-- Sektion 2: Live-Rangliste & Spieler-Status -->
+                <div style="margin-bottom: 20px; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 15px;">
+                    <h3 class="sidebar-title" style="font-size: 1.05rem; border: none; margin-bottom: 10px; color: var(--neon-cyan);">
+                        👥 Live-Rangliste & Spieler
+                    </h3>
+                    <ul class="lobby-players" id="lobby-players-list">
+                        <!-- Dynamische Spielerliste -->
+                    </ul>
+                </div>
 
-            <div style="margin-top: 25px; text-align: left; border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 15px;">
-                <h3 class="sidebar-title" style="font-size: 1rem; border: none; margin-bottom: 10px; color: var(--text-muted);">Spielverlauf (Historie):</h3>
-                <ul class="history-list" id="client-history-list" style="max-height: 180px; overflow-y: auto;">
-                    <!-- Dynamischer Spielverlauf -->
-                </ul>
+                <!-- Sektion 3: Vollständige Tages-Chronik -->
+                <div style="border-top: 1px solid rgba(0, 240, 255, 0.15); padding-top: 15px;">
+                    <h3 class="sidebar-title" style="font-size: 1.05rem; border: none; margin-bottom: 10px; color: var(--text-muted);">
+                        📜 Chronik aller Würfe
+                    </h3>
+                    <ul class="history-list" id="client-history-list" style="max-height: 250px; overflow-y: auto;">
+                        <!-- Dynamischer Spielverlauf -->
+                    </ul>
+                </div>
             </div>
         </main>
 
+        <!-- TRAVEL STICKY BOTTOM NAVIGATION -->
+        <nav class="travel-bottom-nav" id="travel-bottom-nav" style="display: none;">
+            <button type="button" class="travel-nav-item active" data-tab="play" id="nav-btn-play">
+                <span class="travel-nav-icon">🎲</span>
+                <span>Spiel</span>
+            </button>
+            <button type="button" class="travel-nav-item" data-tab="pool" id="nav-btn-pool">
+                <span class="travel-nav-icon">💡</span>
+                <span>Pool</span>
+                <span id="nav-pool-badge" class="travel-nav-badge" style="display: none;">0</span>
+            </button>
+            <button type="button" class="travel-nav-item" data-tab="chronicle" id="nav-btn-chronicle">
+                <span class="travel-nav-icon">📜</span>
+                <span>Chronik</span>
+                <span id="nav-pending-badge" class="travel-nav-badge" style="display: none; background: var(--neon-yellow); color: #000;">0</span>
+            </button>
+        </nav>
+
         <!-- CONTROLLER FOOTER -->
-        <footer style="margin-top: 25px; text-align: center; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 12px;">
-            <span>Quintasch V2</span>
+        <footer style="margin-top: 25px; text-align: center; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; border-top: 1px solid rgba(0, 240, 255, 0.1); padding-top: 12px; margin-bottom: 60px;">
+            <span>Quintasch V3</span>
             <button id="controller-footer-privacy-btn" type="button" style="background: none; border: none; color: var(--neon-cyan); cursor: pointer; font-size: 0.75rem; text-decoration: underline; font-family: inherit;">🛡️ Datenschutz</button>
             <button id="controller-footer-imprint-btn" type="button" style="background: none; border: none; color: var(--neon-cyan); cursor: pointer; font-size: 0.75rem; text-decoration: underline; font-family: inherit;">⚖️ Impressum</button>
         </footer>
+    </div>
+
+    <!-- SLOT CLAIM MODAL (Akku leer / Neues Handy) -->
+    <div id="slot-claim-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 11, 15, 0.95); z-index: 1200; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+        <div class="panel" style="width: 100%; max-width: 440px; text-align: left; border: 2px solid var(--neon-cyan); box-shadow: var(--glow-cyan); display: flex; flex-direction: column; gap: 12px; padding: 20px; max-height: 88vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="sidebar-title" style="font-size: 1.2rem; border: none; margin: 0; color: var(--neon-cyan);">🔄 Spieler-Slot übernehmen</h2>
+                <button type="button" id="close-slot-claim-btn" style="background: none; border: none; color: var(--neon-magenta); font-size: 1.3rem; cursor: pointer; font-weight: bold;">✕</button>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                Wähle deinen bisherigen Namen aus, um mit all deinen bisherigen Punkten, Würfen und Einsätzen fortzufahren:
+            </p>
+            <div id="slot-claim-error" class="status-error" style="font-size: 0.85rem; display: none;"></div>
+            <div id="slot-claim-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto;">
+                <!-- Dynamisch gefüllte Spielerliste -->
+            </div>
+        </div>
     </div>
 
     <!-- EINSATZ-VERTEILEN MODAL (Doppelpasch / Full House) -->

@@ -1,6 +1,6 @@
 # Deployment-Anleitung für quintasch.robedit.de
 
-Diese Anleitung beschreibt das schlüsselfertige Deployment von **Quintasch V2** auf deinem VPS unter der Domain **`quintasch.robedit.de`** mit dem Backend unter **`api-quintasch.robedit.de`**.
+Diese Anleitung beschreibt das schlüsselfertige Deployment von **Quintasch V3** auf deinem VPS unter der Domain **`quintasch.robedit.de`** mit dem Backend unter **`api-quintasch.robedit.de`**.
 
 ---
 
@@ -18,7 +18,7 @@ Diese Anleitung beschreibt das schlüsselfertige Deployment von **Quintasch V2**
 2. Navigiere zu **Settings ➔ Sync / Import collections**.
 3. Lade die Datei [`pb_schema.json`](../pb_schema.json) hoch oder füge den Inhalt per Copy-Paste ein.
 4. Klicke auf **Review and import**.
-   * *Ergebnis:* Die Collections `rooms`, `players`, `rolls`, `system_rulesets` und `custom_rulesets` sind mit den richtigen Feldern und Sicherheitsregeln eingerichtet.
+   * *Ergebnis:* Die Collections `rooms`, `players`, `rolls`, `system_rulesets`, `custom_rulesets` und `planned_stakes` sind mit den richtigen Feldern und Sicherheitsregeln eingerichtet.
 
 ---
 
@@ -80,7 +80,7 @@ sudo systemctl reload caddy
 ### Option B: Direkt per Git auf dem Server
 ```bash
 cd /var/www/quintasch
-git pull origin feature/v2-pocketbase-gameplay
+git pull origin main
 # Alle statischen Dateien liegen direkt im Stammverzeichnis
 ```
 
